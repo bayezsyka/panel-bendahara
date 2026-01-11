@@ -8,7 +8,7 @@ export default function BendaharaLayout({ children }) {
 
   const navLinks = [
     { href: '/bendahara/dashboard', label: 'Dashboard' },
-    { href: '/bendahara/transactions', label: 'Transaksi' },
+    { href: '/bendahara/projects', label : 'Proyek'},
   ]
 
   const isActive = (href) => currentPath.startsWith(href)

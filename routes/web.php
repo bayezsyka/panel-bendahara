@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Bendahara\DashboardController;
-use App\Http\Controllers\Bendahara\TransactionController;
+use App\Http\Controllers\Bendahara\ProjectController;
+use App\Http\Controllers\Bendahara\ExpenseController;
 
 
 Route::middleware(['auth', 'verified', 'role:bendahara'])
@@ -14,7 +15,10 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
     ->name('bendahara.')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('/transactions', TransactionController::class)->except(['show']);
+
+        Route::resource('projects', ProjectController::class);
+        Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy']);
+        Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');
     });
 
 Route::get('/', function () {

@@ -3,61 +3,88 @@
 namespace App\Http\Controllers\Bendahara;
 
 use App\Http\Controllers\Controller;
-use App\Models\Transaction;
+use App\Models\Expense;
+use App\Models\Project;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $months = (int) $request->query('months', 12);
+        $months = (int) $request->query('months', 6);
         $months = max(3, min($months, 24));
 
         $now = now();
         $monthStart = $now->copy()->startOfMonth()->toDateString();
         $monthEnd = $now->copy()->endOfMonth()->toDateString();
 
-        $incomeThisMonth = (int) Transaction::where('type', 'income')
-            ->whereBetween('transacted_at', [$monthStart, $monthEnd])
+        // KPI: Total pengeluaran bulan ini (dari semua proyek)
+        $expenseThisMonth = (int) Expense::whereBetween('transacted_at', [$monthStart, $monthEnd])
             ->sum('amount');
 
-        $expenseThisMonth = (int) Transaction::where('type', 'expense')
-            ->whereBetween('transacted_at', [$monthStart, $monthEnd])
-            ->sum('amount');
+        // KPI: Total pengeluaran keseluruhan
+        $totalExpense = (int) Expense::sum('amount');
 
-        $allIncome = (int) Transaction::where('type', 'income')->sum('amount');
-        $allExpense = (int) Transaction::where('type', 'expense')->sum('amount');
+        // KPI: Jumlah proyek aktif
+        $activeProjects = Project::where('status', 'ongoing')->count();
+
+        // KPI: Jumlah proyek selesai
+        $completedProjects = Project::where('status', 'completed')->count();
+
+        // Data pengeluaran per proyek (top 5 proyek dengan pengeluaran tertinggi)
+        $topProjects = Project::withSum('expenses', 'amount')
+            ->orderByDesc('expenses_sum_amount')
+            ->limit(5)
+            ->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'status' => $p->status,
+                'total' => (int) ($p->expenses_sum_amount ?? 0),
+            ]);
 
         $kpis = [
-            'incomeThisMonth' => $incomeThisMonth,
             'expenseThisMonth' => $expenseThisMonth,
-            'netThisMonth' => $incomeThisMonth - $expenseThisMonth,
-            'netAllTime' => $allIncome - $allExpense,
+            'totalExpense' => $totalExpense,
+            'activeProjects' => $activeProjects,
+            'completedProjects' => $completedProjects,
             'asOf' => $now->toDateString(),
         ];
 
-        $series = $this->monthlySeries($months, $now);
+        // Data series untuk grafik pengeluaran per bulan
+        $expenseSeries = $this->monthlyExpenseSeries($months, $now);
 
-        return inertia::render('Bendahara/Dashboard', [
+        // Data pengeluaran per proyek (untuk pie/bar chart)
+        $projectExpenses = Project::withSum('expenses', 'amount')
+            ->having('expenses_sum_amount', '>', 0)
+            ->orderByDesc('expenses_sum_amount')
+            ->limit(10)
+            ->get()
+            ->map(fn($p) => [
+                'name' => $p->name,
+                'total' => (int) ($p->expenses_sum_amount ?? 0),
+            ]);
+
+        return Inertia::render('Bendahara/Dashboard', [
             'title' => 'Dashboard Bendahara',
             'months' => $months,
             'kpis' => $kpis,
-            'series' => $series,
+            'expenseSeries' => $expenseSeries,
+            'projectExpenses' => $projectExpenses,
+            'topProjects' => $topProjects,
         ]);
     }
 
-    private function monthlySeries(int $months, Carbon $now): array
+    private function monthlyExpenseSeries(int $months, Carbon $now): array
     {
         $start = $now->copy()->startOfMonth()->subMonths($months - 1)->toDateString();
         $end = $now->copy()->endOfMonth()->toDateString();
 
-        $rows = Transaction::query()
+        $rows = Expense::query()
             ->selectRaw("DATE_FORMAT(transacted_at, '%Y-%m') as ym")
-            ->selectRaw("SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END) as income")
-            ->selectRaw("SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END) as expense")
+            ->selectRaw("SUM(amount) as total")
             ->whereBetween('transacted_at', [$start, $end])
             ->groupBy('ym')
             ->orderBy('ym')
@@ -70,15 +97,11 @@ class DashboardController extends Controller
         for ($i = 0; $i < $months; $i++) {
             $ym = $cursor->format('Y-m');
             $row = $rows->get($ym);
-
-            $income  = (int) ($row->income ?? 0);
-            $expense = (int) ($row->expense ?? 0);
+            $total = (int) ($row->total ?? 0);
 
             $out[] = [
                 'month' => $ym,
-                'income' => $income,
-                'expense' => $expense,
-                'net' => $income - $expense,
+                'expense' => $total,
             ];
 
             $cursor->addMonth();
