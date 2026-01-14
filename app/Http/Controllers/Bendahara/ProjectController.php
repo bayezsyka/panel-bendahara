@@ -64,4 +64,16 @@ class ProjectController extends Controller
 
         return $pdf->download($fileName);
     }
+
+    public function update(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'required|in:ongoing,completed',
+        ]);
+
+        $project->update($validated);
+        return redirect()->back()->with('message', 'Proyek Berhasil Diperbarui');
+    }
 }

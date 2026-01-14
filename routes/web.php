@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 use App\Http\Controllers\Bendahara\DashboardController;
@@ -22,12 +23,11 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
     });
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+
+    return redirect()->route('bendahara.dashboard');
 });
 
 Route::get('/dashboard', function () {
