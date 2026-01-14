@@ -24,6 +24,7 @@ class ProjectController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:ongoing,completed',
+            'coordinates' => 'nullable|string|max:255',
         ]);
 
         Project::create($validated);
@@ -67,10 +68,19 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        if ($request->has('only_status') && $request->only_status == true) {
+            $validated = $request->validate([
+                'status' => 'required|in:ongoing,completed',
+            ]);
+            $project->update($validated);
+            return redirect()->back()->with('message', 'Status Berhasil Diperbarui');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:ongoing,completed',
+            'coordinates' => 'nullable|string|max:255',
         ]);
 
         $project->update($validated);

@@ -11,6 +11,7 @@ class Project extends Model
         'name',
         'description',
         'status',
+        'coordinates',
     ];
 
     public function expenses(): HasMany

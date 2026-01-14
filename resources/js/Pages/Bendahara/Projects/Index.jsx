@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react' // Tambah useEffect
+import React, { useState } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
 import Modal from '@/Components/Modal'
@@ -10,33 +10,33 @@ import InputError from '@/Components/InputError'
 
 export default function Index({ projects }) {
   const [showModal, setShowModal] = useState(false)
-  const [isEditing, setIsEditing] = useState(false) // State untuk tahu sedang edit atau buat baru
-  const [currentProject, setCurrentProject] = useState(null) // Menyimpan data proyek yang sedang diedit
+  const [isStatusUpdate, setIsStatusUpdate] = useState(false) // Mode khusus update status
+  const [currentProject, setCurrentProject] = useState(null)
   
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: '',
     description: '',
     status: 'ongoing',
+    coordinates: '', // Input koordinat
+    only_status: false, // Flag helper
   })
 
-  // Fungsi untuk membuka modal dalam mode "Buat Baru"
+  // Modal BUAT BARU (Lengkap)
   const openCreateModal = () => {
-    setIsEditing(false)
+    setIsStatusUpdate(false)
     setCurrentProject(null)
     reset()
     clearErrors()
     setShowModal(true)
   }
 
-  // Fungsi untuk membuka modal dalam mode "Edit"
-  const openEditModal = (project) => {
-    setIsEditing(true)
+  // Modal UPDATE STATUS (Hanya Status)
+  const openStatusModal = (project) => {
+    setIsStatusUpdate(true)
     setCurrentProject(project)
-    // Isi form dengan data yang sudah ada
     setData({
-        name: project.name,
-        description: project.description || '',
         status: project.status,
+        only_status: true,
     })
     clearErrors()
     setShowModal(true)
@@ -45,8 +45,8 @@ export default function Index({ projects }) {
   const submitProject = (e) => {
     e.preventDefault()
     
-    if (isEditing) {
-        // PERUBAHAN: Jika mode edit, gunakan method PUT ke rute update
+    if (isStatusUpdate) {
+        // Update Hanya Status
         put(route('bendahara.projects.update', currentProject.id), {
             onSuccess: () => {
                 setShowModal(false)
@@ -54,7 +54,7 @@ export default function Index({ projects }) {
             },
         })
     } else {
-        // PERUBAHAN: Jika mode baru, gunakan method POST ke rute store
+        // Buat Baru
         post(route('bendahara.projects.store'), {
             onSuccess: () => {
                 setShowModal(false)
@@ -75,7 +75,7 @@ export default function Index({ projects }) {
             <p className="mt-1 text-sm text-gray-500">Kelola status dan progres proyek di sini</p>
           </div>
           <button
-            onClick={openCreateModal} // Panggil fungsi openCreateModal
+            onClick={openCreateModal}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,6 @@ export default function Index({ projects }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
             <div key={project.id} className="group flex flex-col bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition duration-200 overflow-hidden">
-                {/* Bagian atas bisa diklik untuk melihat detail */}
                 <Link href={route('bendahara.projects.show', project.id)} className="flex-1 p-5 block">
                     <div className="flex justify-between items-start mb-4">
                     <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
@@ -109,23 +108,28 @@ export default function Index({ projects }) {
                     <p className="text-sm text-gray-500 line-clamp-2">
                     {project.description || 'Tidak ada deskripsi.'}
                     </p>
+                    {project.coordinates && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            Lokasi Tersedia
+                        </div>
+                    )}
                 </Link>
 
-                {/* Bagian bawah: Tombol Aksi */}
                 <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
                     <Link href={route('bendahara.projects.show', project.id)} className="text-xs font-medium text-gray-600 hover:text-indigo-600">
                         Lihat Detail
                     </Link>
                     
-                    {/* PERUBAHAN: Tombol Edit Status */}
+                    {/* Tombol Ubah Status Saja */}
                     <button 
-                        onClick={() => openEditModal(project)}
+                        onClick={() => openStatusModal(project)}
                         className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Edit Status
+                        Ubah Status
                     </button>
                 </div>
             </div>
@@ -136,32 +140,52 @@ export default function Index({ projects }) {
       <Modal show={showModal} onClose={() => setShowModal(false)}>
         <form onSubmit={submitProject} className="p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            {isEditing ? 'Edit Proyek' : 'Buat Proyek Baru'}
+            {isStatusUpdate ? 'Update Status Proyek' : 'Buat Proyek Baru'}
           </h2>
           
-          <div className="mb-4">
-            <InputLabel value="Nama Proyek" />
-            <TextInput
-              value={data.name}
-              onChange={e => setData('name', e.target.value)}
-              className="mt-1 block w-full"
-              placeholder="Contoh: Renovasi Gedung A"
-              autoFocus
-            />
-            <InputError message={errors.name} className="mt-2" />
-          </div>
+          {/* Form Lengkap (Hanya tampil jika BUKAN update status) */}
+          {!isStatusUpdate && (
+              <>
+                <div className="mb-4">
+                    <InputLabel value="Nama Proyek" />
+                    <TextInput
+                    value={data.name}
+                    onChange={e => setData('name', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder="Contoh: Renovasi Gedung A"
+                    autoFocus
+                    required
+                    />
+                    <InputError message={errors.name} className="mt-2" />
+                </div>
 
-          <div className="mb-4">
-            <InputLabel value="Deskripsi (Opsional)" />
-            <textarea
-              value={data.description}
-              onChange={e => setData('description', e.target.value)}
-              className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-              rows="3"
-            />
-          </div>
+                <div className="mb-4">
+                    <InputLabel value="Deskripsi (Opsional)" />
+                    <textarea
+                    value={data.description}
+                    onChange={e => setData('description', e.target.value)}
+                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    rows="3"
+                    />
+                </div>
 
-          {/* PERUBAHAN: Pilihan Status */}
+                <div className="mb-4">
+                    <InputLabel value="Koordinat Lokasi (Google Maps)" />
+                    <TextInput
+                    value={data.coordinates}
+                    onChange={e => setData('coordinates', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder={'Contoh: 6°52\'09.6"S 109°02\'34.5"E'}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Salin titik koordinat dari Google Maps.
+                    </p>
+                    <InputError message={errors.coordinates} className="mt-2" />
+                </div>
+              </>
+          )}
+
+          {/* Status (Selalu tampil) */}
           <div className="mb-6">
             <InputLabel value="Status Proyek" />
             <select
@@ -172,15 +196,12 @@ export default function Index({ projects }) {
               <option value="ongoing">Sedang Berjalan</option>
               <option value="completed">Selesai (Completed)</option>
             </select>
-            <p className="mt-1 text-xs text-gray-500">
-                Ubah ke "Selesai" jika proyek telah rampung.
-            </p>
           </div>
 
           <div className="flex justify-end gap-3">
             <SecondaryButton onClick={() => setShowModal(false)}>Batal</SecondaryButton>
             <PrimaryButton disabled={processing}>
-                {isEditing ? 'Simpan Perubahan' : 'Simpan Proyek'}
+                Simpan
             </PrimaryButton>
           </div>
         </form>
