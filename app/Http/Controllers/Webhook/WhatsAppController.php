@@ -18,107 +18,95 @@ use App\Services\GeminiReceiptService;
 class WhatsAppController extends Controller
 {
     /**
-     * Handle incoming Webhook from WhatsApp Gateway (Node whatsapp-web.js)
+     * Handle Webhook Masuk (Support Fonnte & Local Baileys)
      */
     public function handle(Request $request)
     {
         try {
-            // === LOG RAW PAYLOAD ===
-            Log::info("INCOMING MESSAGE:", $request->all());
+            // === 1. LOGGING & DATA CAPTURE ===
+            // Kita log dulu biar tau format data yang masuk
+            Log::info("WA_INCOMING", $request->all());
 
-            // sender bisa berupa "62812xxx@c.us" dari whatsapp-web.js
-            $rawSender = (string) ($request->input('sender') ?? $request->input('from') ?? '');
-            $sender = $this->normalizePhone($rawSender); // hasil: "62812xxxx"
+            $sender = $request->input('sender'); // No HP Pengirim
+            $message = trim($request->input('message')); // Isi Pesan Text
 
-            $message = trim((string) ($request->input('message') ?? $request->input('body') ?? ''));
-            $type = (string) ($request->input('type') ?? 'text');
+            // === 2. DETEKSI MEDIA (GAMBAR) ===
+            // Cek apakah ada data gambar dari berbagai sumber
+            $mediaUrl = $request->input('url') ?? $request->input('file'); // Dari Fonnte
+            $mediaBase64 = $request->input('media_base64'); // Dari Baileys Lokal
 
-            // Support 2 bentuk media:
-            // 1) base64 dari Node gateway: media_base64 + mimetype
-            // 2) url/file (legacy/provider lain)
-            $mediaBase64 = $request->input('media_base64');
-            $mimeType = (string) ($request->input('mimetype') ?? '');
-            $mediaUrl = $request->input('url') ?? $request->input('file') ?? null;
+            // Validasi: Dianggap punya media jika ada Base64 ATAU ada URL valid
+            $hasMedia = !empty($mediaBase64) || (!empty($mediaUrl) && $mediaUrl !== 'null');
 
-            $hasMedia = !empty($mediaBase64) || !empty($mediaUrl);
-
-            Log::info("PARSED:", [
-                'rawSender' => $rawSender,
-                'senderNormalized' => $sender,
-                'message' => $message,
-                'type' => $type,
-                'hasMedia' => $hasMedia,
-                'mimeType' => $mimeType,
-                'mediaUrlExists' => !empty($mediaUrl),
-                'mediaBase64Exists' => !empty($mediaBase64),
-            ]);
-
-            // === Cari Mandor ===
-            // Catatan: whatsapp_number di DB harus format "628xxxx"
-            $mandor = Mandor::where('whatsapp_number', $sender)->first();
-
-            if (!$mandor) {
-                // Jangan silent, balas biar jelas
-                $this->replyWA($sender, "❌ Nomor kamu belum terdaftar sebagai mandor.\n\nNomor terdeteksi: *{$sender}*\nMinta admin untuk daftarkan.");
-                return response()->json(['status' => 'ignored', 'reason' => 'unregistered', 'sender' => $sender]);
+            // === 3. VALIDASI PENGIRIM ===
+            if (!$sender) {
+                return response()->json(['status' => 'ignored', 'reason' => 'no_sender']);
             }
 
-            // Cari Proyek Aktif (Ongoing) milik Mandor ini
+            // Cek apakah Mandor terdaftar di database
+            $mandor = Mandor::where('whatsapp_number', $sender)->first();
+            if (!$mandor) {
+                // Opsional: Balas jika nomor tidak dikenal
+                // $this->replyWhatsapp($sender, "❌ Nomor Anda belum terdaftar.");
+                return response()->json(['status' => 'ignored', 'reason' => 'unregistered']);
+            }
+
+            // Cek apakah Mandor punya proyek aktif
             $activeProject = $mandor->projects()->where('status', 'ongoing')->first();
             if (!$activeProject) {
-                $this->replyWA($sender, "Halo {$mandor->name}, Anda tidak memiliki proyek aktif saat ini.");
-                return response()->json(['status' => 'error', 'reason' => 'no_active_project']);
+                $this->replyWhatsapp($sender, "Halo {$mandor->name}, Anda tidak memiliki proyek aktif saat ini.");
+                return response()->json(['status' => 'ignored', 'reason' => 'no_project']);
             }
 
-            // Cek Sesi Cache (Apakah sedang menunggu konfirmasi?)
+            // Cek Session Cache (Apakah user sedang dalam proses konfirmasi?)
             $sessionKey = 'wa_session_' . $sender;
             $pendingData = Cache::get($sessionKey);
 
-            // === SKENARIO 1: Mandor Kirim Gambar (Analisis AI) ===
-            if ($hasMedia && !$pendingData) {
-                $this->replyWA($sender, "⏳ Sedang menganalisis struk, mohon tunggu...");
+            // ==========================================================
+            // SKENARIO 1: TERIMA GAMBAR BARU (PROSES AI)
+            // ==========================================================
+            if ($hasMedia) {
+                $this->replyWhatsapp($sender, "⏳ Foto diterima! Sedang dianalisis oleh AI...");
 
-                // Ambil konten gambar (binary) + base64 untuk Gemini
                 $tempImageContent = null;
-                $base64Image = null;
 
-                if (!empty($mediaBase64)) {
-                    // Dari Node gateway (base64 murni)
-                    $tempImageContent = base64_decode($mediaBase64);
-                    $base64Image = $mediaBase64;
-                } elseif (!empty($mediaUrl)) {
-                    // Dari provider lain yang ngasih URL
-                    $tempImageContent = @file_get_contents($mediaUrl);
-                    if ($tempImageContent !== false) {
-                        $base64Image = base64_encode($tempImageContent);
+                try {
+                    // A. JIKA DARI BAILEYS (BASE64)
+                    if (!empty($mediaBase64)) {
+                        // Bersihkan header data:image/jpeg;base64, jika ada
+                        $mediaBase64 = preg_replace('#^data:image/\w+;base64,#i', '', $mediaBase64);
+                        $tempImageContent = base64_decode($mediaBase64);
                     }
+                    // B. JIKA DARI FONNTE (URL)
+                    elseif (!empty($mediaUrl) && str_contains($mediaUrl, 'http')) {
+                        $tempImageContent = Http::timeout(10)->get($mediaUrl)->body();
+                    }
+
+                    // Validasi Konten Gambar
+                    if (empty($tempImageContent)) {
+                        throw new \Exception("Gagal mengambil isi gambar.");
+                    }
+                } catch (\Exception $e) {
+                    Log::error("IMAGE_ERROR: " . $e->getMessage());
+                    $this->replyWhatsapp($sender, "❌ Gagal memproses gambar. Pastikan sinyal bagus dan kirim ulang.");
+                    return response()->json(['status' => 'error_download']);
                 }
 
-                if (!$tempImageContent || !$base64Image) {
-                    $this->replyWA($sender, "❌ Gagal membaca gambar. Silakan kirim ulang foto struk dengan jelas.");
-                    return response()->json(['status' => 'error', 'reason' => 'media_empty']);
-                }
-
-                // Panggil Service Gemini AI
+                // Kirim ke Gemini AI Service
+                $base64ForAi = base64_encode($tempImageContent);
                 $gemini = new GeminiReceiptService();
-                $result = $gemini->analyzeReceipt($base64Image);
+                $result = $gemini->analyzeReceipt($base64ForAi);
 
                 if (!$result) {
-                    $this->replyWA($sender, "❌ Gagal membaca struk. Pastikan foto jelas dan pencahayaan cukup. Silakan kirim ulang.");
-                    return response()->json(['status' => 'error', 'reason' => 'ai_failed']);
+                    $this->replyWhatsapp($sender, "❌ AI tidak bisa membaca struk ini. Pastikan foto jelas dan ada total harganya.");
+                    return response()->json(['status' => 'error_ai']);
                 }
 
-                // Simpan gambar ke storage public agar bisa diakses nanti
-                $ext = 'jpg';
-                if (!empty($mimeType)) {
-                    if (str_contains($mimeType, 'png')) $ext = 'png';
-                    if (str_contains($mimeType, 'jpeg') || str_contains($mimeType, 'jpg')) $ext = 'jpg';
-                }
-
-                $fileName = 'receipts/' . Str::random(40) . '.' . $ext;
+                // Simpan Gambar ke Storage Laravel (Public)
+                $fileName = 'receipts/' . Str::random(40) . '.jpg';
                 Storage::disk('public')->put($fileName, $tempImageContent);
 
-                // Siapkan data untuk konfirmasi
+                // Simpan Data Sementara ke Cache (Tunggu Konfirmasi YA/BATAL)
                 $confirmData = [
                     'project_id' => $activeProject->id,
                     'title' => $result['title'] ?? 'Pengeluaran Lainnya',
@@ -128,115 +116,106 @@ class WhatsAppController extends Controller
                     'receipt_image' => $fileName,
                 ];
 
-                // Simpan ke Cache selama 10 menit
+                // Simpan cache selama 10 menit
                 Cache::put($sessionKey, $confirmData, 600);
 
                 // Format Pesan Konfirmasi
-                $reply = "✅ *Konfirmasi Laporan Pengeluaran*\n\n" .
-                    "Proyek: {$activeProject->name}\n" .
-                    "Toko/Judul: *{$confirmData['title']}*\n" .
+                $reply = "✅ *Konfirmasi Laporan*\n" .
+                    "----------------------\n" .
+                    "Judul: *{$confirmData['title']}*\n" .
+                    "Barang: {$confirmData['description']}\n" .
+                    "Total: *Rp " . number_format($confirmData['amount'], 0, ',', '.') . "*\n" .
                     "Tanggal: {$confirmData['transacted_at']}\n" .
-                    "Item: {$confirmData['description']}\n" .
-                    "Nominal: *Rp " . number_format((float)$confirmData['amount'], 0, ',', '.') . "*\n\n" .
-                    "Balas *YA* untuk simpan data.\n" .
-                    "Balas *BATAL* untuk membatalkan.";
+                    "----------------------\n" .
+                    "Balas *YA* untuk simpan.\n" .
+                    "Balas *BATAL* untuk hapus.";
 
-                $this->replyWA($sender, $reply);
-                return response()->json(['status' => 'success', 'action' => 'confirm_request']);
+                $this->replyWhatsapp($sender, $reply);
+                return response()->json(['status' => 'success_analyzed']);
             }
 
-            // === SKENARIO 2: Konfirmasi (YA / BATAL) ===
+            // ==========================================================
+            // SKENARIO 2: KONFIRMASI (TEXT YA / BATAL)
+            // ==========================================================
             if ($pendingData) {
-                $msg = strtolower($message);
+                $msgLower = strtolower($message);
 
-                if ($msg === 'ya') {
-                    Expense::create([
-                        'project_id' => $pendingData['project_id'],
-                        'title' => $pendingData['title'],
-                        'amount' => $pendingData['amount'],
-                        'description' => $pendingData['description'],
-                        'transacted_at' => $pendingData['transacted_at'],
-                        'receipt_image' => $pendingData['receipt_image'],
-                    ]);
+                if ($msgLower === 'ya' || $msgLower === 'ok') {
+                    // Simpan ke Database Expenses
+                    Expense::create($pendingData);
 
+                    // Hapus Cache
                     Cache::forget($sessionKey);
 
-                    $this->replyWA($sender, "✅ Laporan berhasil disimpan! Masuk ke pembukuan bendahara.");
-                    return response()->json(['status' => 'success', 'action' => 'saved']);
-                }
-
-                if ($msg === 'batal') {
+                    $this->replyWhatsapp($sender, "✅ Laporan berhasil disimpan ke Keuangan!");
+                } elseif ($msgLower === 'batal' || $msgLower === 'tidak') {
+                    // Hapus File Gambar
                     Storage::disk('public')->delete($pendingData['receipt_image']);
+
+                    // Hapus Cache
                     Cache::forget($sessionKey);
 
-                    $this->replyWA($sender, "🚫 Laporan dibatalkan. Silakan kirim foto baru.");
-                    return response()->json(['status' => 'success', 'action' => 'cancelled']);
+                    $this->replyWhatsapp($sender, "🗑️ Laporan dibatalkan.");
+                } else {
+                    $this->replyWhatsapp($sender, "⚠️ Format salah. Balas *YA* untuk simpan atau *BATAL* untuk hapus.");
                 }
 
-                $this->replyWA($sender, "Format salah. Balas *YA* untuk simpan atau *BATAL*.");
-                return response()->json(['status' => 'success', 'action' => 'waiting_confirm']);
+                return response()->json(['status' => 'processed_confirmation']);
             }
 
-            // === Jika kirim text biasa tanpa sesi ===
-            if (!$hasMedia) {
-                $this->replyWA($sender, "Halo {$mandor->name}. Silakan kirim *FOTO STRUK/NOTA* untuk input laporan pengeluaran otomatis.");
+            // ==========================================================
+            // SKENARIO 3: PESAN BIASA (DEFAULT)
+            // ==========================================================
+            // Jika user mengirim text biasa dan tidak sedang dalam sesi konfirmasi
+            if (!$hasMedia && !$pendingData) {
+                // Filter pesan sistem Fonnte yang mengganggu
+                if ($message === "non-text message") {
+                    // Ignore pesan error bawaan Fonnte
+                    return response()->json(['status' => 'ignored_system_msg']);
+                }
+
+                // Balas instruksi default
+                // Cek panjang pesan > 1 huruf biar gak spam reply
+                if (strlen($message) > 1) {
+                    $this->replyWhatsapp($sender, "Halo {$mandor->name}. Silakan kirim *FOTO NOTA/STRUK* untuk input laporan otomatis.");
+                }
             }
 
             return response()->json(['status' => 'success']);
         } catch (\Exception $e) {
-            Log::error("WhatsApp Error: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error("WEBHOOK CONTROLLER ERROR: " . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Normalisasi nomor ke format DB & gateway:
-     * - "62812xxx@c.us" -> "62812xxx"
-     * - "+62812xxx" -> "62812xxx"
-     * - "0812xxx" -> "62812xxx"
+     * Fungsi Kirim Pesan (Kompatibel dengan Local Gateway & Fonnte)
      */
-    private function normalizePhone(string $raw): string
+    private function replyWhatsapp($target, $message)
     {
-        $s = str_replace(['@c.us', '@s.whatsapp.net'], '', $raw);
-        $s = str_replace(['+', ' '], '', $s);
-
-        // hanya digit
-        $digits = preg_replace('/[^0-9]/', '', $s) ?? '';
-
-        if (str_starts_with($digits, '08')) {
-            $digits = '62' . substr($digits, 1);
-        }
-
-        return $digits;
-    }
-
-    /**
-     * Kirim balasan via Node gateway
-     */
-    private function replyWA(string $targetPhone, string $message): void
-    {
-        $gateway = rtrim(env('WA_GATEWAY_URL', 'http://127.0.0.1:3010'), '/');
-
         try {
-            Log::info("SEND_TO_GATEWAY", [
-                'url' => $gateway . '/send',
-                'to' => $targetPhone,
-                'message_preview' => mb_substr($message, 0, 120),
-            ]);
+            // Prioritas 1: Gunakan Local Gateway (Baileys) jika ada di .env
+            // Setting di .env: WA_GATEWAY_URL=http://127.0.0.1:3010/send
+            $localGatewayUrl = env('WA_GATEWAY_URL', 'http://127.0.0.1:3010/send');
 
-            $response = Http::timeout(20)->post($gateway . '/send', [
-                'to' => $targetPhone,     // harus angka murni
+            // Kita coba tembak ke local gateway dulu
+            $response = Http::post($localGatewayUrl, [
+                'to' => $target,
                 'message' => $message,
             ]);
 
-            Log::info("GATEWAY_RESPONSE", [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
+            // Jika gagal atau gateway tidak aktif, fallback ke Fonnte (Opsional)
+            if ($response->failed()) {
+                Log::warning("Local Gateway failed, trying Fonnte...");
+
+                Http::withHeaders(['Authorization' => env('FONNTE_TOKEN')])
+                    ->post('https://api.fonnte.com/send', [
+                        'target' => $target,
+                        'message' => $message,
+                    ]);
+            }
         } catch (\Exception $e) {
-            Log::error("WA Gateway Error: " . $e->getMessage());
+            Log::error("REPLY ERROR: " . $e->getMessage());
         }
     }
 }
