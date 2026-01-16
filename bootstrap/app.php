@@ -9,6 +9,7 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__ . '/../routes/web.php',
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
+        api: __DIR__ . '/../routes/api.php',
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
@@ -18,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            '/webhook/*', // Atau '/api/webhook/*'
+            'api/*',      // Lebih aman matikan CSRF untuk semua route api
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

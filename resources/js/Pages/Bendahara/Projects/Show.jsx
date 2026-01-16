@@ -22,6 +22,9 @@ export default function Show({ project }) {
   const [showImageModal, setShowImageModal] = useState(null)
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
 
+  // Cek Status Selesai
+  const isCompleted = project.status === 'completed';
+
   const totalExpense = project.expenses.reduce((acc, curr) => acc + parseFloat(curr.amount), 0)
 
   // Form Tambah Pengeluaran
@@ -73,7 +76,7 @@ export default function Show({ project }) {
 
       <div className="mb-6">
         <Link href={route('bendahara.projects.index')} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1 mb-2">
-            &larr; Kembali ke Daftar Proyek
+            ← Kembali ke Daftar Proyek
         </Link>
         
         {/* Header Proyek */}
@@ -82,18 +85,21 @@ export default function Show({ project }) {
                 <div className="flex items-center gap-3">
                     <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
                     <span className={`text-xs px-2 py-1 rounded-full border ${
-                        project.status === 'ongoing' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-green-50 text-green-700 border-green-200'
+                        isCompleted ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'
                     }`}>
-                        {project.status === 'ongoing' ? 'Ongoing' : 'Completed'}
+                        {isCompleted ? 'Completed' : 'Ongoing'}
                     </span>
-                    {/* Tombol Trigger Edit Proyek */}
-                    <button 
-                        onClick={() => setShowEditModal(true)}
-                        className="text-gray-400 hover:text-indigo-600 transition p-1"
-                        title="Edit Detail Proyek"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                    </button>
+                    
+                    {/* Tombol Edit HANYA MUNCUL jika status Ongoing */}
+                    {!isCompleted && (
+                        <button 
+                            onClick={() => setShowEditModal(true)}
+                            className="text-gray-400 hover:text-indigo-600 transition p-1"
+                            title="Edit Detail Proyek"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                    )}
                 </div>
                 <p className="text-gray-500 mt-1">{project.description}</p>
 
@@ -101,7 +107,6 @@ export default function Show({ project }) {
                 {project.coordinates && (
                     <div className="mt-4 max-w-xl">
                         <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-100">
-                            {/* Iframe Google Maps */}
                             <iframe 
                                 width="100%" 
                                 height="250" 
@@ -109,15 +114,13 @@ export default function Show({ project }) {
                                 scrolling="no" 
                                 marginHeight="0" 
                                 marginWidth="0" 
-                                // Menggunakan encodeURIComponent untuk menangani karakter derajat dll
-                                src={`https://maps.google.com/maps?q=${encodeURIComponent(project.coordinates)}&output=embed`}
+                                src={`https://maps.google.com/maps?q=${encodeURIComponent(project.coordinates)}&hl=id&z=14&output=embed`}
                             ></iframe>
                             
                             <div className="p-2 bg-white flex justify-between items-center text-sm">
                                 <span className="text-gray-500 truncate max-w-[200px]">{project.coordinates}</span>
                                 <a 
-                                    // Link untuk rute langsung
-                                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(project.coordinates)}`}
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(project.coordinates)}`}
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="text-indigo-600 font-semibold hover:underline flex items-center gap-1"
@@ -150,18 +153,29 @@ export default function Show({ project }) {
                     <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     Export PDF
                 </a>
-                <button 
-                    onClick={() => setShowExpenseModal(true)}
-                    className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                    Catat Pengeluaran
-                </button>
+                
+                {/* Tombol Catat Pengeluaran: Disabled jika Completed */}
+                {!isCompleted ? (
+                    <button 
+                        onClick={() => setShowExpenseModal(true)}
+                        className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                        Catat Pengeluaran
+                    </button>
+                ) : (
+                    <div className="px-4 py-2 bg-gray-100 text-gray-500 font-medium rounded-lg border border-gray-200 cursor-not-allowed flex items-center gap-2 select-none">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        Proyek Terkunci
+                    </div>
+                )}
             </div>
         </div>
       </div>
 
-      {/* --- Bagian Statistik & Tabel (Tidak berubah signifikan) --- */}
+      {/* --- Bagian Statistik --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
             <div className="text-gray-500 text-sm font-medium">Total Pengeluaran</div>
@@ -181,6 +195,7 @@ export default function Show({ project }) {
         </div>
       </div>
 
+      {/* Tabel Pengeluaran */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Riwayat Pengeluaran</h3>
@@ -222,13 +237,16 @@ export default function Show({ project }) {
                                 {formatRupiah(expense.amount)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button 
-                                    onClick={() => handleDeleteExpense(expense.id)}
-                                    className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100"
-                                    title="Hapus"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                </button>
+                                {/* Hapus hanya jika Ongoing */}
+                                {!isCompleted && (
+                                    <button 
+                                        onClick={() => handleDeleteExpense(expense.id)}
+                                        className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100"
+                                        title="Hapus"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
@@ -242,7 +260,7 @@ export default function Show({ project }) {
         </div>
       </div>
 
-      {/* Modal Edit Proyek (BARU) */}
+      {/* Modal Edit Proyek */}
       <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
         <form onSubmit={submitEditProject} className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Edit Data Proyek</h2>
@@ -303,7 +321,7 @@ export default function Show({ project }) {
       <Modal show={showExpenseModal} onClose={() => setShowExpenseModal(false)}>
         <form onSubmit={submitExpense} className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Catat Pengeluaran Baru</h2>
-            {/* ... (Isi form pengeluaran sama seperti sebelumnya) ... */}
+            {/* Form Fields ... */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <InputLabel value="Judul Pengeluaran" />
@@ -328,7 +346,7 @@ export default function Show({ project }) {
                     <InputError message={errors.amount} className="mt-2" />
                 </div>
             </div>
-            {/* ... sisa form pengeluaran ... */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <InputLabel value="Tanggal Transaksi" />
@@ -371,7 +389,7 @@ export default function Show({ project }) {
         <div className="p-4">
             <div className="flex justify-between items-center mb-4">
                 <h3 className="font-medium">Bukti Transaksi</h3>
-                <button onClick={() => setShowImageModal(null)} className="text-gray-400 hover:text-gray-600">&times;</button>
+                <button onClick={() => setShowImageModal(null)} className="text-gray-400 hover:text-gray-600">×</button>
             </div>
             {showImageModal && (
                 <img src={showImageModal} alt="Struk" className="w-full h-auto rounded-lg border border-gray-200" />

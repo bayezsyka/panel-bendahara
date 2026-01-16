@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use App\Models\Mandor; // <-- Import Model Mandor
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -13,9 +14,16 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::latest()->get();
+        // Load relasi mandor agar namanya bisa muncul di tabel (opsional jika ingin ditampilkan)
+        $projects = Project::with('mandor')->latest()->get();
 
-        return Inertia::render('Bendahara/Projects/Index', ['projects' => $projects]);
+        // Ambil data semua mandor untuk dropdown
+        $mandors = Mandor::all();
+
+        return Inertia::render('Bendahara/Projects/Index', [
+            'projects' => $projects,
+            'mandors' => $mandors // Kirim ke frontend
+        ]);
     }
 
     public function store(Request $request)
@@ -25,6 +33,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
+            'mandor_id' => 'nullable|exists:mandors,id', // <-- Validasi Mandor
         ]);
 
         Project::create($validated);
@@ -35,7 +44,7 @@ class ProjectController extends Controller
     {
         $project->load(['expenses' => function ($query) {
             $query->latest('transacted_at');
-        }]);
+        }, 'mandor']); // Load relasi mandor juga
 
         return Inertia::render('Bendahara/Projects/Show', ['project' => $project]);
     }
@@ -61,13 +70,18 @@ class ProjectController extends Controller
             'periode' => $periodeLabel,
         ]);
 
-        $fileName = 'Laporan_' . str_replace('', '_', $project->name) . '_' . ($monthyear ?? 'Full') . '.pdf';
+        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name) . '_' . ($monthYear ?? 'Full') . '.pdf';
 
         return $pdf->download($fileName);
     }
 
     public function update(Request $request, Project $project)
     {
+        // Proteksi: Jika proyek selesai, kunci edit kecuali reopen status
+        if ($project->status === 'completed' && $request->input('status') !== 'ongoing') {
+            return redirect()->back()->with('message', 'Proyek sudah selesai dan terkunci. Ubah status ke "Sedang Berjalan" terlebih dahulu.');
+        }
+
         if ($request->has('only_status') && $request->only_status == true) {
             $validated = $request->validate([
                 'status' => 'required|in:ongoing,completed',
@@ -81,6 +95,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
+            'mandor_id' => 'nullable|exists:mandors,id', // <-- Validasi Mandor
         ]);
 
         $project->update($validated);

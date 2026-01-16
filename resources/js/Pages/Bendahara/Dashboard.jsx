@@ -1,6 +1,7 @@
 import React from 'react'
 import { Head, router, Link } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
+import Dropdown from '@/Components/Dropdown' // Import komponen Dropdown
 import {
   ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
@@ -29,6 +30,12 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
     })
   }
 
+  // Fungsi untuk menangani export
+  const handleExport = (withReceipts) => {
+    const url = route('bendahara.export.all.pdf', { with_receipts: withReceipts ? 1 : 0 });
+    window.open(url, '_blank');
+  };
+
   return (
     <BendaharaLayout>
       <Head title={title} />
@@ -41,18 +48,56 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
             <div className="text-sm text-gray-500">Data per {kpis.asOf}</div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="text-sm text-gray-600">Range grafik</div>
-            <select
-              className="rounded border border-gray-300 p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-              value={months}
-              onChange={(e) => changeMonths(e.target.value)}
-            >
-              <option value="3">3 bulan</option>
-              <option value="6">6 bulan</option>
-              <option value="12">12 bulan</option>
-              <option value="24">24 bulan</option>
-            </select>
+          <div className="flex items-center gap-3">
+            {/* Dropdown Export Laporan */}
+            <Dropdown>
+                <Dropdown.Trigger>
+                    <span className="inline-flex rounded-md">
+                        <button
+                            type="button"
+                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none"
+                        >
+                            Export Laporan
+                            <svg
+                                className="-mr-0.5 ml-2 h-4 w-4"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                />
+                            </svg>
+                        </button>
+                    </span>
+                </Dropdown.Trigger>
+
+                <Dropdown.Content>
+                    <Dropdown.Link as="button" onClick={() => handleExport(false)} className="w-full text-left">
+                        Export PDF (Tanpa Nota)
+                    </Dropdown.Link>
+                    <Dropdown.Link as="button" onClick={() => handleExport(true)} className="w-full text-left">
+                        Export PDF (Dengan Nota)
+                    </Dropdown.Link>
+                </Dropdown.Content>
+            </Dropdown>
+
+            {/* Filter Range Grafik */}
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-gray-600">Range grafik</div>
+              <select
+                className="rounded border border-gray-300 p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                value={months}
+                onChange={(e) => changeMonths(e.target.value)}
+              >
+                <option value="3">3 bulan</option>
+                <option value="6">6 bulan</option>
+                <option value="12">12 bulan</option>
+                <option value="24">24 bulan</option>
+              </select>
+            </div>
           </div>
         </div>
 

@@ -8,7 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton'
 import SecondaryButton from '@/Components/SecondaryButton'
 import InputError from '@/Components/InputError'
 
-export default function Index({ projects }) {
+export default function Index({ projects, mandors }) { // <-- Menerima data mandors dari Controller
   const [showModal, setShowModal] = useState(false)
   const [isStatusUpdate, setIsStatusUpdate] = useState(false) // Mode khusus update status
   const [currentProject, setCurrentProject] = useState(null)
@@ -18,6 +18,7 @@ export default function Index({ projects }) {
     description: '',
     status: 'ongoing',
     coordinates: '', // Input koordinat
+    mandor_id: '',   // <-- Field baru untuk Mandor
     only_status: false, // Flag helper
   })
 
@@ -90,24 +91,36 @@ export default function Index({ projects }) {
             <div key={project.id} className="group flex flex-col bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition duration-200 overflow-hidden">
                 <Link href={route('bendahara.projects.show', project.id)} className="flex-1 p-5 block">
                     <div className="flex justify-between items-start mb-4">
-                    <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
-                        project.status === 'ongoing' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                        {project.status === 'ongoing' ? 'Sedang Berjalan' : 'Selesai'}
-                    </div>
-                    <span className="text-xs text-gray-400">
-                        {new Date(project.created_at).toLocaleDateString('id-ID')}
-                    </span>
+                        <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                            project.status === 'ongoing' 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                            {project.status === 'ongoing' ? 'Sedang Berjalan' : 'Selesai'}
+                        </div>
+                        <span className="text-xs text-gray-400">
+                            {new Date(project.created_at).toLocaleDateString('id-ID')}
+                        </span>
                     </div>
                     
                     <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition">
-                    {project.name}
+                        {project.name}
                     </h3>
+                    
+                    {/* Tampilkan Nama Mandor jika ada */}
+                    {project.mandor && (
+                        <div className="mb-2 flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded w-fit">
+                            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            Mandor: {project.mandor.name}
+                        </div>
+                    )}
+
                     <p className="text-sm text-gray-500 line-clamp-2">
-                    {project.description || 'Tidak ada deskripsi.'}
+                        {project.description || 'Tidak ada deskripsi.'}
                     </p>
+                    
                     {project.coordinates && (
                         <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -149,33 +162,52 @@ export default function Index({ projects }) {
                 <div className="mb-4">
                     <InputLabel value="Nama Proyek" />
                     <TextInput
-                    value={data.name}
-                    onChange={e => setData('name', e.target.value)}
-                    className="mt-1 block w-full"
-                    placeholder="Contoh: Renovasi Gedung A"
-                    autoFocus
-                    required
+                        value={data.name}
+                        onChange={e => setData('name', e.target.value)}
+                        className="mt-1 block w-full"
+                        placeholder="Contoh: Renovasi Gedung A"
+                        autoFocus
+                        required
                     />
                     <InputError message={errors.name} className="mt-2" />
                 </div>
 
+                {/* --- INPUT PILIH MANDOR (BARU) --- */}
+                <div className="mb-4">
+                    <InputLabel value="Pilih Mandor (Opsional)" />
+                    <select
+                        value={data.mandor_id}
+                        onChange={e => setData('mandor_id', e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    >
+                        <option value="">-- Belum Ada Mandor --</option>
+                        {mandors.map((mandor) => (
+                            <option key={mandor.id} value={mandor.id}>
+                                {mandor.name} ({mandor.whatsapp_number})
+                            </option>
+                        ))}
+                    </select>
+                    <InputError message={errors.mandor_id} className="mt-2" />
+                </div>
+                {/* -------------------------------- */}
+
                 <div className="mb-4">
                     <InputLabel value="Deskripsi (Opsional)" />
                     <textarea
-                    value={data.description}
-                    onChange={e => setData('description', e.target.value)}
-                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                    rows="3"
+                        value={data.description}
+                        onChange={e => setData('description', e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                        rows="3"
                     />
                 </div>
 
                 <div className="mb-4">
                     <InputLabel value="Koordinat Lokasi (Google Maps)" />
                     <TextInput
-                    value={data.coordinates}
-                    onChange={e => setData('coordinates', e.target.value)}
-                    className="mt-1 block w-full"
-                    placeholder={'Contoh: 6°52\'09.6"S 109°02\'34.5"E'}
+                        value={data.coordinates}
+                        onChange={e => setData('coordinates', e.target.value)}
+                        className="mt-1 block w-full"
+                        placeholder={'Contoh: 6°52\'09.6"S 109°02\'34.5"E'}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         Salin titik koordinat dari Google Maps.
