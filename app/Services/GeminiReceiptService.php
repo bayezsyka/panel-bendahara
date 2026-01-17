@@ -8,83 +8,72 @@ use Illuminate\Support\Facades\Log;
 class GeminiReceiptService
 {
     protected $apiKey;
-    // Pakai model flash yang terbaru biar support JSON Mode
-    protected $baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+
+    protected $models = [
+        'gemini-2.5-flash',
+    ];
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY');
+        // અહી તમારી સાચી API KEY ડબલ અવતરણ ચિહ્નો (" ") ની અંદર મૂકો
+        // ઉદાહરણ તરીકે: "AIzaSyD..."
+        $this->apiKey = "AIzaSyDwDcNoJLaw0jULzrQ9XEfFrmvHi4su6wE";
     }
 
     public function analyzeReceipt($imageBase64)
     {
-        // Prompt yang lebih paham konteks Indonesia (QRIS, Struk, Nota Tulis Tangan)
-        $prompt = "Kamu adalah asisten keuangan proyek. Tugasmu adalah mengekstrak data dari gambar struk, nota, atau bukti transfer (QRIS/M-Banking).
+        $prompt = "
+        PERAN: Kamu adalah mesin OCR canggih khusus struk belanja & Bukti Transfer (QRIS) Indonesia.
+        TUGAS: Ekstrak data JSON dari gambar.
         
-        Aturan Ekstraksi:
-        1. 'title': Nama Toko, Merchant, atau Nama Penerima Transfer.
-        2. 'amount': Total nominal (HANYA ANGKA, tanpa Rp atau titik).
-        3. 'date': Tanggal transaksi format YYYY-MM-DD. (PENTING: Jika tidak ada tanggal di gambar, gunakan tanggal hari ini: " . date('Y-m-d') . ").
-        4. 'description': Daftar barang yang dibeli. Jika ini bukti transfer/QRIS, tulis 'Pembayaran QRIS' atau 'Transfer Dana'.
+        Rules:
+        1. title: Nama Toko/Merchant. (Contoh: 'Indomaret', 'Gopay Topup').
+        2. amount: Nominal angka saja (Integer). Buang 'Rp', titik, koma. (Contoh: 50000).
+        3. date: Tanggal (YYYY-MM-DD). Jika tidak ada, pakai hari ini: " . date('Y-m-d') . ".
+        4. description: List item singkat.
 
-        Keluaran HARUS JSON murni.";
+        OUTPUT WAJIB JSON MURNI (Tanpa markdown ```json):
+        { \"title\": \"...\", \"amount\": 0, \"date\": \"...\", \"description\": \"...\" }
+        ";
 
-        try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-            ])->post($this->baseUrl . '?key=' . $this->apiKey, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt],
-                            [
-                                'inline_data' => [
-                                    'mime_type' => 'image/jpeg',
-                                    'data' => $imageBase64
-                                ]
+        foreach ($this->models as $model) {
+            try {
+                // URL બનાવતી વખતે કી સાફ કરીએ છીએ
+                $cleanKey = trim($this->apiKey);
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $cleanKey;
+
+                Log::info("Menghubungi Gemini model: " . $model);
+
+                $response = Http::withHeaders(['Content-Type' => 'application/json'])
+                    ->post($url, [
+                        'contents' => [[
+                            'parts' => [
+                                ['text' => $prompt],
+                                ['inline_data' => ['mime_type' => 'image/jpeg', 'data' => $imageBase64]]
                             ]
+                        ]],
+                        'generationConfig' => [
+                            'temperature' => 0.2
                         ]
-                    ]
-                ],
-                // FITUR KUNCI: Memaksa output JSON (Biar gak error parsing)
-                'generationConfig' => [
-                    'response_mime_type' => 'application/json'
-                ]
-            ]);
+                    ]);
 
-            // Cek jika request gagal di level jaringan
-            if ($response->failed()) {
-                Log::error("Gemini API Error: " . $response->body());
-                return null;
+                if ($response->successful()) {
+                    $json = $response->json();
+                    $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+                    if ($rawText) {
+                        Log::info("✅ BERHASIL DENGAN MODEL: {$model}");
+                        $cleanText = str_replace(['```json', '```'], '', $rawText);
+                        return json_decode($cleanText, true);
+                    }
+                } else {
+                    Log::error("Gagal {$model}: " . $response->body());
+                }
+            } catch (\Exception $e) {
+                Log::error("Exception {$model}: " . $e->getMessage());
             }
-
-            $json = $response->json();
-
-            // Ambil text raw dari Gemini
-            $rawText = $json['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-            if (!$rawText) {
-                Log::error("Gemini Empty Response: ", $json);
-                return null;
-            }
-
-            // Bersihkan markdown json jika masih ada (kadang Gemini bandel)
-            $cleaned = str_replace(['```json', '```'], '', $rawText);
-            $data = json_decode($cleaned, true);
-
-            // Validasi data minimal
-            if (!isset($data['amount']) || !isset($data['title'])) {
-                Log::warning("Gemini Incomplete Data: " . $rawText);
-                return null;
-            }
-
-            // Pastikan amount jadi integer murni
-            $data['amount'] = (int) preg_replace('/\D/', '', $data['amount']);
-
-            return $data;
-        } catch (\Exception $e) {
-            Log::error("Gemini Service Exception: " . $e->getMessage());
-            return null;
         }
+
+        return null;
     }
 }

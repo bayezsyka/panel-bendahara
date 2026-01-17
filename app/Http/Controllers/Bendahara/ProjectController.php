@@ -72,7 +72,7 @@ class ProjectController extends Controller
 
         $fileName = 'Laporan_' . str_replace(' ', '_', $project->name) . '_' . ($monthYear ?? 'Full') . '.pdf';
 
-        return $pdf->download($fileName);
+        return $pdf->stream($fileName);
     }
 
     public function update(Request $request, Project $project)
