@@ -83,38 +83,13 @@ class DashboardController extends Controller
     {
         $withReceipts = $request->boolean('with_receipts', false);
 
-        // Ambil SEMUA project (tidak dibatasi filter bulan dashboard)
+        // Ambil SEMUA project dengan relasi yang dibutuhkan
         $projects = Project::with(['expenses' => function ($query) {
             $query->orderBy('transacted_at', 'asc');
-        }])->get();
-
-        // Siapkan data untuk view
-        $data = $projects->map(function ($project) {
-            // Grouping Mingguan
-            $weeklyExpenses = $project->expenses->groupBy(function ($expense) {
-                return Carbon::parse($expense->transacted_at)->format('W-Y'); // Minggu ke-X Tahun Y
-            });
-
-            // Grouping Harian
-            $dailyExpenses = $project->expenses->groupBy(function ($expense) {
-                return Carbon::parse($expense->transacted_at)->format('Y-m-d');
-            });
-
-            return [
-                'name' => $project->name,
-                'status' => $project->status,
-                'start_date' => $project->start_date->format('d/m/Y'),
-                'end_date' => $project->end_date->format('d/m/Y'),
-                'duration' => $project->duration_text,
-                'total_expense' => $project->expenses->sum('amount'),
-                'weekly_expenses' => $weeklyExpenses,
-                'daily_expenses' => $dailyExpenses,
-                'expenses' => $project->expenses, // Raw list untuk lampiran nota
-            ];
-        });
+        }, 'mandor'])->get();
 
         $pdf = Pdf::loadView('pdf.laporan_keseluruhan', [
-            'projects' => $data,
+            'projects' => $projects,
             'withReceipts' => $withReceipts,
             'generatedAt' => now()->translatedFormat('d F Y H:i'),
         ]);

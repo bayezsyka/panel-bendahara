@@ -2,63 +2,94 @@
 <html>
 
 <head>
+    <meta charset="utf-8" />
     <title>Laporan Keseluruhan Proyek</title>
     <style>
         body {
-            font-family: sans-serif;
-            font-size: 11px;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 12px;
+            color: #111;
+            line-height: 1.4;
         }
 
-        .header {
+        /* Kop Surat Utama */
+        .main-header {
             text-align: center;
             margin-bottom: 20px;
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
         }
 
-        .header h1 {
-            margin: 0;
+        .company-name {
             font-size: 16px;
+            font-weight: bold;
             text-transform: uppercase;
         }
 
+        /* Section per Proyek (BAGIAN 1) */
         .project-section {
-            margin-bottom: 30px;
+            margin-bottom: 18px;
+            /* penting: JANGAN paksa pindah halaman tiap proyek */
+            page-break-after: auto;
+            break-after: auto;
+
+            /* bantu supaya tabel proyek tidak “kepotong aneh” */
             page-break-inside: avoid;
+            break-inside: avoid;
         }
 
-        .project-title {
+        .judul {
+            text-align: center;
+            margin: 10px 0 12px 0;
+        }
+
+        .judul .h1 {
             font-size: 14px;
             font-weight: bold;
-            background-color: #e5e7eb;
-            padding: 8px;
-            margin-bottom: 10px;
+            text-decoration: underline;
+            margin-bottom: 2px;
         }
 
-        .meta-table {
+        /* Info Box */
+        .info-box {
             width: 100%;
-            margin-bottom: 10px;
+            margin: 10px 0 14px 0;
+            border: 1px solid #000;
+            border-collapse: collapse;
         }
 
-        .meta-table td {
-            padding: 2px;
+        .info-box td {
+            padding: 4px 6px;
+            border: 1px solid #000;
         }
 
-        table.data {
+        /* Data Table */
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-top: 10px;
         }
 
-        table.data th,
-        table.data td {
-            border: 1px solid #ccc;
-            padding: 4px;
+        .data-table th,
+        .data-table td {
+            border: 1px solid #000;
+            padding: 4px 6px;
         }
 
-        table.data th {
-            background-color: #f9fafb;
+        .data-table th {
+            background-color: #f0f0f0;
             text-align: left;
+            font-weight: bold;
+        }
+
+        /* Highlight Header Pekan */
+        .week-header {
+            background-color: #e2e2e2;
+            font-weight: bold;
+            color: #333;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            font-style: italic;
         }
 
         .text-right {
@@ -69,162 +100,314 @@
             text-align: center;
         }
 
-        .badge-price {
-            background-color: #eee;
-            padding: 1px 4px;
-            border-radius: 3px;
+        .text-bold {
             font-weight: bold;
-            font-size: 10px;
         }
 
+        /* Page Break */
         .page-break {
-            page-break-after: always;
+            page-break-before: always;
+            break-before: page;
         }
 
-        /* Styles untuk Grid Nota */
-        .receipt-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
+        /* Lampiran */
+        .lampiran-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 10px 0 15px 0;
         }
 
-        .receipt-item {
-            display: inline-block;
-            width: 30%;
-            margin-bottom: 20px;
-            vertical-align: top;
-            border: 1px solid #ddd;
-            padding: 8px;
-            background-color: #fff;
-        }
-
-        .receipt-img {
+        .grid-table {
             width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-bottom: 20px;
+        }
+
+        .grid-cell {
+            width: 50%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+            height: 380px;
+        }
+
+        .grid-meta {
+            margin-bottom: 8px;
+            font-size: 11px;
+            border-bottom: 1px dashed #999;
+            padding-bottom: 5px;
+        }
+
+        .grid-img-container {
+            text-align: center;
+            display: block;
+        }
+
+        .grid-img {
+            max-width: 100%;
+            max-height: 280px;
+            width: auto;
             height: auto;
-            max-height: 200px;
-            object-fit: contain;
-            border: 1px solid #eee;
-            margin: 5px 0;
+            margin: 0 auto;
+        }
+
+        .empty-cell {
+            border: none;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="header">
-        <h1>Laporan Keseluruhan Proyek</h1>
-        <p>PT. JAYA KARYA KONTRUKSI</p>
-        <p>Dicetak pada: {{ $generatedAt }}</p>
+    {{-- HEADER UTAMA LAPORAN --}}
+    <div class="main-header">
+        <img src="https://jkk.sangkolo.store/images/logo.png" style="height: 50px; margin-bottom: 5px;">
+        <div class="company-name">PT. JAYA KARYA KONSTRUKSI</div>
+        <div style="font-size: 11px;">LAPORAN KEUANGAN KESELURUHAN PROYEK</div>
+        <div style="font-size: 10px; margin-top: 5px;">Dicetak pada: {{ $generatedAt }}</div>
     </div>
+
+    {{-- =========================
+        BAGIAN 1: TOTAL & DETAIL PER PROYEK (TANPA LAMPIRAN)
+        Semua proyek nyambung, TIDAK dipaksa halaman baru
+       ========================= --}}
+
+    @php
+        $grandTotal = 0;
+        foreach ($projects as $p) {
+            $grandTotal += $p->expenses->sum('amount');
+        }
+    @endphp
+
+    <table class="info-box" style="margin-top: 0;">
+        <tr>
+            <td width="30%" class="text-bold">TOTAL SEMUA PROYEK</td>
+            <td class="text-bold">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="text-bold">Jumlah Proyek</td>
+            <td>{{ $projects->count() }}</td>
+        </tr>
+    </table>
 
     @foreach ($projects as $project)
         <div class="project-section">
-            <div class="project-title">{{ $project['name'] }}
-                ({{ $project['status'] == 'ongoing' ? 'Berjalan' : 'Selesai' }})</div>
 
-            <table class="meta-table">
+            {{-- JUDUL PER PROYEK --}}
+            <div class="judul">
+                <div class="h1">{{ $project->name }}</div>
+                <div style="font-size: 11px;">
+                    Status: {{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}
+                </div>
+            </div>
+
+            {{-- INFO PROYEK --}}
+            <table class="info-box">
                 <tr>
-                    <td width="15%">Durasi</td>
-                    <td width="2%">:</td>
-                    <td>{{ $project['start_date'] }} s/d {{ $project['end_date'] }} ({{ $project['duration'] }})</td>
+                    <td width="20%" class="text-bold">Mandor</td>
+                    <td width="30%">{{ $project->mandor ? $project->mandor->name : '-' }}</td>
+                    <td width="20%" class="text-bold">Lokasi</td>
+                    <td>{{ $project->coordinates ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <td>Total Pengeluaran</td>
-                    <td>:</td>
-                    <td><strong>Rp {{ number_format($project['total_expense'], 0, ',', '.') }}</strong></td>
+                    <td class="text-bold">Deskripsi</td>
+                    <td colspan="3">{{ $project->description ?? '-' }}</td>
                 </tr>
             </table>
 
-            <h4>Rincian Pengeluaran:</h4>
-            <table class="data">
+            {{-- TABEL PENGELUARAN --}}
+            @php
+                $total = 0;
+                $currentWeek = null;
+            @endphp
+
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="30%">Periode (Minggu/Hari)</th>
-                        <th>Rincian Item & Harga Satuan</th>
-                        <th width="20%" class="text-right">Total (Rp)</th>
+                        <th width="5%" class="text-center">No</th>
+                        <th width="15%">Tanggal</th>
+                        <th>Keterangan</th>
+                        <th width="10%" class="text-center">Ref</th>
+                        <th width="20%" class="text-right">Jumlah</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($project['weekly_expenses'] as $weekKey => $weekItems)
+                    @foreach ($project->expenses as $index => $expense)
                         @php
-                            [$weekNum, $year] = explode('-', $weekKey);
-                            $dto = new DateTime();
-                            $dto->setISODate($year, $weekNum);
-                            $weekStart = $dto->format('d/m/Y');
-                            $weekEnd = $dto->modify('+6 days')->format('d/m/Y');
+                            $total += $expense->amount;
+
+                            $dateObj = \Carbon\Carbon::parse($expense->transacted_at);
+                            $weekNum = $dateObj->isoWeek();
+                            $yearNum = $dateObj->year;
+                            $weekKey = $yearNum . '-' . $weekNum;
+
+                            $startOfWeek = $dateObj->copy()->startOfWeek()->format('d M');
+                            $endOfWeek = $dateObj->copy()->endOfWeek()->format('d M Y');
                         @endphp
-                        {{-- Header Mingguan --}}
-                        <tr style="background-color: #eff6ff;">
-                            <td colspan="2"><strong>Minggu ke-{{ $weekNum }} ({{ $weekStart }} -
-                                    {{ $weekEnd }})</strong></td>
-                            <td class="text-right">
-                                <strong>{{ number_format($weekItems->sum('amount'), 0, ',', '.') }}</strong></td>
-                        </tr>
 
-                        {{-- Breakdown Harian --}}
-                        @foreach ($weekItems->groupBy(fn($i) => $i->transacted_at->format('Y-m-d')) as $dateKey => $dayItems)
+                        @if ($currentWeek !== $weekKey)
                             <tr>
-                                <td style="padding-left: 20px; vertical-align: top;">
-                                    {{ \Carbon\Carbon::parse($dateKey)->format('d F Y') }}
-                                </td>
-                                <td style="vertical-align: top;">
-                                    <ul style="margin: 0; padding-left: 15px;">
-                                        @foreach ($dayItems as $item)
-                                            <li style="margin-bottom: 4px;">
-                                                <span>{{ $item->title }}</span>
-                                                {{-- UPDATE DISINI: Menampilkan Harga Per Item --}}
-                                                <span class="badge-price">Rp
-                                                    {{ number_format($item->amount, 0, ',', '.') }}</span>
-
-                                                @if ($item->description)
-                                                    <br><small style="color: #666;"> - {{ $item->description }}</small>
-                                                @endif
-
-                                                @if ($withReceipts && $item->receipt_image)
-                                                    <br><small style="color: blue;"><i>(Lihat Lampiran Nota)</i></small>
-                                                @endif
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                </td>
-                                <td class="text-right" style="vertical-align: top; font-weight: bold;">
-                                    {{ number_format($dayItems->sum('amount'), 0, ',', '.') }}
+                                <td colspan="5" class="week-header">
+                                    Pekan ke-{{ $weekNum }} ({{ $startOfWeek }} - {{ $endOfWeek }})
                                 </td>
                             </tr>
-                        @endforeach
+                            @php $currentWeek = $weekKey; @endphp
+                        @endif
+
+                        <tr>
+                            <td class="text-center">{{ $index + 1 }}</td>
+                            <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
+                            <td>
+                                <strong>{{ $expense->title }}</strong>
+                                @if ($expense->description)
+                                    <br><span style="font-size: 10px; color: #555;">{{ $expense->description }}</span>
+                                @endif
+                            </td>
+                            <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>
+                            <td class="text-right">{{ number_format($expense->amount, 0, ',', '.') }}</td>
+                        </tr>
                     @endforeach
+
+                    @if ($project->expenses->isEmpty())
+                        <tr>
+                            <td colspan="5" class="text-center" style="padding: 10px;">
+                                Belum ada data pengeluaran.
+                            </td>
+                        </tr>
+                    @endif
                 </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="text-right text-bold">TOTAL PENGELUARAN</td>
+                        <td class="text-right text-bold">Rp {{ number_format($total, 0, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
             </table>
 
-            @if ($withReceipts)
-                <div class="page-break"></div>
-                <h3>Lampiran Nota: {{ $project['name'] }}</h3>
-                <div class="receipt-grid">
-                    @foreach ($project['expenses'] as $expense)
-                        @if ($expense->receipt_image)
-                            <div class="receipt-item">
-                                <div style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 5px;">
-                                    <div style="font-weight: bold; font-size: 11px;">{{ $expense->title }}</div>
-                                    <div style="font-size: 10px; color: #666;">
-                                        {{ $expense->transacted_at->format('d F Y') }}</div>
-                                </div>
+        </div>
+    @endforeach
 
-                                {{-- Gambar Nota --}}
-                                <img src="{{ public_path('storage/' . $expense->receipt_image) }}" class="receipt-img">
 
-                                {{-- Harga di Nota --}}
-                                <div style="text-align: right; font-weight: bold; font-size: 12px; color: #333;">
-                                    Rp {{ number_format($expense->amount, 0, ',', '.') }}
-                                </div>
-                            </div>
-                        @endif
-                    @endforeach
-                </div>
+    {{-- =========================
+        BAGIAN 2: LAMPIRAN
+        Per proyek mulai halaman baru
+       ========================= --}}
+
+    @php
+        // cek apakah ada lampiran sama sekali
+        $hasAnyAttachment = false;
+        foreach ($projects as $p) {
+            $cnt = $p->expenses
+                ->filter(function ($e) {
+                    return !empty($e->receipt_image) && file_exists(storage_path('app/public/' . $e->receipt_image));
+                })
+                ->count();
+            if ($cnt > 0) {
+                $hasAnyAttachment = true;
+                break;
+            }
+        }
+
+        $firstLampiranProject = true;
+    @endphp
+
+    @if ($hasAnyAttachment)
+        {{-- Pindah ke bagian lampiran sekali saja --}}
+        <div class="page-break"></div>
+
+        <div class="lampiran-title">LAMPIRAN BUKTI TRANSAKSI</div>
+
+        @foreach ($projects as $project)
+            @php
+                $expensesWithImages = $project->expenses->filter(function ($e) {
+                    return !empty($e->receipt_image) && file_exists(storage_path('app/public/' . $e->receipt_image));
+                });
+            @endphp
+
+            @if ($expensesWithImages->count() == 0)
+                @continue
+            @endif
+
+            {{-- Per proyek mulai halaman baru (kecuali proyek pertama lampiran, supaya ga bikin halaman kosong) --}}
+            @if (!$firstLampiranProject)
                 <div class="page-break"></div>
             @endif
-        </div>
-        <hr style="border: 0; border-top: 2px dashed #ccc; margin: 30px 0;">
-    @endforeach
+            @php $firstLampiranProject = false; @endphp
+
+            <div class="judul" style="margin-top: 0;">
+                <div class="h1">Lampiran: {{ $project->name }}</div>
+                <div style="font-size: 11px;">
+                    Status: {{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}
+                </div>
+            </div>
+
+            {{-- Loop chunk 4 untuk 2x2 per halaman (di dalam proyek yang sama) --}}
+            @foreach ($expensesWithImages->chunk(4) as $chunkIndex => $chunk)
+                {{-- chunk berikutnya halaman baru, tapi chunk pertama tetap satu halaman dengan judul proyek --}}
+                @if ($chunkIndex > 0)
+                    <div class="page-break"></div>
+                @endif
+
+                <div class="lampiran-title" style="font-size: 12px; text-decoration: none;">
+                    {{ $project->name }} (Hal {{ $chunkIndex + 1 }})
+                </div>
+
+                <table class="grid-table">
+                    <tr>
+                        @foreach ($chunk->slice(0, 2) as $expense)
+                            <td class="grid-cell">
+                                <div class="grid-meta">
+                                    <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
+                                    - {{ $expense->title }} (Rp {{ number_format($expense->amount, 0, ',', '.') }})
+                                </div>
+                                <div class="grid-img-container">
+                                    @php
+                                        $path = storage_path('app/public/' . $expense->receipt_image);
+                                        $type = pathinfo($path, PATHINFO_EXTENSION);
+                                        $data = file_get_contents($path);
+                                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                    @endphp
+                                    <img src="{{ $base64 }}" class="grid-img">
+                                </div>
+                            </td>
+                        @endforeach
+                        @if ($chunk->slice(0, 2)->count() < 2)
+                            <td class="empty-cell"></td>
+                        @endif
+                    </tr>
+
+                    @if ($chunk->count() > 2)
+                        <tr>
+                            @foreach ($chunk->slice(2, 2) as $expense)
+                                <td class="grid-cell">
+                                    <div class="grid-meta">
+                                        <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
+                                        - {{ $expense->title }} (Rp
+                                        {{ number_format($expense->amount, 0, ',', '.') }})
+                                    </div>
+                                    <div class="grid-img-container">
+                                        @php
+                                            $path = storage_path('app/public/' . $expense->receipt_image);
+                                            $type = pathinfo($path, PATHINFO_EXTENSION);
+                                            $data = file_get_contents($path);
+                                            $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                        @endphp
+                                        <img src="{{ $base64 }}" class="grid-img">
+                                    </div>
+                                </td>
+                            @endforeach
+                            @if ($chunk->slice(2, 2)->count() < 2)
+                                <td class="empty-cell"></td>
+                            @endif
+                        </tr>
+                    @endif
+                </table>
+            @endforeach
+        @endforeach
+    @endif
 
 </body>
 

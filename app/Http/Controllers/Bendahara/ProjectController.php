@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
-use App\Models\Mandor; // <-- Import Model Mandor
+use App\Models\Mandor;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -14,15 +14,12 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        // Load relasi mandor agar namanya bisa muncul di tabel (opsional jika ingin ditampilkan)
         $projects = Project::with('mandor')->latest()->get();
-
-        // Ambil data semua mandor untuk dropdown
         $mandors = Mandor::all();
 
         return Inertia::render('Bendahara/Projects/Index', [
             'projects' => $projects,
-            'mandors' => $mandors // Kirim ke frontend
+            'mandors' => $mandors
         ]);
     }
 
@@ -33,7 +30,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
-            'mandor_id' => 'nullable|exists:mandors,id', // <-- Validasi Mandor
+            'mandor_id' => 'nullable|exists:mandors,id',
         ]);
 
         Project::create($validated);
@@ -42,27 +39,26 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
+        // Load relasi expenses (diurutkan terbaru untuk tampilan web) dan mandor
         $project->load(['expenses' => function ($query) {
             $query->latest('transacted_at');
-        }, 'mandor']); // Load relasi mandor juga
+        }, 'mandor']);
 
-        return Inertia::render('Bendahara/Projects/Show', ['project' => $project]);
+        // Ambil data mandor untuk dropdown edit
+        $mandors = Mandor::all();
+
+        return Inertia::render('Bendahara/Projects/Show', [
+            'project' => $project,
+            'mandors' => $mandors // <-- Kirim data mandor ke view Show
+        ]);
     }
 
     public static function exportPdf(Request $request, Project $project)
     {
-        $monthYear = $request->input('month');
-        $query = $project->expenses();
-        $periodeLabel = "Semua Waktu";
+        // Tidak ada filter bulan lagi, ambil semua data urut berdasarkan tanggal (ASC)
+        $expenses = $project->expenses()->orderBy('transacted_at', 'asc')->get();
 
-        if ($monthYear) {
-            $date = Carbon::createFromFormat('Y-m', $monthYear);
-            $query->whereYear('transacted_at', $date->year)
-                ->whereMonth('transacted_at', $date->month);
-            $periodeLabel = $date->translatedFormat('F Y');
-        }
-
-        $expenses = $query->orderBy('transacted_at')->get();
+        $periodeLabel = "Semua Riwayat";
 
         $pdf = Pdf::loadView('pdf.laporan_proyek', [
             'project' => $project,
@@ -70,7 +66,8 @@ class ProjectController extends Controller
             'periode' => $periodeLabel,
         ]);
 
-        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name) . '_' . ($monthYear ?? 'Full') . '.pdf';
+        // Nama file lebih sederhana tanpa bulan
+        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name) . '.pdf';
 
         return $pdf->stream($fileName);
     }

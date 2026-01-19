@@ -15,9 +15,7 @@ class GeminiReceiptService
 
     public function __construct()
     {
-        // અહી તમારી સાચી API KEY ડબલ અવતરણ ચિહ્નો (" ") ની અંદર મૂકો
-        // ઉદાહરણ તરીકે: "AIzaSyD..."
-        $this->apiKey = "AIzaSyDwDcNoJLaw0jULzrQ9XEfFrmvHi4su6wE";
+        $this->apiKey = env('GEMINI_API_KEY');
     }
 
     public function analyzeReceipt($imageBase64)

@@ -16,18 +16,17 @@ const formatRupiah = (number) => {
   }).format(number);
 }
 
-export default function Show({ project }) {
+// Tambahkan prop mandors
+export default function Show({ project, mandors }) {
   const [showExpenseModal, setShowExpenseModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false) // Modal Edit Proyek
+  const [showEditModal, setShowEditModal] = useState(false) 
   const [showImageModal, setShowImageModal] = useState(null)
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7))
+  
+  // Hapus state selectedMonth karena tidak dipakai lagi
 
-  // Cek Status Selesai
   const isCompleted = project.status === 'completed';
-
   const totalExpense = project.expenses.reduce((acc, curr) => acc + parseFloat(curr.amount), 0)
 
-  // Form Tambah Pengeluaran
   const { data, setData, post, processing, errors, reset } = useForm({
     project_id: project.id,
     title: '',
@@ -37,12 +36,13 @@ export default function Show({ project }) {
     receipt_image: null,
   })
 
-  // Form Edit Proyek (Lengkap)
+  // Form Edit Proyek: Tambahkan mandor_id
   const editForm = useForm({
     name: project.name,
     description: project.description || '',
     status: project.status,
     coordinates: project.coordinates || '',
+    mandor_id: project.mandor_id || '', // <-- Inisialisasi Mandor
   })
 
   const submitExpense = (e) => {
@@ -56,7 +56,6 @@ export default function Show({ project }) {
     })
   }
 
-  // Submit Edit Proyek
   const submitEditProject = (e) => {
     e.preventDefault()
     editForm.put(route('bendahara.projects.update', project.id), {
@@ -79,7 +78,6 @@ export default function Show({ project }) {
             ← Kembali ke Daftar Proyek
         </Link>
         
-        {/* Header Proyek */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="flex-1">
                 <div className="flex items-center gap-3">
@@ -90,7 +88,6 @@ export default function Show({ project }) {
                         {isCompleted ? 'Completed' : 'Ongoing'}
                     </span>
                     
-                    {/* Tombol Edit HANYA MUNCUL jika status Ongoing */}
                     {!isCompleted && (
                         <button 
                             onClick={() => setShowEditModal(true)}
@@ -101,9 +98,17 @@ export default function Show({ project }) {
                         </button>
                     )}
                 </div>
-                <p className="text-gray-500 mt-1">{project.description}</p>
+                
+                {/* Tampilkan Nama Mandor */}
+                {project.mandor && (
+                    <div className="mt-2 text-sm text-gray-600 flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-md w-fit">
+                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        Mandor: <span className="font-semibold">{project.mandor.name}</span>
+                    </div>
+                )}
 
-                {/* PREVIEW GMAPS */}
+                <p className="text-gray-500 mt-2">{project.description}</p>
+
                 {project.coordinates && (
                     <div className="mt-4 max-w-xl">
                         <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm bg-gray-100">
@@ -116,7 +121,6 @@ export default function Show({ project }) {
                                 marginWidth="0" 
                                 src={`https://maps.google.com/maps?q=${encodeURIComponent(project.coordinates)}&hl=id&z=14&output=embed`}
                             ></iframe>
-                            
                             <div className="p-2 bg-white flex justify-between items-center text-sm">
                                 <span className="text-gray-500 truncate max-w-[200px]">{project.coordinates}</span>
                                 <a 
@@ -125,7 +129,6 @@ export default function Show({ project }) {
                                     rel="noreferrer"
                                     className="text-indigo-600 font-semibold hover:underline flex items-center gap-1"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                     Rute ke Lokasi
                                 </a>
                             </div>
@@ -134,40 +137,26 @@ export default function Show({ project }) {
                 )}
             </div>
             
-            {/* Tombol Aksi Kanan */}
             <div className="flex flex-col sm:flex-row gap-3 items-end sm:items-center mt-4 lg:mt-0">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Periode:</span>
-                    <input 
-                        type="month" 
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(e.target.value)}
-                        className="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
-                    />
-                </div>
+                {/* Export PDF Langsung tanpa filter bulan */}
                 <a 
-                    href={route('bendahara.projects.export', { project: project.id, month: selectedMonth })}
+                    href={route('bendahara.projects.export', { project: project.id })}
                     target="_blank"
-                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 flex items-center gap-2 shadow-sm"
                 >
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                    Export PDF
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Laporan PDF
                 </a>
                 
-                {/* Tombol Catat Pengeluaran: Disabled jika Completed */}
                 {!isCompleted ? (
                     <button 
                         onClick={() => setShowExpenseModal(true)}
                         className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-2 shadow-sm"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                         Catat Pengeluaran
                     </button>
                 ) : (
                     <div className="px-4 py-2 bg-gray-100 text-gray-500 font-medium rounded-lg border border-gray-200 cursor-not-allowed flex items-center gap-2 select-none">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
                         Proyek Terkunci
                     </div>
                 )}
@@ -175,7 +164,6 @@ export default function Show({ project }) {
         </div>
       </div>
 
-      {/* --- Bagian Statistik --- */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
             <div className="text-gray-500 text-sm font-medium">Total Pengeluaran</div>
@@ -195,7 +183,6 @@ export default function Show({ project }) {
         </div>
       </div>
 
-      {/* Tabel Pengeluaran */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 className="font-semibold text-gray-800">Riwayat Pengeluaran</h3>
@@ -237,14 +224,13 @@ export default function Show({ project }) {
                                 {formatRupiah(expense.amount)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                {/* Hapus hanya jika Ongoing */}
                                 {!isCompleted && (
                                     <button 
                                         onClick={() => handleDeleteExpense(expense.id)}
                                         className="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded hover:bg-red-100"
                                         title="Hapus"
                                     >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        Hapus
                                     </button>
                                 )}
                             </td>
@@ -276,6 +262,24 @@ export default function Show({ project }) {
                 <InputError message={editForm.errors.name} className="mt-2" />
             </div>
 
+            {/* Field Edit Mandor */}
+            <div className="mb-4">
+                <InputLabel value="Mandor Penanggung Jawab" />
+                <select
+                    value={editForm.data.mandor_id}
+                    onChange={e => editForm.setData('mandor_id', e.target.value)}
+                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                >
+                    <option value="">-- Pilih Mandor --</option>
+                    {mandors.map((mandor) => (
+                        <option key={mandor.id} value={mandor.id}>
+                            {mandor.name} ({mandor.whatsapp_number})
+                        </option>
+                    ))}
+                </select>
+                <InputError message={editForm.errors.mandor_id} className="mt-2" />
+            </div>
+
             <div className="mb-4">
                 <InputLabel value="Deskripsi" />
                 <textarea
@@ -294,7 +298,6 @@ export default function Show({ project }) {
                     className="mt-1 block w-full"
                     placeholder={'6°52\'09.6"S 109°02\'34.5"E'}
                 />
-                <p className="text-xs text-gray-500 mt-1">Gunakan format koordinat Google Maps.</p>
                 <InputError message={editForm.errors.coordinates} className="mt-2" />
             </div>
 
@@ -317,11 +320,10 @@ export default function Show({ project }) {
         </form>
       </Modal>
 
-      {/* Modal Catat Pengeluaran */}
+      {/* Modal Catat Pengeluaran & Lihat Gambar (Sama seperti sebelumnya) */}
       <Modal show={showExpenseModal} onClose={() => setShowExpenseModal(false)}>
         <form onSubmit={submitExpense} className="p-6">
             <h2 className="text-lg font-medium text-gray-900 mb-4">Catat Pengeluaran Baru</h2>
-            {/* Form Fields ... */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <InputLabel value="Judul Pengeluaran" />
@@ -329,7 +331,6 @@ export default function Show({ project }) {
                         value={data.title}
                         onChange={e => setData('title', e.target.value)}
                         className="mt-1 block w-full"
-                        placeholder="Misal: Beli Semen"
                         required
                     />
                     <InputError message={errors.title} className="mt-2" />
@@ -384,21 +385,33 @@ export default function Show({ project }) {
         </form>
       </Modal>
 
-      {/* Modal Lihat Gambar */}
       <Modal show={!!showImageModal} onClose={() => setShowImageModal(null)}>
-        <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Bukti Transaksi</h3>
-                <button onClick={() => setShowImageModal(null)} className="text-gray-400 hover:text-gray-600">×</button>
-            </div>
-            {showImageModal && (
-                <img src={showImageModal} alt="Struk" className="w-full h-auto rounded-lg border border-gray-200" />
-            )}
-            <div className="mt-4 text-right">
-                <SecondaryButton onClick={() => setShowImageModal(null)}>Tutup</SecondaryButton>
-            </div>
-        </div>
-      </Modal>
+  <div className="p-4 max-h-[90vh] overflow-y-auto">
+    <div className="flex justify-between items-center mb-4 sticky top-0 bg-white z-10 pb-2">
+      <h3 className="font-medium">Bukti Transaksi</h3>
+      <button
+        type="button"
+        onClick={() => setShowImageModal(null)}
+        className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+        aria-label="Tutup"
+      >
+        ×
+      </button>
+    </div>
+
+    {showImageModal && (
+      <img
+        src={showImageModal}
+        alt="Struk"
+        className="w-full h-auto max-h-[75vh] object-contain rounded-lg border border-gray-200"
+      />
+    )}
+
+    <div className="mt-4 text-right">
+      <SecondaryButton onClick={() => setShowImageModal(null)}>Tutup</SecondaryButton>
+    </div>
+  </div>
+</Modal>
 
     </BendaharaLayout>
   )

@@ -12,7 +12,6 @@
             line-height: 1.4;
         }
 
-        /* Surat resmi */
         .kop {
             width: 100%;
             border-bottom: 2px solid #000;
@@ -22,47 +21,13 @@
 
         .kop-table {
             width: 100%;
-            border: none;
             border-collapse: collapse;
         }
 
-        .kop-table td {
-            vertical-align: middle;
-        }
-
-        .logo-box {
-            width: 90px;
-            height: 60px;
-            border: 1px solid #999;
-            text-align: center;
-            font-size: 10px;
-            color: #666;
-        }
-
-        .kop-title {
-            text-align: center;
-        }
-
-        .kop-title .company {
+        .company {
             font-size: 16px;
             font-weight: bold;
-            letter-spacing: 0.5px;
             text-transform: uppercase;
-        }
-
-        .kop-title .meta {
-            font-size: 11px;
-        }
-
-        .surat-meta {
-            width: 100%;
-            margin: 12px 0 8px 0;
-            border: none;
-        }
-
-        .surat-meta td {
-            padding: 2px 0;
-            vertical-align: top;
         }
 
         .judul {
@@ -73,19 +38,8 @@
         .judul .h1 {
             font-size: 14px;
             font-weight: bold;
-            text-transform: uppercase;
             text-decoration: underline;
             margin-bottom: 2px;
-        }
-
-        .judul .h2 {
-            font-size: 12px;
-            margin: 0;
-        }
-
-        .p {
-            margin: 6px 0;
-            text-align: justify;
         }
 
         .info-box {
@@ -96,8 +50,7 @@
         }
 
         .info-box td {
-            padding: 6px 8px;
-            vertical-align: top;
+            padding: 4px 6px;
             border: 1px solid #000;
         }
 
@@ -110,13 +63,19 @@
         .data-table th,
         .data-table td {
             border: 1px solid #000;
-            padding: 6px 8px;
+            padding: 4px 6px;
         }
 
         .data-table th {
             background-color: #f0f0f0;
             text-align: left;
             font-weight: bold;
+        }
+
+        .week-header {
+            background-color: #e2e2e2;
+            font-weight: bold;
+            font-style: italic;
         }
 
         .text-right {
@@ -131,39 +90,7 @@
             font-weight: bold;
         }
 
-        .ttd-wrap {
-            width: 100%;
-            margin-top: 18px;
-        }
-
-        .ttd-table {
-            width: 100%;
-            border: none;
-            border-collapse: collapse;
-        }
-
-        .ttd-table td {
-            vertical-align: top;
-        }
-
-        .ttd-box {
-            width: 55%;
-            float: right;
-            text-align: center;
-        }
-
-        .ttd-space {
-            height: 70px;
-        }
-
-        .footer-print {
-            margin-top: 10px;
-            text-align: right;
-            font-size: 10px;
-            color: #555;
-        }
-
-        /* Lampiran */
+        /* Styles untuk Lampiran Grid */
         .page-break {
             page-break-before: always;
         }
@@ -173,145 +100,135 @@
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
-            margin: 8px 0 14px 0;
+            margin-bottom: 15px;
         }
 
-        .lampiran-item {
-            border: 1px solid #999;
-            padding: 10px;
-            margin-bottom: 22px;
-            page-break-inside: avoid;
-        }
-
-        .lampiran-detail {
+        .grid-table {
             width: 100%;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed #ccc;
             border-collapse: collapse;
+            table-layout: fixed;
         }
 
-        .lampiran-detail td {
-            padding: 2px 0;
-            border: none;
-        }
-
-        .lampiran-img-container {
-            text-align: center;
+        .grid-cell {
+            width: 50%;
             padding: 10px;
-            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            vertical-align: top;
+            height: 400px;
+            /* Set height fix agar muat 2 baris pas di A4 */
         }
 
-        .lampiran-img {
-            max-width: 95%;
-            max-height: 500px;
+        .grid-meta {
+            margin-bottom: 8px;
+            font-size: 11px;
+            border-bottom: 1px dashed #999;
+            padding-bottom: 5px;
+        }
+
+        .grid-img-container {
+            text-align: center;
+            display: block;
+        }
+
+        .grid-img {
+            max-width: 100%;
+            max-height: 280px;
+            /* Pastikan tidak terlalu tinggi */
+            width: auto;
             height: auto;
+            margin: 0 auto;
+        }
+
+        .empty-cell {
+            border: none;
         }
     </style>
 </head>
 
 <body>
-
-    {{-- ============================== --}}
-    {{-- KOP SURAT PERUSAHAAN           --}}
-    {{-- ============================== --}}
+    {{-- KOP SURAT --}}
     <div class="kop">
         <table class="kop-table">
             <tr>
-                <td style="width: 110px;">
-                    {{-- Ganti dengan <img src="..."> jika sudah ada logo --}}
-                    <div>
-                        <img src="https://jkk.sangkolo.store/images/logo.png" alt="Logo"
-                            style="width: 100%; height: auto;">
-                    </div>
+                <td style="width: 15%; text-align:center;">
+                    <img src="https://jkk.sangkolo.store/images/logo.png" style="height: 60px;">
                 </td>
-                <td class="kop-title">
-                    <div class="company">PT. JAYA KARYA KONSTRUKSI</div>
+                <td style="text-align: center;">
+                    <div class="company">PT. JAYA KARYA KONTRUKSI</div>
+                    <div style="font-size: 11px;">General Contractor & Supplier</div>
                 </td>
-                <td style="width: 110px;"></td>
+                <td style="width: 15%;"></td>
             </tr>
         </table>
     </div>
 
-    {{-- ============================== --}}
-    {{-- IDENTITAS SURAT                --}}
-    {{-- ============================== --}}
-    <table class="surat-meta">
-        <tr>
-            <td style="width: 60%;">
-                <table style="width:100%; border:none;">
-                    <tr>
-                        <td style="width: 22%;">Perihal</td>
-                        <td style="width: 3%;">:</td>
-                        <td class="text-bold">Laporan Keuangan Proyek</td>
-                    </tr>
-                </table>
-            </td>
-            <td style="width: 40%;" class="text-right">
-                {{ date('d F Y') }}
-            </td>
-        </tr>
-    </table>
-
-    {{-- ============================== --}}
-    {{-- JUDUL LAPORAN                  --}}
-    {{-- ============================== --}}
     <div class="judul">
-        <div class="h1">Laporan Keuangan Proyek</div>
-        <div class="h2">{{ $project->name }}</div>
-        <div class="h2">Periode: {{ $periode }}</div>
+        <div class="h1">LAPORAN KEUANGAN PROYEK</div>
+        <div>{{ $project->name }}</div>
     </div>
 
-    {{-- ============================== --}}
-    {{-- RINGKASAN INFO PROYEK          --}}
-    {{-- ============================== --}}
+    {{-- INFO PROYEK --}}
     <table class="info-box">
         <tr>
-            <td style="width: 20%;" class="text-bold">Nama Proyek</td>
-            <td style="width: 30%;">{{ $project->name }}</td>
-            <td style="width: 20%;" class="text-bold">Periode</td>
-            <td>{{ $periode }}</td>
+            <td width="20%" class="text-bold">Nama Proyek</td>
+            <td width="30%">{{ $project->name }}</td>
+            <td width="20%" class="text-bold">Status</td>
+            <td>{{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}</td>
         </tr>
         <tr>
-            <td class="text-bold">Status</td>
-            <td>{{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}</td>
+            <td class="text-bold">Mandor</td>
+            <td>{{ $project->mandor ? $project->mandor->name : '-' }}</td>
             <td class="text-bold">Lokasi</td>
             <td>{{ $project->coordinates ?? '-' }}</td>
         </tr>
-        <tr>
-            <td class="text-bold">Deskripsi</td>
-            <td colspan="3">{{ $project->description ?? '-' }}</td>
-        </tr>
     </table>
 
-    {{-- ============================== --}}
-    {{-- TABEL PENGELUARAN              --}}
-    {{-- ============================== --}}
+    {{-- TABEL PENGELUARAN DENGAN HIGHLIGHT MINGGUAN --}}
     <table class="data-table">
         <thead>
             <tr>
                 <th width="5%" class="text-center">No</th>
                 <th width="15%">Tanggal</th>
-                <th>Keterangan Pengeluaran</th>
-                <th width="10%" class="text-center">Bukti</th>
-                <th width="20%" class="text-right">Jumlah (IDR)</th>
+                <th>Keterangan</th>
+                <th width="10%" class="text-center">Ref</th>
+                <th width="20%" class="text-right">Jumlah</th>
             </tr>
         </thead>
         <tbody>
-            @php $total = 0; @endphp
+            @php
+                $total = 0;
+                $currentWeek = null;
+            @endphp
+
             @foreach ($expenses as $index => $expense)
-                @php $total += $expense->amount; @endphp
+                @php
+                    $total += $expense->amount;
+                    // Hitung Minggu ke berapa dalam tahun ini
+                    $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
+                    $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
+                    $weekKey = $yearNum . '-' . $weekNum;
+                @endphp
+
+                {{-- Row Separator Minggu --}}
+                @if ($currentWeek !== $weekKey)
+                    <tr>
+                        <td colspan="5" class="week-header">
+                            Minggu ke-{{ $weekNum }} ({{ $yearNum }})
+                        </td>
+                    </tr>
+                    @php $currentWeek = $weekKey; @endphp
+                @endif
+
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
                     <td>
                         <strong>{{ $expense->title }}</strong>
                         @if ($expense->description)
-                            <br><span style="font-size: 11px;">{{ $expense->description }}</span>
+                            <br><span style="font-size: 10px; color: #555;">{{ $expense->description }}</span>
                         @endif
                     </td>
-                    <td class="text-center">
-                        {{ $expense->receipt_image ? 'Terlampir' : '-' }}
-                    </td>
+                    <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>
                     <td class="text-right">{{ number_format($expense->amount, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
@@ -324,71 +241,81 @@
         </tfoot>
     </table>
 
-    <div class="footer-print">
-        Dicetak pada: {{ date('d F Y, H:i') }}
+    <div style="margin-top: 10px; font-size: 10px; text-align: right; color: #777;">
+        Dicetak otomatis pada: {{ date('d F Y, H:i') }}
     </div>
 
-    {{-- ============================== --}}
-    {{-- HALAMAN LAMPIRAN FOTO          --}}
-    {{-- ============================== --}}
+    {{-- LAMPIRAN FOTO (GRID 2x2) --}}
     @php
-        $hasImages = $expenses->contains(function ($expense) {
-            return !empty($expense->receipt_image);
+        // Filter hanya yang punya gambar
+        $expensesWithImages = $expenses->filter(function ($e) {
+            return !empty($e->receipt_image) && file_exists(storage_path('app/public/' . $e->receipt_image));
         });
     @endphp
 
-    @if ($hasImages)
-        <div class="page-break"></div>
+    @if ($expensesWithImages->count() > 0)
 
-        <div class="lampiran-title">LAMPIRAN BUKTI TRANSAKSI</div>
+        {{-- Loop per 4 item (Chunk) --}}
+        @foreach ($expensesWithImages->chunk(4) as $chunkIndex => $chunk)
+            <div class="page-break"></div>
+            <div class="lampiran-title">LAMPIRAN BUKTI TRANSAKSI (Hal {{ $loop->iteration }})</div>
 
-        @foreach ($expenses as $index => $expense)
-            @if ($expense->receipt_image)
-                <div class="lampiran-item">
-                    <table class="lampiran-detail">
-                        <tr>
-                            <td width="18%"><strong>No. Transaksi</strong></td>
-                            <td width="2%">:</td>
-                            <td width="30%">#{{ $index + 1 }}</td>
-
-                            <td width="18%"><strong>Tanggal</strong></td>
-                            <td width="2%">:</td>
-                            <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d F Y') }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Keperluan</strong></td>
-                            <td>:</td>
-                            <td>{{ $expense->title }}</td>
-
-                            <td><strong>Nominal</strong></td>
-                            <td>:</td>
-                            <td>Rp {{ number_format($expense->amount, 0, ',', '.') }}</td>
-                        </tr>
-                    </table>
-
-                    <div class="lampiran-img-container">
-                        @php
-                            $imagePath = storage_path('app/public/' . $expense->receipt_image);
-                            $base64Image = null;
-
-                            if (file_exists($imagePath)) {
-                                $type = pathinfo($imagePath, PATHINFO_EXTENSION);
-                                $data = file_get_contents($imagePath);
-                                $base64Image = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                            }
-                        @endphp
-
-                        @if ($base64Image)
-                            <img src="{{ $base64Image }}" class="lampiran-img" alt="Bukti Transaksi">
-                        @else
-                            <div style="padding: 50px; color: #777; border: 1px dashed #ccc;">
-                                File gambar tidak ditemukan di server.
+            <table class="grid-table">
+                {{-- Baris 1: Item 0 dan 1 --}}
+                <tr>
+                    @foreach ($chunk->slice(0, 2) as $expense)
+                        <td class="grid-cell">
+                            <div class="grid-meta">
+                                <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
+                                -
+                                {{ $expense->title }} (Rp {{ number_format($expense->amount, 0, ',', '.') }})
                             </div>
+                            <div class="grid-img-container">
+                                @php
+                                    $path = storage_path('app/public/' . $expense->receipt_image);
+                                    $type = pathinfo($path, PATHINFO_EXTENSION);
+                                    $data = file_get_contents($path);
+                                    $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                @endphp
+                                <img src="{{ $base64 }}" class="grid-img">
+                            </div>
+                        </td>
+                    @endforeach
+                    {{-- Jika ganjil (cuma 1 item di baris ini), isi sel kosong --}}
+                    @if ($chunk->slice(0, 2)->count() < 2)
+                        <td class="empty-cell"></td>
+                    @endif
+                </tr>
+
+                {{-- Baris 2: Item 2 dan 3 --}}
+                @if ($chunk->count() > 2)
+                    <tr>
+                        @foreach ($chunk->slice(2, 2) as $expense)
+                            <td class="grid-cell">
+                                <div class="grid-meta">
+                                    <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
+                                    -
+                                    {{ $expense->title }} (Rp {{ number_format($expense->amount, 0, ',', '.') }})
+                                </div>
+                                <div class="grid-img-container">
+                                    @php
+                                        $path = storage_path('app/public/' . $expense->receipt_image);
+                                        $type = pathinfo($path, PATHINFO_EXTENSION);
+                                        $data = file_get_contents($path);
+                                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
+                                    @endphp
+                                    <img src="{{ $base64 }}" class="grid-img">
+                                </div>
+                            </td>
+                        @endforeach
+                        @if ($chunk->slice(2, 2)->count() < 2)
+                            <td class="empty-cell"></td>
                         @endif
-                    </div>
-                </div>
-            @endif
+                    </tr>
+                @endif
+            </table>
         @endforeach
+
     @endif
 
 </body>
