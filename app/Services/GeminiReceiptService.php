@@ -10,7 +10,7 @@ class GeminiReceiptService
     protected $apiKey;
 
     protected $models = [
-        'gemini-2.5-flash',
+        'gemini-2.5-flash', // Update ke model terbaru jika tersedia, atau tetap 1.5-flash
     ];
 
     public function __construct()
@@ -21,22 +21,33 @@ class GeminiReceiptService
     public function analyzeReceipt($imageBase64)
     {
         $prompt = "
-        PERAN: Kamu adalah mesin OCR canggih khusus struk belanja & Bukti Transfer (QRIS) Indonesia.
-        TUGAS: Ekstrak data JSON dari gambar.
+        PERAN: Kamu adalah mesin OCR canggih khusus struk belanja material bangunan & Bukti Transfer Indonesia.
+        TUGAS: Ekstrak data struk menjadi JSON dengan detail item.
         
         Rules:
-        1. title: Nama Toko/Merchant. (Contoh: 'Indomaret', 'Gopay Topup').
-        2. amount: Nominal angka saja (Integer). Buang 'Rp', titik, koma. (Contoh: 50000).
-        3. date: Tanggal (YYYY-MM-DD). Jika tidak ada, pakai hari ini: " . date('Y-m-d') . ".
-        4. description: List item singkat.
+        1. title: Nama Toko/Merchant (Contoh: 'TB. Sinar Jaya', 'Indomaret').
+        2. date: Tanggal (YYYY-MM-DD). Jika tidak ada, pakai hari ini: " . date('Y-m-d') . ".
+        3. items: Array daftar barang. Wajib ekstrak per baris item.
+           - name: Nama barang.
+           - quantity: Jumlah barang (Integer/Float). Default 1.
+           - price: Harga satuan (Integer). Buang 'Rp', titik.
+           - total: Total harga per item (quantity * price).
+        4. total_amount: Total bayar keseluruhan dari struk.
 
         OUTPUT WAJIB JSON MURNI (Tanpa markdown ```json):
-        { \"title\": \"...\", \"amount\": 0, \"date\": \"...\", \"description\": \"...\" }
+        {
+            \"title\": \"...\",
+            \"date\": \"...\",
+            \"total_amount\": 0,
+            \"items\": [
+                { \"name\": \"Semen Tiga Roda\", \"quantity\": 2, \"price\": 65000, \"total\": 130000 },
+                { \"name\": \"Paku 5cm\", \"quantity\": 1, \"price\": 15000, \"total\": 15000 }
+            ]
+        }
         ";
 
         foreach ($this->models as $model) {
             try {
-                // URL બનાવતી વખતે કી સાફ કરીએ છીએ
                 $cleanKey = trim($this->apiKey);
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $cleanKey;
 
@@ -51,7 +62,8 @@ class GeminiReceiptService
                             ]
                         ]],
                         'generationConfig' => [
-                            'temperature' => 0.2
+                            'temperature' => 0.2,
+                            'response_mime_type' => 'application/json' // Memaksa output JSON
                         ]
                     ]);
 
@@ -61,6 +73,7 @@ class GeminiReceiptService
 
                     if ($rawText) {
                         Log::info("✅ BERHASIL DENGAN MODEL: {$model}");
+                        // Bersihkan markdown jika masih ada
                         $cleanText = str_replace(['```json', '```'], '', $rawText);
                         return json_decode($cleanText, true);
                     }

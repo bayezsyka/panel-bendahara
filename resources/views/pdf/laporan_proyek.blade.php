@@ -64,6 +64,8 @@
         .data-table td {
             border: 1px solid #000;
             padding: 4px 6px;
+            vertical-align: top;
+            /* Pastikan teks mulai dari atas */
         }
 
         .data-table th {
@@ -115,7 +117,6 @@
             border: 1px solid #ddd;
             vertical-align: top;
             height: 400px;
-            /* Set height fix agar muat 2 baris pas di A4 */
         }
 
         .grid-meta {
@@ -133,7 +134,6 @@
         .grid-img {
             max-width: 100%;
             max-height: 280px;
-            /* Pastikan tidak terlalu tinggi */
             width: auto;
             height: auto;
             margin: 0 auto;
@@ -141,6 +141,21 @@
 
         .empty-cell {
             border: none;
+        }
+
+        /* Style Khusus Item Detail */
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 3px;
+        }
+
+        .item-table td {
+            border: none;
+            /* Hilangkan border tabel dalam */
+            padding: 1px 0;
+            color: #333;
         }
     </style>
 </head>
@@ -189,7 +204,7 @@
             <tr>
                 <th width="5%" class="text-center">No</th>
                 <th width="15%">Tanggal</th>
-                <th>Keterangan</th>
+                <th>Keterangan & Rincian Item</th> {{-- Header Diupdate --}}
                 <th width="10%" class="text-center">Ref</th>
                 <th width="20%" class="text-right">Jumlah</th>
             </tr>
@@ -223,9 +238,31 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
                     <td>
+                        {{-- JUDUL NOTA --}}
                         <strong>{{ $expense->title }}</strong>
+
+                        {{-- RINCIAN ITEM (LOGIKA BARU) --}}
+                        @if ($expense->items && $expense->items->count() > 0)
+                            <table class="item-table">
+                                @foreach ($expense->items as $item)
+                                    <tr>
+                                        <td style="width: 50%; padding-left: 8px;">• {{ $item->name }}</td>
+                                        <td style="width: 25%; text-align: right; color: #555;">
+                                            {{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}
+                                        </td>
+                                        <td style="width: 25%; text-align: right; font-weight: bold;">
+                                            = {{ number_format($item->total_price, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </table>
+                        @endif
+
+                        {{-- DESKRIPSI TAMBAHAN --}}
                         @if ($expense->description)
-                            <br><span style="font-size: 10px; color: #555;">{{ $expense->description }}</span>
+                            <div style="margin-top: 4px; font-size: 10px; color: #666; font-style: italic;">
+                                Catatan: {{ $expense->description }}
+                            </div>
                         @endif
                     </td>
                     <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>

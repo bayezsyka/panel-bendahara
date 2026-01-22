@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB; // Tambahkan DB Facade
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 use App\Models\Mandor;
@@ -46,7 +47,7 @@ class WhatsAppController extends Controller
                     return response()->json(['status' => 'no_project']);
                 }
 
-                $this->replyWhatsapp($sender, "⏳ Foto diterima! AI sedang membaca...");
+                $this->replyWhatsapp($sender, "⏳ Foto diterima! AI sedang membaca detail item...");
 
                 // --- Proses Gambar ---
                 $imageContent = !empty($mediaBase64) ? base64_decode($mediaBase64) : Http::get($mediaUrl)->body();
@@ -62,28 +63,37 @@ class WhatsAppController extends Controller
                     return response()->json(['status' => 'error_ai']);
                 }
 
-                // Siapkan Data Sementara
+                // Validasi items array, jika kosong buat dummy
+                $items = $result['items'] ?? [];
+                if (empty($items)) {
+                    $items[] = [
+                        'name' => 'Barang Belanjaan',
+                        'quantity' => 1,
+                        'price' => $result['total_amount'] ?? 0,
+                        'total' => $result['total_amount'] ?? 0
+                    ];
+                }
+
+                // Siapkan Data Draft dengan ITEMS
                 $draftData = [
                     'mandor_id' => $mandor->id,
                     'title' => $result['title'] ?? 'Pengeluaran',
-                    'amount' => $result['amount'] ?? 0,
-                    'description' => $result['description'] ?? '-',
+                    'amount' => $result['total_amount'] ?? 0, // Total header
                     'transacted_at' => $result['date'] ?? date('Y-m-d'),
                     'receipt_image' => $fileName,
+                    'items' => $items, // Simpan array item
                     'project_id' => null,
                     'step' => 'confirmation'
                 ];
 
                 // --- CEK JUMLAH PROYEK ---
                 if ($projects->count() == 1) {
-                    // Kalau cuma 1, langsung assign
                     $draftData['project_id'] = $projects->first()->id;
                     $draftData['step'] = 'confirmation';
 
-                    Cache::put($sessionKey, $draftData, 600);
+                    Cache::put($sessionKey, $draftData, 600); // Simpan 10 menit
                     $this->sendConfirmationMessage($sender, $draftData, $projects->first()->name);
                 } else {
-                    // Kalau BANYAK PROYEK, masuk step pemilihan
                     $draftData['step'] = 'select_project';
                     Cache::put($sessionKey, $draftData, 600);
 
@@ -127,31 +137,35 @@ class WhatsAppController extends Controller
 
                 // B. JIKA SEDANG KONFIRMASI AKHIR (STEP: CONFIRMATION)
                 if ($cachedData['step'] === 'confirmation') {
-                    if (in_array(strtolower($message), ['ya', 'ok', 'y', 'siap'])) {
+                    if (in_array(strtolower($message), ['ya', 'ok', 'y', 'siap', 'lanjut', 'benar'])) {
 
-                        // === PERBAIKAN DI SINI (SESUAIKAN DENGAN NAMA KOLOM DB) ===
-                        Expense::create([
-                            'project_id'    => $cachedData['project_id'],
-                            'title'         => $cachedData['title'],
-                            'amount'        => $cachedData['amount'],
-                            'description'   => $cachedData['description'],
+                        DB::transaction(function () use ($cachedData) {
+                            // 1. Simpan Header Pengeluaran
+                            $expense = Expense::create([
+                                'project_id'    => $cachedData['project_id'],
+                                'title'         => $cachedData['title'],
+                                'amount'        => $cachedData['amount'],
+                                'description'   => "Input via WhatsApp", // Default description
+                                'transacted_at' => $cachedData['transacted_at'],
+                                'receipt_image' => $cachedData['receipt_image'],
+                                'created_at'    => now(),
+                                'updated_at'    => now(),
+                            ]);
 
-                            // Ganti nama key kiri sesuai kolom DB kamu
-                            // Jika di DB namanya 'date', ubah jadi 'date'
-                            // Jika 'transacted_at', biarkan 'transacted_at'
-                            'transacted_at' => $cachedData['transacted_at'],
-
-                            // Jika di DB namanya 'image_path', ubah key kiri jadi 'image_path'
-                            // Jika 'receipt_image', biarkan 'receipt_image'
-                            'receipt_image' => $cachedData['receipt_image'],
-
-                            'status'        => 'pending'
-                        ]);
-                        // ==========================================================
+                            // 2. Simpan Detail Item
+                            foreach ($cachedData['items'] as $item) {
+                                $expense->items()->create([
+                                    'name' => $item['name'],
+                                    'quantity' => $item['quantity'],
+                                    'price' => $item['price'],
+                                    'total_price' => $item['total'] ?? ($item['quantity'] * $item['price']),
+                                ]);
+                            }
+                        });
 
                         Cache::forget($sessionKey);
-                        $this->replyWhatsapp($sender, "✅ *BERHASIL!* Laporan tersimpan.");
-                    } elseif (in_array(strtolower($message), ['batal', 'tidak', 'ga', 'no'])) {
+                        $this->replyWhatsapp($sender, "✅ *BERHASIL!* Laporan & detail item tersimpan.");
+                    } elseif (in_array(strtolower($message), ['batal', 'tidak', 'ga', 'no', 'salah'])) {
                         Storage::disk('public')->delete($cachedData['receipt_image']);
                         Cache::forget($sessionKey);
                         $this->replyWhatsapp($sender, "🗑️ Laporan dibatalkan. Silakan kirim foto ulang.");
@@ -164,7 +178,7 @@ class WhatsAppController extends Controller
 
             // Default Response
             if (!$hasMedia) {
-                $this->replyWhatsapp($sender, "Halo Pak {$mandor->name}. Kirim foto struk untuk lapor pengeluaran.");
+                $this->replyWhatsapp($sender, "Halo Pak {$mandor->name}. Kirim foto struk untuk lapor pengeluaran. Saya akan baca detail itemnya otomatis.");
             }
 
             return response()->json(['status' => 'success']);
@@ -176,15 +190,27 @@ class WhatsAppController extends Controller
 
     private function sendConfirmationMessage($target, $data, $projectName)
     {
-        $amount = number_format($data['amount'], 0, ',', '.');
+        $total = number_format($data['amount'], 0, ',', '.');
+
+        // Format list item untuk WA
+        $itemListStr = "";
+        foreach ($data['items'] as $item) {
+            $price = number_format($item['price'], 0, ',', '.');
+            $subtotal = number_format($item['total'], 0, ',', '.');
+            // Cth: • 2x Semen (65.000) = 130.000
+            $itemListStr .= "• {$item['quantity']}x {$item['name']} (@{$price}) = {$subtotal}\n";
+        }
+
         $msg =  "✅ *Konfirmasi Data*\n" .
             "------------------\n" .
             "Proyek: *{$projectName}*\n" .
-            "Toko: {$data['title']}\n" .
-            "Item: {$data['description']}\n" .
-            "Total: *Rp {$amount}*\n" .
+            "Toko: *{$data['title']}*\n" .
             "Tgl: {$data['transacted_at']}\n" .
             "------------------\n" .
+            "*Rincian Item:*\n" .
+            $itemListStr .
+            "------------------\n" .
+            "Total Nota: *Rp {$total}*\n\n" .
             "Balas *YA* jika benar.\n" .
             "Balas *BATAL* jika salah.";
 
@@ -194,7 +220,7 @@ class WhatsAppController extends Controller
     private function replyWhatsapp($target, $message)
     {
         try {
-            $url = env('WA_GATEWAY_URL', 'http://127.0.0.1:3010/send');
+            $url = env('WA_GATEWAY_URL', '[http://127.0.0.1:3010/send](http://127.0.0.1:3010/send)');
             Http::post($url, ['to' => $target, 'message' => $message]);
         } catch (\Exception $e) {
             Log::error("Gagal kirim WA: " . $e->getMessage());

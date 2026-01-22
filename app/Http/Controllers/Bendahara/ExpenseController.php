@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Expense;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB; // PENTING: Import DB Facade
 
 class ExpenseController extends Controller
 {
@@ -14,25 +15,51 @@ class ExpenseController extends Controller
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
             'transacted_at' => 'required|date',
             'receipt_image' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
+
+            // Validasi Array Items
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
         ]);
 
-        $data = $request->except('receipt_image');
-        if ($request->hasFile('receipt_image')) {
-            $path = $request->file('receipt_image')->store('receipts', 'public');
-            $data['receipt_image'] = $path;
-        }
+        DB::transaction(function () use ($request) {
+            $data = $request->except(['receipt_image', 'items']);
 
-        Expense::create($data);
+            if ($request->hasFile('receipt_image')) {
+                $path = $request->file('receipt_image')->store('receipts', 'public');
+                $data['receipt_image'] = $path;
+            }
+
+            // Hitung ulang total amount dari server-side untuk keamanan
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $totalAmount += ($item['quantity'] * $item['price']);
+            }
+            $data['amount'] = $totalAmount;
+
+            // 1. Buat Header Pengeluaran (Nota)
+            $expense = Expense::create($data);
+
+            // 2. Buat Detail Item Pengeluaran
+            foreach ($request->items as $item) {
+                $expense->items()->create([
+                    'name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total_price' => $item['quantity'] * $item['price'],
+                ]);
+            }
+        });
+
         return redirect()->back()->with('message', 'Pengeluaran Berhasil Dicatat');
     }
 
     public function destroy(Expense $expense)
     {
-        // Hapus foto struk jika ada
         if ($expense->receipt_image) {
             Storage::disk('public')->delete($expense->receipt_image);
         }
