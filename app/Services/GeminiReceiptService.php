@@ -15,7 +15,7 @@ class GeminiReceiptService
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY');
+        $this->apiKey = config('services.gemini.key');
     }
 
     public function analyzeReceipt($imageBase64)
