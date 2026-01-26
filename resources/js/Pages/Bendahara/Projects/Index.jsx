@@ -9,9 +9,9 @@ import PrimaryButton from '@/Components/PrimaryButton'
 import SecondaryButton from '@/Components/SecondaryButton'
 import InputError from '@/Components/InputError'
 
-export default function Index({ projects, mandors }) {
+export default function Index({ projects, mandors, benderas }) {
   const [showModal, setShowModal] = useState(false)
-  const [isStatusUpdate, setIsStatusUpdate] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [currentProject, setCurrentProject] = useState(null)
   
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
@@ -20,23 +20,29 @@ export default function Index({ projects, mandors }) {
     status: 'ongoing',
     coordinates: '',
     mandor_id: '',
-    only_status: false,
+    bendera_id: '',
+    location: '',
   })
 
   const openCreateModal = () => {
-    setIsStatusUpdate(false)
+    setIsEditing(false)
     setCurrentProject(null)
     reset()
     clearErrors()
     setShowModal(true)
   }
 
-  const openStatusModal = (project) => {
-    setIsStatusUpdate(true)
+  const openEditModal = (project) => {
+    setIsEditing(true)
     setCurrentProject(project)
     setData({
+        name: project.name,
+        description: project.description || '',
         status: project.status,
-        only_status: true,
+        coordinates: project.coordinates || '',
+        mandor_id: project.mandor_id || '',
+        bendera_id: project.bendera_id || '',
+        location: project.location || '',
     })
     clearErrors()
     setShowModal(true)
@@ -45,7 +51,7 @@ export default function Index({ projects, mandors }) {
   const submitProject = (e) => {
     e.preventDefault()
     
-    if (isStatusUpdate) {
+    if (isEditing) {
         put(route('bendahara.projects.update', currentProject.id), {
             onSuccess: () => {
                 setShowModal(false)
@@ -101,29 +107,38 @@ export default function Index({ projects, mandors }) {
                         </span>
                     </div>
                     
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 group-hover:text-indigo-600 transition">
                         {project.name}
                     </h3>
-                    
-                    {project.mandor && (
-                        <div className="mb-2 flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded w-fit">
-                            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {project.mandor.name}
+
+                    {/* Badge Bendera */}
+                    {project.bendera && (
+                        <div className="mb-3 inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-purple-100 text-purple-700">
+                           🏢 {project.bendera.name}
                         </div>
                     )}
+                    
+                    <div className="space-y-2 mb-2">
+                        {project.mandor && (
+                            <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100">
+                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span className="font-medium">Pelaksana: {project.mandor.name}</span>
+                            </div>
+                        )}
 
-                    <p className="text-sm text-gray-500 line-clamp-2">
+                        {(project.location || project.coordinates) && (
+                            <div className="flex items-start gap-2 text-xs text-gray-500 px-2">
+                                <svg className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                <span className="line-clamp-1">{project.location || 'Lokasi Koordinat Tersedia'}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="text-sm text-gray-500 line-clamp-2 mt-3 pt-3 border-t border-dashed border-gray-100">
                         {project.description || 'Tidak ada deskripsi.'}
                     </p>
-                    
-                    {project.coordinates && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            Lokasi Tersedia
-                        </div>
-                    )}
                 </Link>
 
                 <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
@@ -132,13 +147,13 @@ export default function Index({ projects, mandors }) {
                     </Link>
                     
                     <button 
-                        onClick={() => openStatusModal(project)}
+                        onClick={() => openEditModal(project)}
                         className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        Ubah Status
+                        Edit Proyek
                     </button>
                 </div>
             </div>
@@ -149,32 +164,48 @@ export default function Index({ projects, mandors }) {
       <Modal show={showModal} onClose={() => setShowModal(false)}>
         <form onSubmit={submitProject} className="p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            {isStatusUpdate ? 'Update Status Proyek' : 'Buat Proyek Baru'}
+            {isEditing ? 'Edit Proyek' : 'Buat Proyek Baru'}
           </h2>
           
-          {!isStatusUpdate && (
-              <>
-                <div className="mb-4">
-                    <InputLabel value="Nama Proyek" />
-                    <TextInput
-                        value={data.name}
-                        onChange={e => setData('name', e.target.value)}
-                        className="mt-1 block w-full"
-                        placeholder="Contoh: Renovasi Gedung A"
-                        autoFocus
-                        required
-                    />
-                    <InputError message={errors.name} className="mt-2" />
-                </div>
+            <div className="mb-4">
+                <InputLabel value="Nama Proyek" />
+                <TextInput
+                    value={data.name}
+                    onChange={e => setData('name', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder="Contoh: Renovasi Gedung A"
+                    autoFocus
+                    required
+                />
+                <InputError message={errors.name} className="mt-2" />
+            </div>
 
-                <div className="mb-4">
-                    <InputLabel value="Pilih Mandor (Opsional)" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                     <InputLabel value="Bendera (PT/CV)" />
+                    <select
+                        value={data.bendera_id}
+                        onChange={e => setData('bendera_id', e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    >
+                        <option value="">-- Pilih Bendera --</option>
+                        {benderas.map((bendera) => (
+                            <option key={bendera.id} value={bendera.id}>
+                                {bendera.name}
+                            </option>
+                        ))}
+                    </select>
+                    <InputError message={errors.bendera_id} className="mt-2" />
+                </div>
+                
+                 <div>
+                    <InputLabel value="Pelaksana" />
                     <select
                         value={data.mandor_id}
                         onChange={e => setData('mandor_id', e.target.value)}
                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                     >
-                        <option value="">-- Belum Ada Mandor --</option>
+                        <option value="">-- Pilih Pelaksana --</option>
                         {mandors.map((mandor) => (
                             <option key={mandor.id} value={mandor.id}>
                                 {mandor.name} ({mandor.whatsapp_number})
@@ -183,29 +214,40 @@ export default function Index({ projects, mandors }) {
                     </select>
                     <InputError message={errors.mandor_id} className="mt-2" />
                 </div>
+            </div>
 
-                <div className="mb-4">
-                    <InputLabel value="Deskripsi (Opsional)" />
-                    <textarea
-                        value={data.description}
-                        onChange={e => setData('description', e.target.value)}
-                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                        rows="3"
-                    />
-                </div>
+            <div className="mb-4">
+                 <InputLabel value="Lokasi Proyek (Teks)" />
+                 <TextInput
+                    value={data.location}
+                    onChange={e => setData('location', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder="Contoh: Jl. Sudirman No. 45, Jakarta"
+                />
+                <InputError message={errors.location} className="mt-2" />
+            </div>
 
-                <div className="mb-4">
-                    <InputLabel value="Koordinat Lokasi (Google Maps)" />
-                    <TextInput
-                        value={data.coordinates}
-                        onChange={e => setData('coordinates', e.target.value)}
-                        className="mt-1 block w-full"
-                        placeholder={'Contoh: 6°52\'09.6"S 109°02\'34.5"E'}
-                    />
-                    <InputError message={errors.coordinates} className="mt-2" />
-                </div>
-              </>
-          )}
+            <div className="mb-4">
+                <InputLabel value="Koordinat Maps (Opsional)" />
+                <TextInput
+                    value={data.coordinates}
+                    onChange={e => setData('coordinates', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder={'Contoh: -6.1234, 106.1234'}
+                />
+                <InputError message={errors.coordinates} className="mt-2" />
+            </div>
+
+            <div className="mb-4">
+                <InputLabel value="Deskripsi (Opsional)" />
+                <textarea
+                    value={data.description}
+                    onChange={e => setData('description', e.target.value)}
+                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    rows="2"
+                    placeholder="Catatan tambahan..."
+                />
+            </div>
 
           <div className="mb-6">
             <InputLabel value="Status Proyek" />
@@ -222,7 +264,7 @@ export default function Index({ projects, mandors }) {
           <div className="flex justify-end gap-3">
             <SecondaryButton onClick={() => setShowModal(false)}>Batal</SecondaryButton>
             <PrimaryButton disabled={processing}>
-                Simpan
+                {isEditing ? 'Simpan Perubahan' : 'Buat Proyek'}
             </PrimaryButton>
           </div>
         </form>

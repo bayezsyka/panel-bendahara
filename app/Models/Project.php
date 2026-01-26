@@ -14,7 +14,9 @@ class Project extends Model
         'description',
         'status',
         'coordinates',
-        'mandor_id', // <-- TAMBAHKAN INI
+        'mandor_id',
+        'bendera_id',
+        'location',
     ];
 
     protected $casts = [
@@ -27,10 +29,14 @@ class Project extends Model
         return $this->hasMany(Expense::class);
     }
 
-    // --- RELASI BARU KE MANDOR ---
     public function mandor(): BelongsTo
     {
         return $this->belongsTo(Mandor::class);
+    }
+
+    public function bendera(): BelongsTo
+    {
+        return $this->belongsTo(Bendera::class);
     }
 
     // ... (kode accessor getStartDateAttribute dll biarkan tetap ada) ...

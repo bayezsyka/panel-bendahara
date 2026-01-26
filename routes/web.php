@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/export-all-pdf', [DashboardController::class, 'exportAllPdf'])->name('export.all.pdf');
         Route::resource('projects', ProjectController::class);
-        Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy']);
+        Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy', 'update']);
         Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');
 
         // Review data pengeluaran dari WhatsApp (pending)
@@ -28,7 +28,13 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
         Route::put('/expense-requests/{expenseRequest}/reject', [ExpenseRequestController::class, 'reject'])->name('expense_requests.reject');
 
         Route::resource('mandors', \App\Http\Controllers\Bendahara\MandorController::class)
-            ->except(['create', 'show', 'edit']); // Kita pakai modal, jadi tidak butuh halaman create/edit terpisah
+            ->except(['create', 'show', 'edit']);
+
+        Route::resource('benderas', \App\Http\Controllers\Bendahara\BenderaController::class)
+            ->except(['create', 'show', 'edit']);
+
+        Route::resource('expense-types', \App\Http\Controllers\Bendahara\ExpenseTypeController::class)
+            ->except(['create', 'show', 'edit']);
     });
 
 Route::get('/', function () {

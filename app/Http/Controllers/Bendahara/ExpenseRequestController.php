@@ -20,8 +20,11 @@ class ExpenseRequestController extends Controller
             ->latest()
             ->get();
 
+        $expenseTypes = \App\Models\ExpenseType::all();
+
         return Inertia::render('Bendahara/ExpenseRequests/Index', [
             'requests' => $requests,
+            'expenseTypes' => $expenseTypes,
         ]);
     }
 
@@ -32,6 +35,7 @@ class ExpenseRequestController extends Controller
             'amount' => 'required|numeric|min:0',
             'transacted_at' => 'required|date',
             'description' => 'nullable|string',
+            'expense_type_id' => 'required|exists:expense_types,id',
         ]);
 
         if ($expenseRequest->status !== 'pending') {
@@ -48,6 +52,7 @@ class ExpenseRequestController extends Controller
             // Buat Expense final
             $expense = Expense::create([
                 'project_id' => $expenseRequest->project_id,
+                'expense_type_id' => $request->expense_type_id,
                 'title' => $expenseRequest->title,
                 'description' => $expenseRequest->description ?? 'Dikonfirmasi bendahara',
                 'amount' => $expenseRequest->amount,

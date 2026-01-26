@@ -72,14 +72,15 @@ export default function BendaharaLayout({ children, header }) {
             {/* --- SIDEBAR UTAMA --- */}
             <aside 
                 className={`
-                    group fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 shadow-sm
-                    transform transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
+                    group bg-white border-r border-gray-200 shadow-sm flex-shrink-0
+                    transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
                     
-                    /* MOBILE: Logic Buka/Tutup Biasa */
-                    w-64 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+                    /* MOBILE: Fixed overlay dengan toggle */
+                    fixed inset-y-0 left-0 z-50 w-64
+                    ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                     
-                    /* DESKTOP (md): Logic Auto-Hide / Expand on Hover */
-                    md:translate-x-0 
+                    /* DESKTOP (md): Relative positioning, mendorong konten */
+                    md:relative md:translate-x-0
                     md:w-20 md:hover:w-72
                 `}
             >
@@ -123,9 +124,21 @@ export default function BendaharaLayout({ children, header }) {
                     />
 
                     <SidebarLink 
-                        name="Data Mandor" 
+                        name="Data Pelaksana" 
                         routeName="bendahara.mandors.index" 
                         icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+                    />
+
+                    <SidebarLink 
+                        name="Data Bendera" 
+                        routeName="bendahara.benderas.index" 
+                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                    />
+
+                    <SidebarLink 
+                        name="Data Tipe Biaya" 
+                        routeName="bendahara.expense-types.index" 
+                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
                     />
 
                     <SidebarLink 
@@ -177,11 +190,8 @@ export default function BendaharaLayout({ children, header }) {
             </aside>
 
             {/* --- KONTEN UTAMA --- */}
-            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out md:pl-20">
-                {/* md:pl-20 -> Memberikan padding kiri sebesar lebar sidebar saat mode 'tutup' (mini).
-                   Saat sidebar di-hover (melebar), dia akan menutupi konten (overlay) tanpa menggesernya,
-                   sehingga layout tabel/grafik tidak berantakan/goyang.
-                */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Konten sekarang akan bergeser otomatis karena sidebar menggunakan relative positioning di desktop */}
                 
                 {/* Header Mobile */}
                 <div className="md:hidden flex items-center justify-between bg-white border-b border-gray-200 p-4 sticky top-0 z-30">

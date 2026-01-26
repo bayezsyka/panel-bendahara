@@ -18,7 +18,7 @@ const formatRupiah = (number) => {
   }).format(number);
 }
 
-export default function Show({ project, mandors }) {
+export default function Show({ project, mandors, benderas }) {
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false) 
   const [showImageModal, setShowImageModal] = useState(null)
@@ -46,6 +46,8 @@ export default function Show({ project, mandors }) {
     status: project.status,
     coordinates: project.coordinates || '',
     mandor_id: project.mandor_id || '',
+    bendera_id: project.bendera_id || '',
+    location: project.location || '',
   })
 
   const sortedExpenses = [...project.expenses].sort((a, b) => {
@@ -53,6 +55,8 @@ export default function Show({ project, mandors }) {
       const dateB = new Date(b[sortBy]);
       return dateB - dateA;
   });
+
+  const [editingExpenseId, setEditingExpenseId] = useState(null)
 
   const handleAddItem = () => {
       setData('items', [...data.items, { name: '', quantity: 1, price: 0 }]);
@@ -69,15 +73,63 @@ export default function Show({ project, mandors }) {
       setData('items', newItems);
   }
 
+  const openCreateExpenseModal = () => {
+    setEditingExpenseId(null)
+    setData({
+        project_id: project.id,
+        title: '',
+        transacted_at: new Date().toISOString().split('T')[0],
+        description: '',
+        receipt_image: null,
+        items: [{ name: '', quantity: 1, price: 0 }]
+    })
+    setShowExpenseModal(true)
+  }
+
+  const openEditExpenseModal = (expense) => {
+    setEditingExpenseId(expense.id)
+    setData({
+        project_id: project.id,
+        title: expense.title,
+        transacted_at: expense.transacted_at, // Assumes YYYY-MM-DD from backend or cast
+        description: expense.description || '',
+        receipt_image: null, // Don't prepopulate file input, handled by backend if null
+        items: expense.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+        }))
+    })
+    setShowExpenseModal(true)
+  }
+
   const submitExpense = (e) => {
     e.preventDefault()
-    post(route('bendahara.expenses.store'), {
-      onSuccess: () => {
-        setShowExpenseModal(false)
-        reset()
-      },
-      forceFormData: true,
-    })
+    
+    if (editingExpenseId) {
+        // Edit Mode
+        router.post(route('bendahara.expenses.update', editingExpenseId), {
+            _method: 'put',
+            ...data
+        }, {
+            onSuccess: () => {
+                setShowExpenseModal(false)
+                reset()
+                setEditingExpenseId(null)
+            },
+            preserveScroll: true,
+            forceFormData: true,
+        })
+    } else {
+        // Create Mode
+        post(route('bendahara.expenses.store'), {
+            onSuccess: () => {
+                setShowExpenseModal(false)
+                reset()
+            },
+            forceFormData: true,
+        })
+    }
   }
 
   const submitEditProject = (e) => {
@@ -138,12 +190,27 @@ export default function Show({ project, mandors }) {
           text: isCompleted ? 'Selesai' : 'Berjalan',
           variant: isCompleted ? 'green' : 'blue'
         }}
-        meta={project.mandor && (
-          <div className="flex items-center gap-2 mt-1">
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            Mandor: <span className="font-medium text-gray-700">{project.mandor.name}</span>
-          </div>
-        )}
+        meta={
+            <div className="flex flex-col gap-1 mt-1">
+                 {project.bendera && (
+                    <div className="inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wide uppercase bg-purple-100 text-purple-700 w-fit">
+                        🏢 {project.bendera.name}
+                    </div>
+                 )}
+                 {project.mandor && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        Pelaksana: <span className="font-medium text-gray-900">{project.mandor.name}</span>
+                    </div>
+                 )}
+                 {project.location && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                         {project.location}
+                    </div>
+                 )}
+            </div>
+        }
         actions={
           <div className="flex items-center gap-2">
             {/* Edit Button */}
@@ -181,7 +248,7 @@ export default function Show({ project, mandors }) {
             {/* Add Expense Button */}
             {!isCompleted ? (
               <button 
-                onClick={() => setShowExpenseModal(true)}
+                onClick={openCreateExpenseModal}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -340,12 +407,20 @@ export default function Show({ project, mandors }) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
                     {!isCompleted && (
-                      <button 
-                        onClick={() => handleDeleteExpense(expense.id)}
-                        className="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded hover:bg-red-100 text-xs"
-                      >
-                        Hapus
-                      </button>
+                      <div className="flex flex-col gap-2 align-end">
+                          <button 
+                            onClick={() => openEditExpenseModal(expense)}
+                            className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 text-xs text-center"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded hover:bg-red-100 text-xs text-center"
+                          >
+                            Hapus
+                          </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -376,22 +451,52 @@ export default function Show({ project, mandors }) {
             <InputError message={editForm.errors.name} className="mt-2" />
           </div>
 
-          <div className="mb-4">
-            <InputLabel value="Mandor Penanggung Jawab" />
-            <select
-              value={editForm.data.mandor_id}
-              onChange={e => editForm.setData('mandor_id', e.target.value)}
-              className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-            >
-              <option value="">-- Pilih Mandor --</option>
-              {mandors.map((mandor) => (
-                <option key={mandor.id} value={mandor.id}>
-                  {mandor.name} ({mandor.whatsapp_number})
-                </option>
-              ))}
-            </select>
-            <InputError message={editForm.errors.mandor_id} className="mt-2" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                   <InputLabel value="Bendera (PT/CV)" />
+                   <select
+                        value={editForm.data.bendera_id}
+                        onChange={e => editForm.setData('bendera_id', e.target.value)}
+                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    >
+                        <option value="">-- Pilih Bendera --</option>
+                        {benderas.map((bendera) => (
+                            <option key={bendera.id} value={bendera.id}>
+                                {bendera.name}
+                            </option>
+                        ))}
+                    </select>
+                    <InputError message={editForm.errors.bendera_id} className="mt-2" />
+              </div>
+              
+               <div>
+                    <InputLabel value="Pelaksana Penanggung Jawab" />
+                    <select
+                      value={editForm.data.mandor_id}
+                      onChange={e => editForm.setData('mandor_id', e.target.value)}
+                      className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                    >
+                      <option value="">-- Pilih Pelaksana --</option>
+                      {mandors.map((mandor) => (
+                        <option key={mandor.id} value={mandor.id}>
+                          {mandor.name} ({mandor.whatsapp_number})
+                        </option>
+                      ))}
+                    </select>
+                    <InputError message={editForm.errors.mandor_id} className="mt-2" />
+               </div>
           </div>
+
+            <div className="mb-4">
+                 <InputLabel value="Lokasi Proyek (Teks)" />
+                 <TextInput
+                    value={editForm.data.location}
+                    onChange={e => editForm.setData('location', e.target.value)}
+                    className="mt-1 block w-full"
+                    placeholder="Contoh: Jl. Sudirman No. 45, Jakarta"
+                />
+                <InputError message={editForm.errors.location} className="mt-2" />
+            </div>
 
           <div className="mb-4">
             <InputLabel value="Deskripsi" />
@@ -404,7 +509,7 @@ export default function Show({ project, mandors }) {
           </div>
 
           <div className="mb-4">
-            <InputLabel value="Koordinat Lokasi" />
+            <InputLabel value="Koordinat Lokasi (Maps)" />
             <TextInput
               value={editForm.data.coordinates}
               onChange={e => editForm.setData('coordinates', e.target.value)}
@@ -436,7 +541,9 @@ export default function Show({ project, mandors }) {
       {/* Modal Catat Pengeluaran */}
       <Modal show={showExpenseModal} onClose={() => setShowExpenseModal(false)}>
         <form onSubmit={submitExpense} className="p-6 max-h-[90vh] overflow-y-auto">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Catat Pengeluaran Baru</h2>
+          <h2 className="text-lg font-medium text-gray-900 mb-4">
+            {editingExpenseId ? 'Edit Pengeluaran' : 'Catat Pengeluaran Baru'}
+          </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
@@ -533,6 +640,9 @@ export default function Show({ project, mandors }) {
           
           <div className="mb-4">
             <InputLabel value="Foto Struk (Opsional)" />
+             {editingExpenseId && !data.receipt_image && (
+                 <p className="text-xs text-gray-500 mb-1 italic">*Biarkan kosong jika tidak ingin mengubah foto</p>
+             )}
             <input 
               type="file"
               onChange={e => setData('receipt_image', e.target.files[0])}
@@ -554,7 +664,7 @@ export default function Show({ project, mandors }) {
 
           <div className="flex justify-end gap-3 sticky bottom-0 bg-white pt-4 border-t border-gray-100">
             <SecondaryButton onClick={() => setShowExpenseModal(false)}>Batal</SecondaryButton>
-            <PrimaryButton disabled={processing}>Simpan Pengeluaran</PrimaryButton>
+            <PrimaryButton disabled={processing}>{editingExpenseId ? 'Simpan Perubahan' : 'Simpan Pengeluaran'}</PrimaryButton>
           </div>
         </form>
       </Modal>

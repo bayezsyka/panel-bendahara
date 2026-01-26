@@ -13,12 +13,14 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with('mandor')->latest()->get();
+        $projects = Project::with(['mandor', 'bendera'])->latest()->get();
         $mandors = Mandor::all();
+        $benderas = \App\Models\Bendera::all();
 
         return Inertia::render('Bendahara/Projects/Index', [
             'projects' => $projects,
-            'mandors' => $mandors
+            'mandors' => $mandors,
+            'benderas' => $benderas
         ]);
     }
 
@@ -30,6 +32,8 @@ class ProjectController extends Controller
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
             'mandor_id' => 'nullable|exists:mandors,id',
+            'bendera_id' => 'nullable|exists:benderas,id',
+            'location' => 'nullable|string|max:255',
         ]);
 
         Project::create($validated);
@@ -41,13 +45,15 @@ class ProjectController extends Controller
         // PENTING: Tambahkan 'items' di sini agar detail muncul di view
         $project->load(['expenses' => function ($query) {
             $query->with('items')->latest('transacted_at');
-        }, 'mandor']);
+        }, 'mandor', 'bendera']); // Tambah load bendera
 
         $mandors = Mandor::all();
+        $benderas = \App\Models\Bendera::all();
 
         return Inertia::render('Bendahara/Projects/Show', [
             'project' => $project,
-            'mandors' => $mandors
+            'mandors' => $mandors,
+            'benderas' => $benderas
         ]);
     }
 
@@ -89,6 +95,8 @@ class ProjectController extends Controller
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
             'mandor_id' => 'nullable|exists:mandors,id',
+            'bendera_id' => 'nullable|exists:benderas,id',
+            'location' => 'nullable|string|max:255',
         ]);
 
         $project->update($validated);

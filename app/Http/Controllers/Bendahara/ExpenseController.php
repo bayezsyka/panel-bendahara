@@ -58,6 +58,59 @@ class ExpenseController extends Controller
         return redirect()->back()->with('message', 'Pengeluaran Berhasil Dicatat');
     }
 
+    public function update(Request $request, Expense $expense)
+    {
+        $request->validate([
+            'project_id' => 'required|exists:projects,id',
+            'title' => 'required|string|max:255',
+            'transacted_at' => 'required|date',
+            'receipt_image' => 'nullable|image|max:2048',
+            'description' => 'nullable|string',
+
+            // Validasi Array Items
+            'items' => 'required|array|min:1',
+            'items.*.name' => 'required|string|max:255',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+        ]);
+
+        DB::transaction(function () use ($request, $expense) {
+            $data = $request->except(['receipt_image', 'items', '_method']); // Exclude _method from data
+
+            if ($request->hasFile('receipt_image')) {
+                // Hapus foto lama jika ada
+                if ($expense->receipt_image) {
+                    Storage::disk('public')->delete($expense->receipt_image);
+                }
+                $path = $request->file('receipt_image')->store('receipts', 'public');
+                $data['receipt_image'] = $path;
+            }
+
+            // Hitung ulang total amount
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $totalAmount += ($item['quantity'] * $item['price']);
+            }
+            $data['amount'] = $totalAmount;
+
+            // Update Expense
+            $expense->update($data);
+
+            // Sync Items: Hapus semua dan buat ulang
+            $expense->items()->delete();
+            foreach ($request->items as $item) {
+                $expense->items()->create([
+                    'name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total_price' => $item['quantity'] * $item['price'],
+                ]);
+            }
+        });
+
+        return redirect()->back()->with('message', 'Pengeluaran Berhasil Diupdate');
+    }
+
     public function destroy(Expense $expense)
     {
         if ($expense->receipt_image) {

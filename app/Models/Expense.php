@@ -10,10 +10,12 @@ class Expense extends Model
 {
     protected $fillable = [
         'project_id',
+        'expense_type_id', // Tambahan tipe biaya
         'title',
         'description',
         'amount',
         'receipt_image',
+        'status',
         'transacted_at',
     ];
 
@@ -30,5 +32,10 @@ class Expense extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ExpenseItem::class);
+    }
+
+    public function expenseType(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseType::class, 'expense_type_id');
     }
 }

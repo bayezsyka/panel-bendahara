@@ -18,7 +18,7 @@ const formatRupiah = (number) => {
   }).format(n)
 }
 
-export default function Index({ requests }) {
+export default function Index({ requests, expenseTypes }) {
   const [active, setActive] = useState(null)
 
   const { data, setData, processing, errors, reset } = useForm({
@@ -26,7 +26,8 @@ export default function Index({ requests }) {
     amount: '',
     transacted_at: '',
     description: '',
-    review_note: ''
+    review_note: '',
+    expense_type_id: '',
   })
 
   const openReview = (r) => {
@@ -36,7 +37,8 @@ export default function Index({ requests }) {
       amount: r.amount || '',
       transacted_at: r.transacted_at || new Date().toISOString().slice(0, 10),
       description: r.description || '',
-      review_note: ''
+      review_note: '',
+      expense_type_id: '',
     })
   }
 
@@ -53,7 +55,8 @@ export default function Index({ requests }) {
         title: data.title,
         amount: data.amount,
         transacted_at: data.transacted_at,
-        description: data.description
+        description: data.description,
+        expense_type_id: data.expense_type_id,
       },
       {
         onSuccess: () => close(),
@@ -245,6 +248,23 @@ export default function Index({ requests }) {
                             />
                             <InputError className="mt-1" message={errors.title} />
                         </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                         <InputLabel value="Tipe Biaya / Kategori" className="text-gray-700 font-bold" />
+                         <select
+                            value={data.expense_type_id}
+                            onChange={(e => setData('expense_type_id', e.target.value))}
+                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm bg-yellow-50 text-gray-900 font-medium"
+                         >
+                             <option value="">-- Pilih Tipe Biaya (Wajib) --</option>
+                             {expenseTypes.map((type) => (
+                                 <option key={type.id} value={type.id}>
+                                     {type.name} ({type.code})
+                                 </option>
+                             ))}
+                         </select>
+                         <InputError className="mt-1" message={errors.expense_type_id} />
                     </div>
 
                     <div>
