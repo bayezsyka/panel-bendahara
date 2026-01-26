@@ -34,10 +34,17 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-
+            'pending_expense_requests_count' => function () {
+                // Hanya hitung jika user sudah login (opsional: cek role)
+                if (auth()->check()) {
+                    return \App\Models\ExpenseRequest::where('status', 'pending')->count();
+                }
+                return 0;
+            },
             'flash' => [
                 'success' => fn() => session('success'),
                 'error' => fn() => session('error'),
+                'message' => fn() => session('message'),
             ]
         ];
     }

@@ -89,7 +89,6 @@ export default function Index({ expenseTypes }) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Tipe Biaya</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode Akun</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -99,9 +98,6 @@ export default function Index({ expenseTypes }) {
                                     <tr key={type.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {type.name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {type.code || '-'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button 
@@ -121,7 +117,7 @@ export default function Index({ expenseTypes }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="2" className="px-6 py-12 text-center text-gray-500">
                                         Belum ada data tipe biaya.
                                     </td>
                                 </tr>
@@ -138,7 +134,7 @@ export default function Index({ expenseTypes }) {
                         {isEditing ? 'Edit Tipe Biaya' : 'Tambah Tipe Biaya Baru'}
                     </h2>
 
-                    <div className="mb-4">
+                    <div className="mb-6">
                         <InputLabel value="Nama Tipe Biaya" />
                         <TextInput
                             value={data.name}
@@ -148,17 +144,6 @@ export default function Index({ expenseTypes }) {
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />
-                    </div>
-
-                    <div className="mb-6">
-                        <InputLabel value="Kode Akun / Biaya (Opsional)" />
-                        <TextInput
-                            value={data.code}
-                            onChange={e => setData('code', e.target.value)}
-                            className="mt-1 block w-full"
-                            placeholder="Contoh: 501, MAT, OPR"
-                        />
-                        <InputError message={errors.code} className="mt-2" />
                     </div>
 
                     <div className="flex justify-end gap-3">

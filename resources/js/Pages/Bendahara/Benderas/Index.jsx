@@ -89,7 +89,6 @@ export default function Index({ benderas }) {
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Bendera (PT/CV)</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode / Singkatan</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
@@ -99,9 +98,6 @@ export default function Index({ benderas }) {
                                     <tr key={bendera.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {bendera.name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {bendera.code || '-'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button 
@@ -121,7 +117,7 @@ export default function Index({ benderas }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="3" className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan="2" className="px-6 py-12 text-center text-gray-500">
                                         Belum ada data bendera.
                                     </td>
                                 </tr>
@@ -138,7 +134,7 @@ export default function Index({ benderas }) {
                         {isEditing ? 'Edit Data Bendera' : 'Tambah Bendera Baru'}
                     </h2>
 
-                    <div className="mb-4">
+                    <div className="mb-6">
                         <InputLabel value="Nama Bendera / Perusahaan" />
                         <TextInput
                             value={data.name}
@@ -148,17 +144,6 @@ export default function Index({ benderas }) {
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />
-                    </div>
-
-                    <div className="mb-6">
-                        <InputLabel value="Kode (Opsional)" />
-                        <TextInput
-                            value={data.code}
-                            onChange={e => setData('code', e.target.value)}
-                            className="mt-1 block w-full"
-                            placeholder="Contoh: JKK, EKA, dll. Untuk keperluan laporan."
-                        />
-                        <InputError message={errors.code} className="mt-2" />
                     </div>
 
                     <div className="flex justify-end gap-3">

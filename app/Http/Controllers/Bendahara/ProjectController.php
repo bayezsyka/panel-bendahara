@@ -13,7 +13,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['mandor', 'bendera'])->latest()->get();
+        $projects = Project::with(['mandors', 'mandor', 'bendera'])->latest()->get();
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
 
@@ -32,41 +32,70 @@ class ProjectController extends Controller
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
             'mandor_id' => 'nullable|exists:mandors,id',
+            'mandor_ids' => 'nullable|array',
+            'mandor_ids.*' => 'exists:mandors,id',
             'bendera_id' => 'nullable|exists:benderas,id',
             'location' => 'nullable|string|max:255',
         ]);
 
-        Project::create($validated);
+        $project = Project::create($validated);
+
+        // Sync multiple mandors jika ada
+        if ($request->has('mandor_ids') && is_array($request->mandor_ids)) {
+            $project->mandors()->sync($request->mandor_ids);
+        } elseif ($request->has('mandor_id') && $request->mandor_id) {
+            // Backward compatibility: jika hanya mandor_id yang dikirim
+            $project->mandors()->sync([$request->mandor_id]);
+        }
+
         return redirect()->back()->with('message', 'Proyek Berhasil Dibuat');
     }
 
-    public function show(Project $project)
+    public function show(Request $request, Project $project)
     {
+        // Filter by Tipe Biaya
+        $expenseTypeId = $request->input('expense_type_id');
+
         // PENTING: Tambahkan 'items' di sini agar detail muncul di view
-        $project->load(['expenses' => function ($query) {
+        $project->load(['expenses' => function ($query) use ($expenseTypeId) {
             $query->with('items')->latest('transacted_at');
-        }, 'mandor', 'bendera']); // Tambah load bendera
+            if ($expenseTypeId) {
+                $query->where('expense_type_id', $expenseTypeId);
+            }
+        }, 'mandors', 'mandor', 'bendera']); // Load mandors (many-to-many) dan mandor (backward compatibility)
 
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
+        $expenseTypes = \App\Models\ExpenseType::all(); // Tambah ini
 
         return Inertia::render('Bendahara/Projects/Show', [
             'project' => $project,
             'mandors' => $mandors,
-            'benderas' => $benderas
+            'benderas' => $benderas,
+            'expenseTypes' => $expenseTypes, // Tambah ini
         ]);
     }
 
     public static function exportPdf(Request $request, Project $project)
     {
-        // Untuk PDF, load items juga jika ingin ditampilkan di PDF (opsional)
-        $expenses = $project->expenses()->with('items')->orderBy('transacted_at', 'asc')->get();
+        // Grouping per Tipe Biaya (Fetch all, group by type in controller/view)
+        $expenses = $project->expenses()
+            ->with(['items', 'expenseType']) // Eager load expenseType for grouping label
+            ->orderBy('expense_type_id', 'asc') // Grouping logic
+            ->orderBy('transacted_at', 'asc') // Sort dalam group
+            ->get();
+
+        // Grouping collection
+        $groupedExpenses = $expenses->groupBy(function ($item) {
+            return $item->expenseType ? $item->expenseType->name : 'Lain-lain / Belum Dikategorikan';
+        });
 
         $periodeLabel = "Semua Riwayat";
 
         $pdf = Pdf::loadView('pdf.laporan_proyek', [
             'project' => $project,
-            'expenses' => $expenses,
+            'groupedExpenses' => $groupedExpenses, // Kirim data grouped
+            'expenses' => $expenses, // Tetap kirim raw expenses untuk lampiran foto
             'periode' => $periodeLabel,
         ]);
 
@@ -95,11 +124,22 @@ class ProjectController extends Controller
             'status' => 'required|in:ongoing,completed',
             'coordinates' => 'nullable|string|max:255',
             'mandor_id' => 'nullable|exists:mandors,id',
+            'mandor_ids' => 'nullable|array',
+            'mandor_ids.*' => 'exists:mandors,id',
             'bendera_id' => 'nullable|exists:benderas,id',
             'location' => 'nullable|string|max:255',
         ]);
 
         $project->update($validated);
+
+        // Sync multiple mandors jika ada
+        if ($request->has('mandor_ids') && is_array($request->mandor_ids)) {
+            $project->mandors()->sync($request->mandor_ids);
+        } elseif ($request->has('mandor_id') && $request->mandor_id) {
+            // Backward compatibility: jika hanya mandor_id yang dikirim
+            $project->mandors()->sync([$request->mandor_id]);
+        }
+
         return redirect()->back()->with('message', 'Proyek Berhasil Diperbarui');
     }
     public function destroy(Project $project)

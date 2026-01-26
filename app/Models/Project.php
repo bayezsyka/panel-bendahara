@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Tambahkan ini
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 class Project extends Model
@@ -29,6 +30,19 @@ class Project extends Model
         return $this->hasMany(Expense::class);
     }
 
+    /**
+     * Relasi many-to-many dengan Mandor
+     * Satu project bisa dipegang oleh banyak mandor
+     */
+    public function mandors(): BelongsToMany
+    {
+        return $this->belongsToMany(Mandor::class)->withTimestamps();
+    }
+
+    /**
+     * Helper untuk mendapatkan mandor pertama (backward compatibility)
+     * Atau bisa digunakan untuk mendapatkan mandor utama
+     */
     public function mandor(): BelongsTo
     {
         return $this->belongsTo(Mandor::class);

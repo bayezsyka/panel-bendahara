@@ -200,54 +200,24 @@ class WhatsAppController extends Controller
 
                         $flow = $cachedData['flow'] ?? 'receipt';
 
-                        // Flow baru (nominal) SELALU pending review keuangan.
-                        // Flow lama (receipt) tetap default lama, tapi bisa diaktifkan pending lewat ENV.
-                        $requireApprovalForReceipt = (bool) env('WA_REQUIRE_FINANCE_APPROVAL', false);
+                        // SEMUA FLOW (Nominal & Receipt/Gemini) masuk ke Pending Review Keuangan
+                        // agar Bendahara bisa cek dulu sebelum masuk pembukuan.
+                        ExpenseRequest::create([
+                            'mandor_id' => $cachedData['mandor_id'],
+                            'project_id' => $cachedData['project_id'],
+                            'source' => 'whatsapp',
+                            'input_type' => ($cachedData['flow'] ?? 'receipt') === 'nominal' ? 'nominal' : 'receipt',
+                            'title' => $cachedData['title'],
+                            'description' => 'Input via WhatsApp',
+                            'amount' => $cachedData['amount'],
+                            'transacted_at' => $cachedData['transacted_at'],
+                            'receipt_image' => $cachedData['receipt_image'] ?? null,
+                            'items' => $cachedData['items'] ?? null,
+                            'status' => 'pending',
+                        ]);
 
-                        if ($flow === 'nominal' || ($flow === 'receipt' && $requireApprovalForReceipt)) {
-                            ExpenseRequest::create([
-                                'mandor_id' => $cachedData['mandor_id'],
-                                'project_id' => $cachedData['project_id'],
-                                'source' => 'whatsapp',
-                                'input_type' => $flow === 'nominal' ? 'nominal' : 'receipt',
-                                'title' => $cachedData['title'],
-                                'description' => 'Input via WhatsApp',
-                                'amount' => $cachedData['amount'],
-                                'transacted_at' => $cachedData['transacted_at'],
-                                'receipt_image' => $cachedData['receipt_image'] ?? null,
-                                'items' => $cachedData['items'] ?? null,
-                                'status' => 'pending',
-                            ]);
-
-                            Cache::forget($sessionKey);
-                            $this->replyWhatsapp($sender, "✅ *TERKIRIM!* Data masuk antrian review keuangan. Nanti akan diproses bendahara.");
-                        } else {
-                            // BEHAVIOR LAMA: langsung simpan ke tabel expenses setelah mandor konfirmasi.
-                            DB::transaction(function () use ($cachedData) {
-                                $expense = Expense::create([
-                                    'project_id'    => $cachedData['project_id'],
-                                    'title'         => $cachedData['title'],
-                                    'amount'        => $cachedData['amount'],
-                                    'description'   => "Input via WhatsApp",
-                                    'transacted_at' => $cachedData['transacted_at'],
-                                    'receipt_image' => $cachedData['receipt_image'],
-                                    'created_at'    => now(),
-                                    'updated_at'    => now(),
-                                ]);
-
-                                foreach ($cachedData['items'] as $item) {
-                                    $expense->items()->create([
-                                        'name' => $item['name'],
-                                        'quantity' => $item['quantity'],
-                                        'price' => $item['price'],
-                                        'total_price' => $item['total'] ?? ($item['quantity'] * $item['price']),
-                                    ]);
-                                }
-                            });
-
-                            Cache::forget($sessionKey);
-                            $this->replyWhatsapp($sender, "✅ *BERHASIL!* Laporan & detail item tersimpan.");
-                        }
+                        Cache::forget($sessionKey);
+                        $this->replyWhatsapp($sender, "✅ *TERKIRIM!* Data masuk antrian review keuangan. Nanti akan diproses bendahara.");
                     } elseif (in_array(strtolower($message), ['batal', 'tidak', 'ga', 'no', 'salah'])) {
                         if (!empty($cachedData['receipt_image'])) {
                             Storage::disk('public')->delete($cachedData['receipt_image']);

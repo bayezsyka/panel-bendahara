@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Mandor extends Model
 {
@@ -13,18 +14,25 @@ class Mandor extends Model
     ];
 
     /**
-     * Mandor bisa memegang banyak proyek (History)
+     * Relasi many-to-many dengan Project
+     * Satu mandor bisa memegang banyak proyek
      */
-    public function projects(): HasMany
+    public function projects(): BelongsToMany
     {
-        return $this->hasMany(Project::class);
+        return $this->belongsToMany(Project::class)->withTimestamps();
     }
 
     /**
      * Helper untuk mendapatkan proyek yang sedang aktif dikerjakan mandor ini
      */
-    public function activeProject()
+    public function activeProjects()
     {
-        return $this->hasOne(Project::class)->where('status', 'ongoing')->latestOfMany();
+        return $this->belongsToMany(Project::class)
+            ->wherePivotIn('project_id', function ($query) {
+                $query->select('id')
+                    ->from('projects')
+                    ->where('status', 'ongoing');
+            })
+            ->withTimestamps();
     }
 }

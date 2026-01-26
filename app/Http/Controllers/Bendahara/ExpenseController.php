@@ -14,6 +14,7 @@ class ExpenseController extends Controller
     {
         $request->validate([
             'project_id' => 'required|exists:projects,id',
+            'expense_type_id' => 'required|exists:expense_types,id', // Wajib Tipe Biaya
             'title' => 'required|string|max:255',
             'transacted_at' => 'required|date',
             'receipt_image' => 'nullable|image|max:2048',
@@ -62,6 +63,7 @@ class ExpenseController extends Controller
     {
         $request->validate([
             'project_id' => 'required|exists:projects,id',
+            'expense_type_id' => 'required|exists:expense_types,id', // Wajib Tipe Biaya
             'title' => 'required|string|max:255',
             'transacted_at' => 'required|date',
             'receipt_image' => 'nullable|image|max:2048',

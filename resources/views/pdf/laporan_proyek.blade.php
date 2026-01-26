@@ -199,81 +199,107 @@
     </table>
 
     {{-- TABEL PENGELUARAN DENGAN HIGHLIGHT MINGGUAN --}}
+    {{-- TABEL PENGELUARAN GROUPED BY TIPE BIAYA --}}
     <table class="data-table">
         <thead>
             <tr>
                 <th width="5%" class="text-center">No</th>
                 <th width="15%">Tanggal</th>
-                <th>Keterangan & Rincian Item</th> {{-- Header Diupdate --}}
+                <th>Keterangan & Rincian Item</th>
                 <th width="10%" class="text-center">Ref</th>
                 <th width="20%" class="text-right">Jumlah</th>
             </tr>
         </thead>
         <tbody>
             @php
-                $total = 0;
-                $currentWeek = null;
+                $grandTotal = 0;
             @endphp
 
-            @foreach ($expenses as $index => $expense)
+            @foreach ($groupedExpenses as $typeName => $expensesInGroup)
+                {{-- HEADER GROUP TIPE BIAYA --}}
+                <tr style="background-color: #d1e7dd;">
+                    <td colspan="5" style="font-weight: bold; font-size: 13px; padding: 6px;">
+                        KATEGORI: {{ strtoupper($typeName) }}
+                    </td>
+                </tr>
+
                 @php
-                    $total += $expense->amount;
-                    // Hitung Minggu ke berapa dalam tahun ini
-                    $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
-                    $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
-                    $weekKey = $yearNum . '-' . $weekNum;
+                    $subTotal = 0;
+                    $currentWeek = null;
                 @endphp
 
-                {{-- Row Separator Minggu --}}
-                @if ($currentWeek !== $weekKey)
+                @foreach ($expensesInGroup as $index => $expense)
+                    @php
+                        $subTotal += $expense->amount;
+                        // Hitung Minggu ke berapa dalam tahun ini
+                        $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
+                        $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
+                        $weekKey = $yearNum . '-' . $weekNum;
+                    @endphp
+
+                    {{-- Row Separator Minggu --}}
+                    @if ($currentWeek !== $weekKey)
+                        <tr>
+                            <td colspan="5" class="week-header" style="font-size: 10px; color: #555;">
+                                — Minggu ke-{{ $weekNum }} ({{ $yearNum }})
+                            </td>
+                        </tr>
+                        @php $currentWeek = $weekKey; @endphp
+                    @endif
+
                     <tr>
-                        <td colspan="5" class="week-header">
-                            Minggu ke-{{ $weekNum }} ({{ $yearNum }})
+                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
+                        <td>
+                            {{-- JUDUL NOTA --}}
+                            <strong>{{ $expense->title }}</strong>
+
+                            {{-- RINCIAN ITEM --}}
+                            @if ($expense->items && $expense->items->count() > 0)
+                                <table class="item-table">
+                                    @foreach ($expense->items as $item)
+                                        <tr>
+                                            <td style="width: 50%; padding-left: 8px;">• {{ $item->name }}</td>
+                                            <td style="width: 25%; text-align: right; color: #555;">
+                                                {{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}
+                                            </td>
+                                            <td style="width: 25%; text-align: right; font-weight: bold;">
+                                                = {{ number_format($item->total_price, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
+
+                            {{-- DESKRIPSI TAMBAHAN --}}
+                            @if ($expense->description)
+                                <div style="margin-top: 4px; font-size: 10px; color: #666; font-style: italic;">
+                                    Catatan: {{ $expense->description }}
+                                </div>
+                            @endif
                         </td>
+                        <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>
+                        <td class="text-right">{{ number_format($expense->amount, 0, ',', '.') }}</td>
                     </tr>
-                    @php $currentWeek = $weekKey; @endphp
-                @endif
+                @endforeach
 
-                <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
-                    <td>
-                        {{-- JUDUL NOTA --}}
-                        <strong>{{ $expense->title }}</strong>
-
-                        {{-- RINCIAN ITEM (LOGIKA BARU) --}}
-                        @if ($expense->items && $expense->items->count() > 0)
-                            <table class="item-table">
-                                @foreach ($expense->items as $item)
-                                    <tr>
-                                        <td style="width: 50%; padding-left: 8px;">• {{ $item->name }}</td>
-                                        <td style="width: 25%; text-align: right; color: #555;">
-                                            {{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}
-                                        </td>
-                                        <td style="width: 25%; text-align: right; font-weight: bold;">
-                                            = {{ number_format($item->total_price, 0, ',', '.') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </table>
-                        @endif
-
-                        {{-- DESKRIPSI TAMBAHAN --}}
-                        @if ($expense->description)
-                            <div style="margin-top: 4px; font-size: 10px; color: #666; font-style: italic;">
-                                Catatan: {{ $expense->description }}
-                            </div>
-                        @endif
+                {{-- SUB TOTAL PER TIPE --}}
+                <tr style="background-color: #f8f9fa;">
+                    <td colspan="4" class="text-right text-bold" style="font-style: italic;">Subtotal
+                        {{ $typeName }}</td>
+                    <td class="text-right text-bold border-top-double">Rp {{ number_format($subTotal, 0, ',', '.') }}
                     </td>
-                    <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>
-                    <td class="text-right">{{ number_format($expense->amount, 0, ',', '.') }}</td>
                 </tr>
+
+                @php $grandTotal += $subTotal; @endphp
             @endforeach
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="4" class="text-right text-bold">TOTAL PENGELUARAN</td>
-                <td class="text-right text-bold">Rp {{ number_format($total, 0, ',', '.') }}</td>
+                <td colspan="4" class="text-right text-bold" style="font-size: 14px; padding: 10px;">TOTAL
+                    KESELURUHAN PROYEK</td>
+                <td class="text-right text-bold" style="font-size: 14px; padding: 10px;">Rp
+                    {{ number_format($grandTotal, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>

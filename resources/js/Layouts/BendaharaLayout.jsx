@@ -33,10 +33,10 @@ export default function BendaharaLayout({ children, header }) {
     const isActive = (routeName) => route().current(routeName);
 
     // --- KOMPONEN LINK SIDEBAR ---
-    const SidebarLink = ({ name, routeName, icon }) => (
+    const SidebarLink = ({ name, routeName, icon, badge }) => (
         <Link
             href={route(routeName)}
-            className={`group/link flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap ${
+            className={`group/link relative flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap ${
                 isActive(routeName)
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
                     : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
@@ -52,14 +52,26 @@ export default function BendaharaLayout({ children, header }) {
             <span className={`ml-3 transition-all duration-300 ease-in-out md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs`}>
                 {name}
             </span>
-            
+
+            {/* Badge Notification */}
+            {badge > 0 && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full transition-opacity duration-300">
+                    {badge}
+                </span>
+            )}
+
             {/* Teks untuk Mobile (Selalu muncul di mobile) */}
             <span className="md:hidden ml-3">{name}</span>
+            {badge > 0 && (
+                <span className="md:hidden ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                    {badge}
+                </span>
+            )}
         </Link>
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="h-screen bg-gray-50 flex overflow-hidden">
             
             {/* --- BACKDROP MOBILE --- */}
             {sidebarOpen && (
@@ -124,26 +136,27 @@ export default function BendaharaLayout({ children, header }) {
                     />
 
                     <SidebarLink 
-                        name="Data Pelaksana" 
+                        name="Pelaksana" 
                         routeName="bendahara.mandors.index" 
                         icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                     />
 
                     <SidebarLink 
-                        name="Data Bendera" 
+                        name="Bendera" 
                         routeName="bendahara.benderas.index" 
                         icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
                     />
 
                     <SidebarLink 
-                        name="Data Tipe Biaya" 
+                        name="Tipe Biaya" 
                         routeName="bendahara.expense-types.index" 
                         icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
                     />
 
                     <SidebarLink 
                         name="Pending WhatsApp" 
-                        routeName="bendahara.expense_requests.index" 
+                        routeName="bendahara.expense_requests.index"
+                        badge={usePage().props.pending_expense_requests_count}
                         icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                     />
 

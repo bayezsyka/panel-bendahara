@@ -20,6 +20,7 @@ export default function Index({ projects, mandors, benderas }) {
     status: 'ongoing',
     coordinates: '',
     mandor_id: '',
+    mandor_ids: [],
     bendera_id: '',
     location: '',
   })
@@ -35,12 +36,14 @@ export default function Index({ projects, mandors, benderas }) {
   const openEditModal = (project) => {
     setIsEditing(true)
     setCurrentProject(project)
+    const mandorIds = project.mandors ? project.mandors.map(m => m.id) : (project.mandor_id ? [project.mandor_id] : [])
     setData({
         name: project.name,
         description: project.description || '',
         status: project.status,
         coordinates: project.coordinates || '',
         mandor_id: project.mandor_id || '',
+        mandor_ids: mandorIds,
         bendera_id: project.bendera_id || '',
         location: project.location || '',
     })
@@ -119,7 +122,19 @@ export default function Index({ projects, mandors, benderas }) {
                     )}
                     
                     <div className="space-y-2 mb-2">
-                        {project.mandor && (
+                        {/* Tampilkan multiple mandors jika ada */}
+                        {project.mandors && project.mandors.length > 0 ? (
+                            <div className="space-y-1.5">
+                                {project.mandors.map((mandor, idx) => (
+                                    <div key={mandor.id} className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100">
+                                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                        </svg>
+                                        <span className="font-medium">Pelaksana {idx + 1}: {mandor.name}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : project.mandor && (
                             <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-100">
                                 <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -198,21 +213,29 @@ export default function Index({ projects, mandors, benderas }) {
                     <InputError message={errors.bendera_id} className="mt-2" />
                 </div>
                 
-                 <div>
-                    <InputLabel value="Pelaksana" />
-                    <select
-                        value={data.mandor_id}
-                        onChange={e => setData('mandor_id', e.target.value)}
-                        className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                    >
-                        <option value="">-- Pilih Pelaksana --</option>
+                 <div className="md:col-span-2">
+                    <InputLabel value="Pelaksana (Bisa Pilih Lebih dari 1)" />
+                    <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto">
                         {mandors.map((mandor) => (
-                            <option key={mandor.id} value={mandor.id}>
-                                {mandor.name} ({mandor.whatsapp_number})
-                            </option>
+                            <label key={mandor.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={data.mandor_ids.includes(mandor.id)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setData('mandor_ids', [...data.mandor_ids, mandor.id])
+                                        } else {
+                                            setData('mandor_ids', data.mandor_ids.filter(id => id !== mandor.id))
+                                        }
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <span className="text-sm text-gray-700">{mandor.name} ({mandor.whatsapp_number})</span>
+                            </label>
                         ))}
-                    </select>
-                    <InputError message={errors.mandor_id} className="mt-2" />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Pilih satu atau lebih pelaksana untuk proyek ini</p>
+                    <InputError message={errors.mandor_ids} className="mt-2" />
                 </div>
             </div>
 

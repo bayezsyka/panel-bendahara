@@ -18,7 +18,7 @@ const formatRupiah = (number) => {
   }).format(number);
 }
 
-export default function Show({ project, mandors, benderas }) {
+export default function Show({ project, mandors, benderas, expenseTypes }) {
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false) 
   const [showImageModal, setShowImageModal] = useState(null)
@@ -29,6 +29,7 @@ export default function Show({ project, mandors, benderas }) {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     project_id: project.id,
+    expense_type_id: '',
     title: '',
     transacted_at: new Date().toISOString().split('T')[0],
     description: '',
@@ -46,6 +47,7 @@ export default function Show({ project, mandors, benderas }) {
     status: project.status,
     coordinates: project.coordinates || '',
     mandor_id: project.mandor_id || '',
+    mandor_ids: project.mandors ? project.mandors.map(m => m.id) : (project.mandor_id ? [project.mandor_id] : []),
     bendera_id: project.bendera_id || '',
     location: project.location || '',
   })
@@ -77,6 +79,7 @@ export default function Show({ project, mandors, benderas }) {
     setEditingExpenseId(null)
     setData({
         project_id: project.id,
+        expense_type_id: '',
         title: '',
         transacted_at: new Date().toISOString().split('T')[0],
         description: '',
@@ -90,6 +93,7 @@ export default function Show({ project, mandors, benderas }) {
     setEditingExpenseId(expense.id)
     setData({
         project_id: project.id,
+        expense_type_id: expense.expense_type_id || '',
         title: expense.title,
         transacted_at: expense.transacted_at, // Assumes YYYY-MM-DD from backend or cast
         description: expense.description || '',
@@ -197,7 +201,17 @@ export default function Show({ project, mandors, benderas }) {
                         🏢 {project.bendera.name}
                     </div>
                  )}
-                 {project.mandor && (
+                 {/* Tampilkan multiple mandors */}
+                 {project.mandors && project.mandors.length > 0 ? (
+                    <div className="space-y-1">
+                        {project.mandors.map((mandor, idx) => (
+                            <div key={mandor.id} className="flex items-center gap-2 text-sm text-gray-600">
+                                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                Pelaksana {idx + 1}: <span className="font-medium text-gray-900">{mandor.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                 ) : project.mandor && (
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                         <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         Pelaksana: <span className="font-medium text-gray-900">{project.mandor.name}</span>
@@ -319,27 +333,54 @@ export default function Show({ project, mandors, benderas }) {
         <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <h3 className="font-semibold text-gray-800">Riwayat Pengeluaran</h3>
           
-          <div className="flex bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setSortBy('transacted_at')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                sortBy === 'transacted_at' 
-                ? 'bg-white text-indigo-700 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
-              }`}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Filter Tipe Biaya */}
+            <select
+                value={new URLSearchParams(window.location.search).get('expense_type_id') || ''}
+                onChange={(e) => {
+                    const params = new URLSearchParams(window.location.search);
+                    if (e.target.value) {
+                        params.set('expense_type_id', e.target.value);
+                    } else {
+                        params.delete('expense_type_id');
+                    }
+                    router.get(`${window.location.pathname}?${params.toString()}`, {}, {
+                        preserveState: true,
+                        preserveScroll: true,
+                    });
+                }}
+                className="text-xs border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
             >
-              Tanggal Nota
-            </button>
-            <button
-              onClick={() => setSortBy('created_at')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                sortBy === 'created_at' 
-                ? 'bg-white text-indigo-700 shadow-sm' 
-                : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Tanggal Input
-            </button>
+                <option value="">Semua Tipe Biaya</option>
+                {expenseTypes && expenseTypes.map((type) => (
+                    <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
+            </select>
+
+            <div className="w-px h-6 bg-gray-300 mx-1 hidden sm:block"></div>
+
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+                <button
+                onClick={() => setSortBy('transacted_at')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+                    sortBy === 'transacted_at' 
+                    ? 'bg-white text-indigo-700 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                >
+                Tanggal Nota
+                </button>
+                <button
+                onClick={() => setSortBy('created_at')}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
+                    sortBy === 'created_at' 
+                    ? 'bg-white text-indigo-700 shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+                >
+                Tanggal Input
+                </button>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -468,22 +509,30 @@ export default function Show({ project, mandors, benderas }) {
                     </select>
                     <InputError message={editForm.errors.bendera_id} className="mt-2" />
               </div>
-              
-               <div>
-                    <InputLabel value="Pelaksana Penanggung Jawab" />
-                    <select
-                      value={editForm.data.mandor_id}
-                      onChange={e => editForm.setData('mandor_id', e.target.value)}
-                      className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                    >
-                      <option value="">-- Pilih Pelaksana --</option>
-                      {mandors.map((mandor) => (
-                        <option key={mandor.id} value={mandor.id}>
-                          {mandor.name} ({mandor.whatsapp_number})
-                        </option>
-                      ))}
-                    </select>
-                    <InputError message={editForm.errors.mandor_id} className="mt-2" />
+               
+               <div className="md:col-span-2">
+                    <InputLabel value="Pelaksana (Bisa Pilih Lebih dari 1)" />
+                    <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto">
+                        {mandors.map((mandor) => (
+                            <label key={mandor.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={editForm.data.mandor_ids.includes(mandor.id)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            editForm.setData('mandor_ids', [...editForm.data.mandor_ids, mandor.id])
+                                        } else {
+                                            editForm.setData('mandor_ids', editForm.data.mandor_ids.filter(id => id !== mandor.id))
+                                        }
+                                    }}
+                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <span className="text-sm text-gray-700">{mandor.name} ({mandor.whatsapp_number})</span>
+                            </label>
+                        ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">Pilih satu atau lebih pelaksana untuk proyek ini</p>
+                    <InputError message={editForm.errors.mandor_ids} className="mt-2" />
                </div>
           </div>
 
@@ -557,7 +606,26 @@ export default function Show({ project, mandors, benderas }) {
               />
               <InputError message={errors.title} className="mt-2" />
             </div>
+
             <div>
+              <InputLabel value="Tipe Biaya" />
+              <select
+                value={data.expense_type_id}
+                onChange={e => setData('expense_type_id', e.target.value)}
+                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                required
+              >
+                <option value="">-- Pilih Tipe Biaya --</option>
+                {expenseTypes && expenseTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                        {type.name}
+                    </option>
+                ))}
+              </select>
+              <InputError message={errors.expense_type_id} className="mt-2" />
+            </div>
+
+            <div className="md:col-span-2">
               <InputLabel value="Tanggal Transaksi" />
               <TextInput 
                 type="date"
