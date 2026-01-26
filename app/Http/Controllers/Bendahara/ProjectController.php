@@ -94,4 +94,9 @@ class ProjectController extends Controller
         $project->update($validated);
         return redirect()->back()->with('message', 'Proyek Berhasil Diperbarui');
     }
+    public function destroy(Project $project)
+    {
+        $project->delete();
+        return redirect()->route('bendahara.projects.index')->with('message', 'Proyek Berhasil Dihapus');
+    }
 }

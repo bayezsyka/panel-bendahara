@@ -8,6 +8,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import Swal from 'sweetalert2';
 
 export default function Index({ mandors }) {
     const [showModal, setShowModal] = useState(false);
@@ -51,9 +52,20 @@ export default function Index({ mandors }) {
     };
 
     const handleDelete = (id) => {
-        if (confirm('Yakin ingin menghapus mandor ini?')) {
-            destroy(route('bendahara.mandors.destroy', id));
-        }
+        Swal.fire({
+            title: 'Hapus Mandor?',
+            text: 'Data mandor ini akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route('bendahara.mandors.destroy', id));
+            }
+        });
     };
 
     return (

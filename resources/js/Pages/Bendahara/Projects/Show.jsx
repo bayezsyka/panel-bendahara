@@ -121,17 +121,7 @@ export default function Show({ project, mandors }) {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        router.delete(route('bendahara.projects.destroy', project.id), {
-          onSuccess: () => {
-            Swal.fire({
-              title: 'Terhapus!',
-              text: 'Proyek berhasil dihapus.',
-              icon: 'success',
-              timer: 1500,
-              showConfirmButton: false
-            });
-          }
-        });
+        router.delete(route('bendahara.projects.destroy', project.id));
       }
     });
   }

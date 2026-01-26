@@ -1,10 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
+import Swal from 'sweetalert2';
 
 export default function BendaharaLayout({ children, header }) {
-    const { auth } = usePage().props;
+    const { auth, flash } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    useEffect(() => {
+        if (flash?.message) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil',
+                text: flash.message,
+                showConfirmButton: false,
+                timer: 1500,
+                position: 'center',
+                toast: false
+            });
+        }
+        if (flash?.error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: flash.error,
+                showConfirmButton: true,
+            });
+        }
+    }, [flash]);
 
     // Helper untuk mengecek link aktif
     const isActive = (routeName) => route().current(routeName);
