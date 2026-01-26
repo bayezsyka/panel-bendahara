@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
+import PageHeader from '@/Components/PageHeader';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
-import DangerButton from '@/Components/DangerButton';
 
 export default function Index({ mandors }) {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
-    // Form State
     const { data, setData, post, put, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         id: '',
         name: '',
         whatsapp_number: '',
     });
 
-    // Buka Modal Tambah
     const openAddModal = () => {
         setIsEditing(false);
         reset();
@@ -28,7 +26,6 @@ export default function Index({ mandors }) {
         setShowModal(true);
     };
 
-    // Buka Modal Edit
     const openEditModal = (mandor) => {
         setIsEditing(true);
         setData({
@@ -40,7 +37,6 @@ export default function Index({ mandors }) {
         setShowModal(true);
     };
 
-    // Handle Submit (Create/Update)
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isEditing) {
@@ -54,7 +50,6 @@ export default function Index({ mandors }) {
         }
     };
 
-    // Handle Delete
     const handleDelete = (id) => {
         if (confirm('Yakin ingin menghapus mandor ini?')) {
             destroy(route('bendahara.mandors.destroy', id));
@@ -65,14 +60,18 @@ export default function Index({ mandors }) {
         <BendaharaLayout>
             <Head title="Kelola Mandor" />
 
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">Daftar Mandor</h1>
-                <PrimaryButton onClick={openAddModal}>
-                    + Tambah Mandor
-                </PrimaryButton>
-            </div>
+            <PageHeader
+                title="Data Mandor"
+                backLink={route('bendahara.dashboard')}
+                backLabel="Dashboard"
+                actions={
+                    <PrimaryButton onClick={openAddModal}>
+                        + Tambah Mandor
+                    </PrimaryButton>
+                }
+            />
 
-            <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -127,7 +126,7 @@ export default function Index({ mandors }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                                    <td colSpan="4" className="px-6 py-12 text-center text-gray-500">
                                         Belum ada data mandor.
                                     </td>
                                 </tr>
@@ -165,7 +164,6 @@ export default function Index({ mandors }) {
                             placeholder="Contoh: 081234567890"
                             required
                         />
-                        <p className="text-xs text-gray-500 mt-1">Gunakan format 08xxx atau 628xxx</p>
                         <InputError message={errors.whatsapp_number} className="mt-2" />
                     </div>
 

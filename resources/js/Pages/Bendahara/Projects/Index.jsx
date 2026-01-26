@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Head, Link, useForm } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
+import PageHeader from '@/Components/PageHeader'
 import Modal from '@/Components/Modal'
 import InputLabel from '@/Components/InputLabel'
 import TextInput from '@/Components/TextInput'
@@ -8,21 +9,20 @@ import PrimaryButton from '@/Components/PrimaryButton'
 import SecondaryButton from '@/Components/SecondaryButton'
 import InputError from '@/Components/InputError'
 
-export default function Index({ projects, mandors }) { // <-- Menerima data mandors dari Controller
+export default function Index({ projects, mandors }) {
   const [showModal, setShowModal] = useState(false)
-  const [isStatusUpdate, setIsStatusUpdate] = useState(false) // Mode khusus update status
+  const [isStatusUpdate, setIsStatusUpdate] = useState(false)
   const [currentProject, setCurrentProject] = useState(null)
   
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     name: '',
     description: '',
     status: 'ongoing',
-    coordinates: '', // Input koordinat
-    mandor_id: '',   // <-- Field baru untuk Mandor
-    only_status: false, // Flag helper
+    coordinates: '',
+    mandor_id: '',
+    only_status: false,
   })
 
-  // Modal BUAT BARU (Lengkap)
   const openCreateModal = () => {
     setIsStatusUpdate(false)
     setCurrentProject(null)
@@ -31,7 +31,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
     setShowModal(true)
   }
 
-  // Modal UPDATE STATUS (Hanya Status)
   const openStatusModal = (project) => {
     setIsStatusUpdate(true)
     setCurrentProject(project)
@@ -47,7 +46,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
     e.preventDefault()
     
     if (isStatusUpdate) {
-        // Update Hanya Status
         put(route('bendahara.projects.update', currentProject.id), {
             onSuccess: () => {
                 setShowModal(false)
@@ -55,7 +53,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
             },
         })
     } else {
-        // Buat Baru
         post(route('bendahara.projects.store'), {
             onSuccess: () => {
                 setShowModal(false)
@@ -67,24 +64,25 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
 
   return (
     <BendaharaLayout>
-      <Head title="Manajemen Proyek" />
+      <Head title="Proyek Konstruksi" />
 
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Proyek Konstruksi</h1>
-            <p className="mt-1 text-sm text-gray-500">Kelola status dan progres proyek di sini</p>
-          </div>
-          <button
-            onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Buat Proyek Baru
-          </button>
-        </div>
+        <PageHeader
+          title="Proyek Konstruksi"
+          backLink={route('bendahara.dashboard')}
+          backLabel="Dashboard"
+          actions={
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Buat Proyek
+            </button>
+          }
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
@@ -96,7 +94,7 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                             ? 'bg-blue-100 text-blue-800' 
                             : 'bg-green-100 text-green-800'
                         }`}>
-                            {project.status === 'ongoing' ? 'Sedang Berjalan' : 'Selesai'}
+                            {project.status === 'ongoing' ? 'Berjalan' : 'Selesai'}
                         </div>
                         <span className="text-xs text-gray-400">
                             {new Date(project.created_at).toLocaleDateString('id-ID')}
@@ -107,13 +105,12 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                         {project.name}
                     </h3>
                     
-                    {/* Tampilkan Nama Mandor jika ada */}
                     {project.mandor && (
                         <div className="mb-2 flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded w-fit">
                             <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            Mandor: {project.mandor.name}
+                            {project.mandor.name}
                         </div>
                     )}
 
@@ -134,7 +131,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                         Lihat Detail
                     </Link>
                     
-                    {/* Tombol Ubah Status Saja */}
                     <button 
                         onClick={() => openStatusModal(project)}
                         className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
@@ -156,7 +152,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
             {isStatusUpdate ? 'Update Status Proyek' : 'Buat Proyek Baru'}
           </h2>
           
-          {/* Form Lengkap (Hanya tampil jika BUKAN update status) */}
           {!isStatusUpdate && (
               <>
                 <div className="mb-4">
@@ -172,7 +167,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                     <InputError message={errors.name} className="mt-2" />
                 </div>
 
-                {/* --- INPUT PILIH MANDOR (BARU) --- */}
                 <div className="mb-4">
                     <InputLabel value="Pilih Mandor (Opsional)" />
                     <select
@@ -189,7 +183,6 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                     </select>
                     <InputError message={errors.mandor_id} className="mt-2" />
                 </div>
-                {/* -------------------------------- */}
 
                 <div className="mb-4">
                     <InputLabel value="Deskripsi (Opsional)" />
@@ -209,15 +202,11 @@ export default function Index({ projects, mandors }) { // <-- Menerima data mand
                         className="mt-1 block w-full"
                         placeholder={'Contoh: 6°52\'09.6"S 109°02\'34.5"E'}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                        Salin titik koordinat dari Google Maps.
-                    </p>
                     <InputError message={errors.coordinates} className="mt-2" />
                 </div>
               </>
           )}
 
-          {/* Status (Selalu tampil) */}
           <div className="mb-6">
             <InputLabel value="Status Proyek" />
             <select

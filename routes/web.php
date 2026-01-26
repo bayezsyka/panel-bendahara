@@ -9,6 +9,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Bendahara\DashboardController;
 use App\Http\Controllers\Bendahara\ProjectController;
 use App\Http\Controllers\Bendahara\ExpenseController;
+use App\Http\Controllers\Bendahara\ExpenseRequestController;
 
 
 Route::middleware(['auth', 'verified', 'role:bendahara'])
@@ -20,6 +21,11 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
         Route::resource('projects', ProjectController::class);
         Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy']);
         Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');
+
+        // Review data pengeluaran dari WhatsApp (pending)
+        Route::get('/expense-requests', [ExpenseRequestController::class, 'index'])->name('expense_requests.index');
+        Route::put('/expense-requests/{expenseRequest}/approve', [ExpenseRequestController::class, 'approve'])->name('expense_requests.approve');
+        Route::put('/expense-requests/{expenseRequest}/reject', [ExpenseRequestController::class, 'reject'])->name('expense_requests.reject');
 
         Route::resource('mandors', \App\Http\Controllers\Bendahara\MandorController::class)
             ->except(['create', 'show', 'edit']); // Kita pakai modal, jadi tidak butuh halaman create/edit terpisah

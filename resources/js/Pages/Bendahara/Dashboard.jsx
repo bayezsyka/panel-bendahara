@@ -1,7 +1,8 @@
 import React from 'react'
 import { Head, router, Link } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
-import Dropdown from '@/Components/Dropdown' // Import komponen Dropdown
+import PageHeader from '@/Components/PageHeader'
+import Dropdown from '@/Components/Dropdown'
 import {
   ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
@@ -14,12 +15,10 @@ function rupiah(n) {
 }
 
 function monthLabel(ym) {
-  // ym: "2026-01"
   const d = new Date(ym + '-01')
   return new Intl.DateTimeFormat('id-ID', { month: 'short', year: '2-digit' }).format(d)
 }
 
-// Warna untuk pie chart
 const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#22c55e', '#14b8a6']
 
 export default function Dashboard({ title, kpis, expenseSeries, projectExpenses, topProjects, months }) {
@@ -30,7 +29,6 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
     })
   }
 
-  // Fungsi untuk menangani export
   const handleExport = (withReceipts) => {
     const url = route('bendahara.export.all.pdf', { with_receipts: withReceipts ? 1 : 0 });
     window.open(url, '_blank');
@@ -42,53 +40,40 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
 
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-            <div className="text-sm text-gray-500">Data per {kpis.asOf}</div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Dropdown Export Laporan */}
-            <Dropdown>
+        <PageHeader
+          title={title}
+          meta={`Data per ${kpis.asOf}`}
+          actions={
+            <>
+              {/* Dropdown Export */}
+              <Dropdown>
                 <Dropdown.Trigger>
-                    <span className="inline-flex rounded-md">
-                        <button
-                            type="button"
-                            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none"
-                        >
-                            Export Laporan
-                            <svg
-                                className="-mr-0.5 ml-2 h-4 w-4"
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
-                            >
-                                <path
-                                    fillRule="evenodd"
-                                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                        </button>
-                    </span>
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                  >
+                    <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export
+                    <svg className="ml-2 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
                 </Dropdown.Trigger>
-
                 <Dropdown.Content>
-                    <Dropdown.Link as="button" onClick={() => handleExport(false)} className="w-full text-left">
-                        Export PDF (Tanpa Nota)
-                    </Dropdown.Link>
-                    <Dropdown.Link as="button" onClick={() => handleExport(true)} className="w-full text-left">
-                        Export PDF (Dengan Nota)
-                    </Dropdown.Link>
+                  <Dropdown.Link as="button" onClick={() => handleExport(false)} className="w-full text-left">
+                    PDF (Tanpa Nota)
+                  </Dropdown.Link>
+                  <Dropdown.Link as="button" onClick={() => handleExport(true)} className="w-full text-left">
+                    PDF (Dengan Nota)
+                  </Dropdown.Link>
                 </Dropdown.Content>
-            </Dropdown>
+              </Dropdown>
 
-            {/* Filter Range Grafik */}
-            <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-600">Range grafik</div>
+              {/* Filter Range */}
               <select
-                className="rounded border border-gray-300 p-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 value={months}
                 onChange={(e) => changeMonths(e.target.value)}
               >
@@ -97,9 +82,9 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                 <option value="12">12 bulan</option>
                 <option value="24">24 bulan</option>
               </select>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -166,7 +151,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Tren Pengeluaran</h3>
-              <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">{months} bulan terakhir</span>
+              <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-xs font-medium text-indigo-700">{months} bulan</span>
             </div>
             <div style={{ width: '100%', height: 280 }}>
               <ResponsiveContainer>
@@ -198,8 +183,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
           {/* Project Expense Pie Chart */}
           <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Distribusi Pengeluaran per Proyek</h3>
-              <p className="text-sm text-gray-500">10 proyek dengan pengeluaran tertinggi</p>
+              <h3 className="text-lg font-semibold text-gray-900">Distribusi per Proyek</h3>
             </div>
             {projectExpenses && projectExpenses.length > 0 ? (
               <div style={{ width: '100%', height: 280 }}>
@@ -240,7 +224,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-6 py-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Proyek dengan Pengeluaran Tertinggi</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Pengeluaran Tertinggi</h3>
               <Link 
                 href="/bendahara/projects" 
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
@@ -255,7 +239,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                 <tr>
                   <th className="px-6 py-3 font-medium text-gray-500">Nama Proyek</th>
                   <th className="px-6 py-3 font-medium text-gray-500">Status</th>
-                  <th className="px-6 py-3 text-right font-medium text-gray-500">Total Pengeluaran</th>
+                  <th className="px-6 py-3 text-right font-medium text-gray-500">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -299,7 +283,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
         {/* Monthly Expense Table */}
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="border-b border-gray-200 px-6 py-4">
-            <h3 className="text-lg font-semibold text-gray-900">Detail Pengeluaran Bulanan</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Pengeluaran Bulanan</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
