@@ -78,11 +78,19 @@ class ProjectController extends Controller
 
     public static function exportPdf(Request $request, Project $project)
     {
-        // Grouping per Tipe Biaya (Fetch all, group by type in controller/view)
-        $expenses = $project->expenses()
-            ->with(['items', 'expenseType']) // Eager load expenseType for grouping label
-            ->orderBy('expense_type_id', 'asc') // Grouping logic
-            ->orderBy('transacted_at', 'asc') // Sort dalam group
+        $expenseTypeId = $request->query('expense_type_id');
+        $expenseType = null;
+
+        $query = $project->expenses()
+            ->with(['items', 'expenseType']);
+
+        if ($expenseTypeId) {
+            $query->where('expense_type_id', $expenseTypeId);
+            $expenseType = \App\Models\ExpenseType::find($expenseTypeId);
+        }
+
+        $expenses = $query->orderBy('expense_type_id', 'asc')
+            ->orderBy('transacted_at', 'asc')
             ->get();
 
         // Grouping collection
@@ -91,15 +99,23 @@ class ProjectController extends Controller
         });
 
         $periodeLabel = "Semua Riwayat";
+        if ($expenseType) {
+            $periodeLabel = "Kategori: " . $expenseType->name;
+        }
 
         $pdf = Pdf::loadView('pdf.laporan_proyek', [
             'project' => $project,
-            'groupedExpenses' => $groupedExpenses, // Kirim data grouped
-            'expenses' => $expenses, // Tetap kirim raw expenses untuk lampiran foto
+            'groupedExpenses' => $groupedExpenses,
+            'expenses' => $expenses,
             'periode' => $periodeLabel,
+            'expenseType' => $expenseType,
         ]);
 
-        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name) . '.pdf';
+        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name);
+        if ($expenseType) {
+            $fileName .= '_' . str_replace(' ', '_', $expenseType->name);
+        }
+        $fileName .= '.pdf';
 
         return $pdf->stream($fileName);
     }

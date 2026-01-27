@@ -40,6 +40,7 @@ const Content = ({
     width = '48',
     contentClasses = 'py-1 bg-white',
     children,
+    closeOnClick = true,
 }) => {
     const { open, setOpen } = useContext(DropDownContext);
 
@@ -55,6 +56,10 @@ const Content = ({
 
     if (width === '48') {
         widthClasses = 'w-48';
+    } else if (width === '56') {
+        widthClasses = 'w-56';
+    } else if (width === '64') {
+        widthClasses = 'w-64';
     }
 
     return (
@@ -70,7 +75,7 @@ const Content = ({
             >
                 <div
                     className={`absolute z-50 mt-2 rounded-md shadow-lg ${alignmentClasses} ${widthClasses}`}
-                    onClick={() => setOpen(false)}
+                    onClick={() => { if (closeOnClick) setOpen(false); }}
                 >
                     <div
                         className={
@@ -86,10 +91,22 @@ const Content = ({
     );
 };
 
-const DropdownLink = ({ className = '', children, ...props }) => {
+const DropdownLink = ({ className = '', children, closeOnClick = true, ...props }) => {
+    const { setOpen } = useContext(DropDownContext);
+
+    const handleClick = (e) => {
+        if (closeOnClick) {
+            setOpen(false);
+        }
+        if (props.onClick) {
+            props.onClick(e);
+        }
+    };
+
     return (
         <Link
             {...props}
+            onClick={handleClick}
             className={
                 'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
                 className
@@ -104,4 +121,5 @@ Dropdown.Trigger = Trigger;
 Dropdown.Content = Content;
 Dropdown.Link = DropdownLink;
 
+export { DropDownContext };
 export default Dropdown;

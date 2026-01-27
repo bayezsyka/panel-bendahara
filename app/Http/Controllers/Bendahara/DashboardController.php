@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\Project;
+use App\Models\ExpenseType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -68,6 +69,9 @@ class DashboardController extends Controller
                 'total' => (int) ($p->expenses_sum_amount ?? 0),
             ]);
 
+        // Get all expense types for the filter
+        $expenseTypes = ExpenseType::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('Bendahara/Dashboard', [
             'title' => 'Dashboard Bendahara',
             'months' => $months,
@@ -75,6 +79,7 @@ class DashboardController extends Controller
             'expenseSeries' => $expenseSeries,
             'projectExpenses' => $projectExpenses,
             'topProjects' => $topProjects,
+            'expenseTypes' => $expenseTypes,
         ]);
     }
 
@@ -95,6 +100,45 @@ class DashboardController extends Controller
         ]);
 
         return $pdf->stream('Laporan-Keseluruhan-Proyek.pdf');
+    }
+
+    // Method Baru: Export PDF berdasarkan Tipe Biaya
+    public function exportByTypePdf(Request $request)
+    {
+        $expenseTypeId = $request->query('expense_type_id');
+
+        if (!$expenseTypeId) {
+            return back()->with('error', 'Tipe biaya tidak dipilih');
+        }
+
+        $expenseType = ExpenseType::findOrFail($expenseTypeId);
+
+        // Ambil SEMUA expenses dengan tipe biaya tertentu, dari SEMUA proyek
+        $expenses = Expense::with(['project', 'items'])
+            ->where('expense_type_id', $expenseTypeId)
+            ->orderBy('transacted_at', 'asc')
+            ->get();
+
+        // Group expenses by project untuk tampilan yang lebih terstruktur
+        $groupedByProject = $expenses->groupBy('project_id')->map(function ($projectExpenses) {
+            $project = $projectExpenses->first()->project;
+            return [
+                'project' => $project,
+                'expenses' => $projectExpenses,
+                'total' => $projectExpenses->sum('amount'),
+            ];
+        });
+
+        $grandTotal = $expenses->sum('amount');
+
+        $pdf = Pdf::loadView('pdf.laporan_tipe_biaya', [
+            'expenseType' => $expenseType,
+            'groupedByProject' => $groupedByProject,
+            'grandTotal' => $grandTotal,
+            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+        ]);
+
+        return $pdf->stream('Laporan-' . $expenseType->name . '.pdf');
     }
 
     // ... method monthlyExpenseSeries tetap sama ...

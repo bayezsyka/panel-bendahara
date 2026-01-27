@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara'])
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/export-all-pdf', [DashboardController::class, 'exportAllPdf'])->name('export.all.pdf');
+        Route::get('/export-by-type-pdf', [DashboardController::class, 'exportByTypePdf'])->name('export.by.type.pdf');
         Route::resource('projects', ProjectController::class);
         Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy', 'update']);
         Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');

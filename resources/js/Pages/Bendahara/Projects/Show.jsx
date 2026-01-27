@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useContext } from 'react'
 import { Head, Link, useForm, router } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
 import PageHeader from '@/Components/PageHeader'
+import Dropdown, { DropDownContext } from '@/Components/Dropdown'
 import Modal from '@/Components/Modal'
 import InputLabel from '@/Components/InputLabel'
 import TextInput from '@/Components/TextInput'
@@ -17,6 +18,63 @@ const formatRupiah = (number) => {
     minimumFractionDigits: 0
   }).format(number);
 }
+
+const SelectedProjectExportActions = ({ project, expenseTypes }) => {
+  const { setOpen } = useContext(DropDownContext);
+  const [selectedType, setSelectedType] = useState('');
+
+  const onExportAll = () => {
+    window.open(route('bendahara.projects.export', { project: project.id }), '_blank');
+    setOpen(false);
+  };
+
+  const onExportByType = () => {
+    if (!selectedType) {
+      alert('Pilih tipe biaya terlebih dahulu');
+      return;
+    }
+    window.open(route('bendahara.projects.export', { project: project.id, expense_type_id: selectedType }), '_blank');
+    setOpen(false);
+  };
+
+  return (
+    <Dropdown.Content closeOnClick={false} width="64">
+      <div className="block px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        Export Laporan
+      </div>
+      <Dropdown.Link as="button" onClick={onExportAll} className="w-full text-left">
+        PDF (Semua Kategori)
+      </Dropdown.Link>
+
+      <div className="border-t border-gray-100 my-1"></div>
+
+      <div className="px-4 py-3 space-y-3">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Export Per Tipe Biaya
+        </label>
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="block w-full rounded-lg border-gray-200 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
+        >
+          <option value="">Pilih Tipe</option>
+          {expenseTypes.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+        <button
+          onClick={onExportByType}
+          className="w-full inline-flex justify-center items-center rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-500 transition-colors"
+        >
+          <svg className="w-3 h-3 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Export Tipe Biaya
+        </button>
+      </div>
+    </Dropdown.Content>
+  );
+};
 
 export default function Show({ project, mandors, benderas, expenseTypes }) {
   const [showExpenseModal, setShowExpenseModal] = useState(false)
@@ -249,15 +307,22 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
             <div className="w-px h-6 bg-gray-200 mx-1"></div>
             
-            {/* Export Button */}
-            <a 
-              href={route('bendahara.projects.export', { project: project.id })}
-              target="_blank"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm"
-            >
-              <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              Export
-            </a>
+            {/* Export Dropdown */}
+            <Dropdown>
+              <Dropdown.Trigger>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm"
+                >
+                  <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Export
+                  <svg className="ml-1 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </Dropdown.Trigger>
+              <SelectedProjectExportActions project={project} expenseTypes={expenseTypes} />
+            </Dropdown>
             
             {/* Add Expense Button */}
             {!isCompleted ? (
@@ -509,31 +574,31 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
                     </select>
                     <InputError message={editForm.errors.bendera_id} className="mt-2" />
               </div>
-               
-               <div className="md:col-span-2">
-                    <InputLabel value="Pelaksana (Bisa Pilih Lebih dari 1)" />
-                    <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto">
-                        {mandors.map((mandor) => (
-                            <label key={mandor.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={editForm.data.mandor_ids.includes(mandor.id)}
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            editForm.setData('mandor_ids', [...editForm.data.mandor_ids, mandor.id])
-                                        } else {
-                                            editForm.setData('mandor_ids', editForm.data.mandor_ids.filter(id => id !== mandor.id))
-                                        }
-                                    }}
-                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <span className="text-sm text-gray-700">{mandor.name} ({mandor.whatsapp_number})</span>
-                            </label>
-                        ))}
-                    </div>
-                    <p className="mt-1 text-xs text-gray-500">Pilih satu atau lebih pelaksana untuk proyek ini</p>
-                    <InputError message={editForm.errors.mandor_ids} className="mt-2" />
-               </div>
+          </div>
+
+          <div className="mb-4">
+                <InputLabel value="Pelaksana (Bisa Pilih Lebih dari 1)" />
+                <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-32 overflow-y-auto bg-gray-50">
+                    {mandors.map((mandor) => (
+                        <label key={mandor.id} className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={editForm.data.mandor_ids.includes(mandor.id)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        editForm.setData('mandor_ids', [...editForm.data.mandor_ids, mandor.id])
+                                    } else {
+                                        editForm.setData('mandor_ids', editForm.data.mandor_ids.filter(id => id !== mandor.id))
+                                    }
+                                }}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span className="text-sm text-gray-700">{mandor.name} ({mandor.whatsapp_number})</span>
+                        </label>
+                    ))}
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Pilih satu atau lebih pelaksana untuk proyek ini</p>
+                <InputError message={editForm.errors.mandor_ids} className="mt-2" />
           </div>
 
             <div className="mb-4">
