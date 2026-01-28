@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Project extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'name',
         'description',
@@ -74,5 +76,14 @@ class Project extends Model
         if ($diff->d > 0) $parts[] = $diff->d . ' hari';
 
         return count($parts) > 0 ? implode(' ', $parts) : 'Baru saja';
+    }
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Proyek ini telah di-{$eventName}");
     }
 }

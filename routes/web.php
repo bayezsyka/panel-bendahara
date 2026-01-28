@@ -16,14 +16,9 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])
     ->prefix('superadmin')
     ->name('superadmin.')
     ->group(function () {
-
-        // Halaman Dashboard Superadmin (opsional, buat controller terpisah jika perlu)
-        Route::get('/dashboard', function () {
-            return Inertia::render('Superadmin/Dashboard');
-        })->name('dashboard');
-
         // CRUD Users
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
+        Route::get('/activity-logs', [\App\Http\Controllers\Superadmin\ActivityLogController::class, 'index'])->name('activity_logs.index');
     });
 
 Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])

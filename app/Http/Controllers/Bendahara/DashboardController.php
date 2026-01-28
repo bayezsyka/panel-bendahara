@@ -93,6 +93,11 @@ class DashboardController extends Controller
             $query->orderBy('transacted_at', 'asc');
         }, 'mandor'])->get();
 
+        activity()
+            ->causedBy(auth()->user())
+            ->withProperties(['with_receipts' => $withReceipts])
+            ->log('Melakukan export PDF laporan keseluruhan');
+
         $pdf = Pdf::loadView('pdf.laporan_keseluruhan', [
             'projects' => $projects,
             'withReceipts' => $withReceipts,
@@ -130,6 +135,12 @@ class DashboardController extends Controller
         });
 
         $grandTotal = $expenses->sum('amount');
+
+        activity()
+            ->causedBy(auth()->user())
+            ->on($expenseType)
+            ->withProperties(['expense_type' => $expenseType->name])
+            ->log('Melakukan export PDF laporan berdasarkan tipe biaya: ' . $expenseType->name);
 
         $pdf = Pdf::loadView('pdf.laporan_tipe_biaya', [
             'expenseType' => $expenseType,

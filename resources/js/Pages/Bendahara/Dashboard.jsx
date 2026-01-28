@@ -83,7 +83,7 @@ const ExportActions = ({ expenseTypes, handleExport, handleExportByType, selecte
 export default function Dashboard({ title, kpis, expenseSeries, projectExpenses, topProjects, months, expenseTypes }) {
   const [selectedExpenseType, setSelectedExpenseType] = useState('')
   function changeMonths(m) {
-    router.get('/bendahara/dashboard', { months: m }, {
+    router.get(route(route().current()), { months: m }, {
       preserveState: true,
       replace: true,
     })

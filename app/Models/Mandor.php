@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Mandor extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'name',
         'whatsapp_number',
@@ -34,5 +37,14 @@ class Mandor extends Model
                     ->where('status', 'ongoing');
             })
             ->withTimestamps();
+    }
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Mandor ini telah di-{$eventName}");
     }
 }

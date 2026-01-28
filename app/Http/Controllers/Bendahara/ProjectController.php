@@ -111,6 +111,12 @@ class ProjectController extends Controller
             'expenseType' => $expenseType,
         ]);
 
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($project)
+            ->withProperties(['expense_type' => $expenseType ? $expenseType->name : 'Semua'])
+            ->log('Melakukan export PDF laporan proyek: ' . $project->name);
+
         $fileName = 'Laporan_' . str_replace(' ', '_', $project->name);
         if ($expenseType) {
             $fileName .= '_' . str_replace(' ', '_', $expenseType->name);
@@ -148,12 +154,37 @@ class ProjectController extends Controller
 
         $project->update($validated);
 
+        // Detect Muliple Mandors changes
+        $oldMandors = $project->mandors->pluck('name')->toArray();
+        $mandorsChanged = false;
+
         // Sync multiple mandors jika ada
         if ($request->has('mandor_ids') && is_array($request->mandor_ids)) {
             $project->mandors()->sync($request->mandor_ids);
+            $mandorsChanged = true;
         } elseif ($request->has('mandor_id') && $request->mandor_id) {
             // Backward compatibility: jika hanya mandor_id yang dikirim
             $project->mandors()->sync([$request->mandor_id]);
+            $mandorsChanged = true;
+        }
+
+        if ($mandorsChanged) {
+            $project->refresh(); // Refresh relations
+            $newMandors = $project->mandors->pluck('name')->toArray();
+
+            // Log manually if list different
+            sort($oldMandors);
+            sort($newMandors);
+            if ($oldMandors !== $newMandors) {
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($project)
+                    ->withProperties([
+                        'old' => ['pelaksana' => implode(', ', $oldMandors)],
+                        'attributes' => ['pelaksana' => implode(', ', $newMandors)],
+                    ])
+                    ->log('updated'); // Use standard 'updated' event name so it shows in log as Update
+            }
         }
 
         return redirect()->back()->with('message', 'Proyek Berhasil Diperbarui');
