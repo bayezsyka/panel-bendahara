@@ -19,7 +19,7 @@ class CompleteProjectSeeder extends Seeder
         $this->command->info('Membersihkan data lama...');
         ExpenseItem::query()->delete();
         Expense::query()->delete();
-        \DB::table('mandor_project')->delete();
+        DB::table('mandor_project')->delete();
         Project::query()->delete();
 
         // Buat 3 projects
