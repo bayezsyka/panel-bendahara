@@ -49,6 +49,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        if (!$user->is_active) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Akun anda telah dinonaktifkan. Silahkan hubungi superadmin.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 
@@ -80,6 +88,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }

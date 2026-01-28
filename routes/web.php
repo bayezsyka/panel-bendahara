@@ -10,9 +10,23 @@ use App\Http\Controllers\Bendahara\DashboardController;
 use App\Http\Controllers\Bendahara\ProjectController;
 use App\Http\Controllers\Bendahara\ExpenseController;
 use App\Http\Controllers\Bendahara\ExpenseRequestController;
+use App\Http\Controllers\Superadmin\UserController;
 
+Route::middleware(['auth', 'verified', 'role:superadmin'])
+    ->prefix('superadmin')
+    ->name('superadmin.')
+    ->group(function () {
 
-Route::middleware(['auth', 'verified', 'role:bendahara'])
+        // Halaman Dashboard Superadmin (opsional, buat controller terpisah jika perlu)
+        Route::get('/dashboard', function () {
+            return Inertia::render('Superadmin/Dashboard');
+        })->name('dashboard');
+
+        // CRUD Users
+        Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
+    });
+
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
     ->prefix('bendahara')
     ->name('bendahara.')
     ->group(function () {
@@ -43,7 +57,12 @@ Route::get('/', function () {
         return redirect()->route('login');
     }
 
-    return redirect()->route('bendahara.dashboard');
+    $role = Auth::user()->role;
+    if ($role === 'superadmin' || $role === 'bendahara') {
+        return redirect()->route('bendahara.dashboard');
+    }
+
+    return redirect()->route('dashboard'); // Fallback for other roles
 });
 
 Route::get('/dashboard', function () {
@@ -54,31 +73,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
-
-
-//coba cek
-Route::get('/test-gemini', function () {
-    $service = new \App\Services\GeminiReceiptService();
-
-    // INI BASE64 JPEG ASLI (1x1 Pixel Putih)
-    $validJpegBase64 = "/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwf5ip//2Q==";
-
-    $result = $service->analyzeReceipt($validJpegBase64);
-
-    // Debugging: Jika null, kita cek log error terakhir
-    if (is_null($result)) {
-        return [
-            'status' => 'Gagal',
-            'pesan' => 'Cek storage/logs/laravel.log untuk detail errornya.',
-            'api_key' => substr(env('GEMINI_API_KEY'), 0, 5) . '...', // Cek apakah key terbaca
-        ];
-    }
-
-    return [
-        'status' => 'Berhasil!',
-        'hasil_ai' => $result,
-    ];
 });
 
 require __DIR__ . '/auth.php';

@@ -36,26 +36,26 @@ export default function BendaharaLayout({ children, header }) {
     const SidebarLink = ({ name, routeName, icon, badge }) => (
         <Link
             href={route(routeName)}
-            className={`group/link relative flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap ${
+            className={`group/link relative flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ease-in-out overflow-hidden whitespace-nowrap ${
                 isActive(routeName)
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                    : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                    : 'text-gray-600 hover:bg-indigo-50/80 hover:text-indigo-600'
             }`}
         >
-            {/* Ikon: Ukuran tetap agar tidak gepeng saat animasi */}
-            <div className={`flex-shrink-0 w-6 h-6 transition-colors duration-300 ${isActive(routeName) ? 'text-white' : 'text-gray-400 group-hover/link:text-indigo-600'}`}>
+            {/* Ikon: Ukuran diperkecil untuk proporsi lebih baik */}
+            <div className={`flex-shrink-0 w-5 h-5 transition-colors duration-200 ${isActive(routeName) ? 'text-white' : 'text-gray-500 group-hover/link:text-indigo-600'}`}>
                 {icon}
             </div>
             
             {/* Teks: Muncul saat parent di-hover */}
             {/* Menggunakan max-w dan opacity untuk transisi smooth */}
-            <span className={`ml-3 transition-all duration-300 ease-in-out md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs`}>
+            <span className={`ml-3 transition-all duration-200 ease-in-out md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs`}>
                 {name}
             </span>
 
             {/* Badge Notification */}
             {badge > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full transition-opacity duration-300">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm transition-opacity duration-200">
                     {badge}
                 </span>
             )}
@@ -63,7 +63,7 @@ export default function BendaharaLayout({ children, header }) {
             {/* Teks untuk Mobile (Selalu muncul di mobile) */}
             <span className="md:hidden ml-3">{name}</span>
             {badge > 0 && (
-                <span className="md:hidden ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full">
+                <span className="md:hidden ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm">
                     {badge}
                 </span>
             )}
@@ -84,7 +84,7 @@ export default function BendaharaLayout({ children, header }) {
             {/* --- SIDEBAR UTAMA --- */}
             <aside 
                 className={`
-                    group bg-white border-r border-gray-200 shadow-sm flex-shrink-0
+                    group bg-white border-r border-gray-200/60 shadow-xl flex-shrink-0
                     transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)]
                     
                     /* MOBILE: Fixed overlay dengan toggle */
@@ -117,66 +117,80 @@ export default function BendaharaLayout({ children, header }) {
                 </div>
 
                 {/* Menu Navigasi */}
-                <div className="p-3 space-y-2 overflow-y-auto h-[calc(100vh-5rem)] scrollbar-hide">
+                <div className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-5rem)] custom-scrollbar">
                     {/* Label Group Menu (Hanya muncul saat hover) */}
-                    <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4 transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
+                    <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
                         Menu Utama
                     </p>
                     
                     <SidebarLink 
                         name="Dashboard" 
                         routeName="bendahara.dashboard" 
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
                     />
                     
                     <SidebarLink 
                         name="Proyek Konstruksi" 
                         routeName="bendahara.projects.index" 
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
                     />
 
                     <SidebarLink 
                         name="Pelaksana" 
                         routeName="bendahara.mandors.index" 
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                     />
 
                     <SidebarLink 
                         name="Bendera" 
                         routeName="bendahara.benderas.index" 
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
                     />
 
                     <SidebarLink 
                         name="Tipe Biaya" 
                         routeName="bendahara.expense-types.index" 
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
                     />
 
                     <SidebarLink 
                         name="Pending WhatsApp" 
                         routeName="bendahara.expense_requests.index"
                         badge={usePage().props.pending_expense_requests_count}
-                        icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                     />
+
+                    {/* Menu Khusus Superadmin */}
+                    {auth.user.role === 'superadmin' && (
+                        <>
+                            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
+                                Admin
+                            </p>
+                            <SidebarLink 
+                                name="Kelola User" 
+                                routeName="superadmin.users.index" 
+                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+                            />
+                        </>
+                    )}
 
 
                     {/* Divider & Menu Akun */}
                     <div className="pt-4 mt-4 border-t border-gray-100">
-                        <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
+                        <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
                             Akun
                         </p>
                         
                         <Link 
                             href={route('profile.edit')}
-                            className="group/link flex items-center px-4 py-3 text-sm font-medium rounded-xl text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-all duration-300 overflow-hidden whitespace-nowrap"
+                            className="group/link flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 overflow-hidden whitespace-nowrap"
                         >
-                            <div className="flex-shrink-0 w-6 h-6 text-gray-400 group-hover/link:text-indigo-600 transition-colors">
+                            <div className="flex-shrink-0 w-5 h-5 text-gray-500 group-hover/link:text-indigo-600 transition-colors">
                                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                             </div>
-                            <span className="ml-3 transition-all duration-300 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
+                            <span className="ml-3 transition-all duration-200 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
                                 Profil Saya
                             </span>
                              <span className="md:hidden ml-3">Profil Saya</span>
@@ -186,14 +200,14 @@ export default function BendaharaLayout({ children, header }) {
                             href={route('logout')} 
                             method="post" 
                             as="button"
-                            className="w-full text-left group/link flex items-center px-4 py-3 text-sm font-medium rounded-xl text-red-500 hover:bg-red-50 transition-all duration-300 overflow-hidden whitespace-nowrap"
+                            className="w-full text-left group/link flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-red-500 hover:bg-red-50 transition-all duration-200 overflow-hidden whitespace-nowrap"
                         >
-                            <div className="flex-shrink-0 w-6 h-6 text-red-400 group-hover/link:text-red-600 transition-colors">
+                            <div className="flex-shrink-0 w-5 h-5 text-red-400 group-hover/link:text-red-600 transition-colors">
                                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                 </svg>
                             </div>
-                            <span className="ml-3 transition-all duration-300 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
+                            <span className="ml-3 transition-all duration-200 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
                                 Keluar
                             </span>
                             <span className="md:hidden ml-3">Keluar</span>
