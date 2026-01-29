@@ -15,6 +15,11 @@ class ExpenseType extends Model
         'code',
     ];
 
+    public function expenses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Expense::class, 'expense_type_id');
+    }
+
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()

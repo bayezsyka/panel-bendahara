@@ -11,7 +11,7 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Activity::with('causer') // causer adalah user yang melakukan aksi
+        $query = Activity::with(['causer', 'subject']) // causer adalah user yang melakukan aksi, subject adalah data yang dirubah
             ->latest();
 
         // Fitur Search sederhana
@@ -155,7 +155,7 @@ class ActivityLogController extends Controller
                 return route('superadmin.users.index', ['search' => $log->properties['attributes']['name'] ?? '']);
 
             case 'App\Models\Project':
-                return route('bendahara.projects.show', $log->subject_id);
+                return $log->subject ? route('bendahara.projects.show', $log->subject) : null;
 
                 // Tambahkan model lain di sini
                 // case 'App\Models\Expense':

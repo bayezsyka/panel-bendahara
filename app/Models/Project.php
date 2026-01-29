@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Project extends Model
@@ -14,6 +15,7 @@ class Project extends Model
     use LogsActivity;
     protected $fillable = [
         'name',
+        'slug',
         'description',
         'status',
         'coordinates',
@@ -21,6 +23,31 @@ class Project extends Model
         'bendera_id',
         'location',
     ];
+
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($project) {
+            if ($project->isDirty('name') || empty($project->slug)) {
+                $slug = Str::slug($project->name);
+                $originalSlug = $slug;
+                $count = 1;
+
+                // Ensure uniqueness (except for self)
+                while (static::where('slug', $slug)->where('id', '!=', $project->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count++;
+                }
+
+                $project->slug = $slug;
+            }
+        });
+    }
 
     protected $casts = [
         'created_at' => 'datetime',

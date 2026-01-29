@@ -24,7 +24,7 @@ const SelectedProjectExportActions = ({ project, expenseTypes }) => {
   const [selectedType, setSelectedType] = useState('');
 
   const onExportAll = () => {
-    window.open(route('bendahara.projects.export', { project: project.id }), '_blank');
+    window.open(route('bendahara.projects.export', { project: project.slug || project.id }), '_blank');
     setOpen(false);
   };
 
@@ -33,7 +33,7 @@ const SelectedProjectExportActions = ({ project, expenseTypes }) => {
       alert('Pilih tipe biaya terlebih dahulu');
       return;
     }
-    window.open(route('bendahara.projects.export', { project: project.id, expense_type_id: selectedType }), '_blank');
+    window.open(route('bendahara.projects.export', { project: project.slug || project.id, expense_type_id: selectedType }), '_blank');
     setOpen(false);
   };
 
@@ -196,7 +196,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
   const submitEditProject = (e) => {
     e.preventDefault()
-    editForm.put(route('bendahara.projects.update', project.id), {
+    editForm.put(route('bendahara.projects.update', project.slug || project.id), {
         onSuccess: () => setShowEditModal(false)
     })
   }
@@ -235,7 +235,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        router.delete(route('bendahara.projects.destroy', project.id));
+        router.delete(route('bendahara.projects.destroy', project.slug || project.id));
       }
     });
   }

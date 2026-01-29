@@ -72,6 +72,21 @@ class DashboardController extends Controller
         // Get all expense types for the filter
         $expenseTypes = ExpenseType::orderBy('name')->get(['id', 'name']);
 
+        // Data pengeluaran per tipe biaya (untuk chart breakdown)
+        $expenseByType = ExpenseType::withSum('expenses', 'amount')
+            ->having('expenses_sum_amount', '>', 0)
+            ->orderByDesc('expenses_sum_amount')
+            ->get()
+            ->map(fn($t) => [
+                'id' => $t->id,
+                'name' => $t->name,
+                'code' => $t->code,
+                'total' => (int) ($t->expenses_sum_amount ?? 0),
+            ]);
+
+        // Data pengeluaran per tipe biaya per bulan (untuk trend analysis)
+        $expenseByTypeMonthly = $this->monthlyExpenseByTypeSeries($months, $now);
+
         return Inertia::render('Bendahara/Dashboard', [
             'title' => 'Dashboard Bendahara',
             'months' => $months,
@@ -80,6 +95,8 @@ class DashboardController extends Controller
             'projectExpenses' => $projectExpenses,
             'topProjects' => $topProjects,
             'expenseTypes' => $expenseTypes,
+            'expenseByType' => $expenseByType,
+            'expenseByTypeMonthly' => $expenseByTypeMonthly,
         ]);
     }
 
@@ -94,7 +111,7 @@ class DashboardController extends Controller
         }, 'mandor'])->get();
 
         activity()
-            ->causedBy(auth()->user())
+            ->causedBy($request->user())
             ->withProperties(['with_receipts' => $withReceipts])
             ->log('Melakukan export PDF laporan keseluruhan');
 
@@ -137,7 +154,7 @@ class DashboardController extends Controller
         $grandTotal = $expenses->sum('amount');
 
         activity()
-            ->causedBy(auth()->user())
+            ->causedBy($request->user())
             ->on($expenseType)
             ->withProperties(['expense_type' => $expenseType->name])
             ->log('Melakukan export PDF laporan berdasarkan tipe biaya: ' . $expenseType->name);
@@ -180,6 +197,46 @@ class DashboardController extends Controller
                 'expense' => $total,
             ];
 
+            $cursor->addMonth();
+        }
+
+        return $out;
+    }
+
+    private function monthlyExpenseByTypeSeries(int $months, Carbon $now): array
+    {
+        $start = $now->copy()->startOfMonth()->subMonths($months - 1)->toDateString();
+        $end = $now->copy()->endOfMonth()->toDateString();
+
+        // Get all expense types
+        $expenseTypes = ExpenseType::all();
+
+        // Get expense data grouped by type and month
+        $rows = Expense::query()
+            ->selectRaw("expense_type_id, DATE_FORMAT(transacted_at, '%Y-%m') as ym, SUM(amount) as total")
+            ->whereBetween('transacted_at', [$start, $end])
+            ->groupBy('expense_type_id', 'ym')
+            ->get();
+
+        // Create a lookup for quick access
+        $lookup = [];
+        foreach ($rows as $row) {
+            $lookup[$row->expense_type_id][$row->ym] = (int) $row->total;
+        }
+
+        // Build the series data
+        $out = [];
+        $cursor = $now->copy()->startOfMonth()->subMonths($months - 1);
+
+        for ($i = 0; $i < $months; $i++) {
+            $ym = $cursor->format('Y-m');
+            $entry = ['month' => $ym];
+
+            foreach ($expenseTypes as $type) {
+                $entry[$type->name] = $lookup[$type->id][$ym] ?? 0;
+            }
+
+            $out[] = $entry;
             $cursor->addMonth();
         }
 

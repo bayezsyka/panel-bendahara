@@ -6,7 +6,8 @@ import Dropdown, { DropDownContext } from '@/Components/Dropdown'
 import {
   ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis,
+  AreaChart, Area, ComposedChart, Line,
+  XAxis, YAxis, CartesianGrid,
   Tooltip, Legend
 } from 'recharts'
 
@@ -80,7 +81,7 @@ const ExportActions = ({ expenseTypes, handleExport, handleExportByType, selecte
   );
 };
 
-export default function Dashboard({ title, kpis, expenseSeries, projectExpenses, topProjects, months, expenseTypes }) {
+export default function Dashboard({ title, kpis, expenseSeries, projectExpenses, topProjects, months, expenseTypes, expenseByType, expenseByTypeMonthly }) {
   const [selectedExpenseType, setSelectedExpenseType] = useState('')
   function changeMonths(m) {
     router.get(route(route().current()), { months: m }, {
@@ -290,6 +291,251 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
             )}
           </div>
         </div>
+
+        {/* Expense By Type Analysis Section */}
+        {expenseByType && expenseByType.length > 0 && (
+          <div className="space-y-6">
+            {/* Section Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Analisis Per Tipe Biaya</h2>
+                <p className="text-sm text-gray-500 mt-1">Breakdown pengeluaran berdasarkan kategori biaya</p>
+              </div>
+            </div>
+
+            {/* Summary Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {expenseByType.slice(0, 4).map((type, index) => {
+                const colors = [
+                  { bg: 'from-indigo-500 to-purple-600', icon: 'bg-indigo-400/30' },
+                  { bg: 'from-emerald-500 to-teal-600', icon: 'bg-emerald-400/30' },
+                  { bg: 'from-orange-500 to-amber-600', icon: 'bg-orange-400/30' },
+                  { bg: 'from-pink-500 to-rose-600', icon: 'bg-pink-400/30' },
+                ];
+                const color = colors[index % colors.length];
+                const totalAll = expenseByType.reduce((sum, t) => sum + t.total, 0);
+                const percentage = totalAll > 0 ? ((type.total / totalAll) * 100).toFixed(1) : 0;
+                
+                return (
+                  <div 
+                    key={type.id}
+                    className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${color.bg} p-5 text-white shadow-lg`}
+                  >
+                    <div className={`absolute -right-4 -top-4 h-24 w-24 rounded-full ${color.icon}`}></div>
+                    <div className="relative">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/20 text-sm font-bold">
+                          #{index + 1}
+                        </span>
+                        <span className="text-xs font-medium text-white/80 uppercase tracking-wide">
+                          Top {index + 1}
+                        </span>
+                      </div>
+                      <h4 className="font-semibold text-sm truncate mb-1" title={type.name}>
+                        {type.name}
+                      </h4>
+                      <p className="text-lg font-bold">{rupiah(type.total)}</p>
+                      <div className="mt-2 flex items-center gap-2">
+                        <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-white rounded-full transition-all duration-500" 
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium">{percentage}%</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Horizontal Bar Chart - Total by Type */}
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Total Per Tipe Biaya</h3>
+                  <p className="text-sm text-gray-500">Perbandingan total pengeluaran per kategori</p>
+                </div>
+                <div style={{ width: '100%', height: 320 }}>
+                  <ResponsiveContainer>
+                    <BarChart 
+                      data={expenseByType} 
+                      layout="vertical"
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                      <XAxis 
+                        type="number" 
+                        tickFormatter={(v) => new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(v)}
+                        tick={{ fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        type="category" 
+                        dataKey="name" 
+                        width={100}
+                        tick={{ fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(name) => name.length > 12 ? name.substring(0, 12) + '...' : name}
+                      />
+                      <Tooltip 
+                        formatter={(value) => [rupiah(value), 'Total']}
+                        contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                        cursor={{ fill: 'rgba(99, 102, 241, 0.05)' }}
+                      />
+                      <Bar 
+                        dataKey="total" 
+                        radius={[0, 6, 6, 0]}
+                        maxBarSize={35}
+                      >
+                        {expenseByType.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Stacked Area Chart - Monthly Trend by Type */}
+              <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Tren Bulanan Per Tipe</h3>
+                  <p className="text-sm text-gray-500">Perkembangan pengeluaran per kategori tiap bulan</p>
+                </div>
+                <div style={{ width: '100%', height: 320 }}>
+                  <ResponsiveContainer>
+                    <AreaChart 
+                      data={expenseByTypeMonthly}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        {expenseByType.map((type, index) => (
+                          <linearGradient key={type.id} id={`colorType${index}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8}/>
+                            <stop offset="95%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1}/>
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                      <XAxis 
+                        dataKey="month" 
+                        tickFormatter={monthLabel}
+                        tick={{ fontSize: 11 }}
+                        axisLine={{ stroke: '#e5e7eb' }}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        tickFormatter={(v) => new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(v)}
+                        tick={{ fontSize: 11 }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip 
+                        formatter={(value, name) => [rupiah(value), name]}
+                        labelFormatter={(label) => monthLabel(label)}
+                        contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: 20 }}
+                        iconType="circle"
+                        iconSize={8}
+                        formatter={(value) => <span className="text-xs text-gray-600">{value.length > 15 ? value.substring(0, 15) + '...' : value}</span>}
+                      />
+                      {expenseByType.slice(0, 5).map((type, index) => (
+                        <Area 
+                          key={type.id}
+                          type="monotone"
+                          dataKey={type.name}
+                          stackId="1"
+                          stroke={COLORS[index % COLORS.length]}
+                          fill={`url(#colorType${index})`}
+                          strokeWidth={2}
+                        />
+                      ))}
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Breakdown Table */}
+            <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900">Detail Pengeluaran Per Tipe Biaya</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-left">
+                    <tr>
+                      <th className="px-6 py-3 font-medium text-gray-500">Tipe Biaya</th>
+                      <th className="px-6 py-3 text-right font-medium text-gray-500">Total</th>
+                      <th className="px-6 py-3 font-medium text-gray-500">Proporsi</th>
+                      <th className="px-6 py-3 text-right font-medium text-gray-500">%</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {expenseByType.map((type, index) => {
+                      const totalAll = expenseByType.reduce((sum, t) => sum + t.total, 0);
+                      const percentage = totalAll > 0 ? ((type.total / totalAll) * 100) : 0;
+                      
+                      return (
+                        <tr key={type.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="w-3 h-3 rounded-full flex-shrink-0" 
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              ></div>
+                              <span className="font-medium text-gray-900">{type.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right font-medium text-gray-900">
+                            {rupiah(type.total)}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="h-2 rounded-full transition-all duration-500"
+                                style={{ 
+                                  width: `${percentage}%`,
+                                  backgroundColor: COLORS[index % COLORS.length]
+                                }}
+                              ></div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                              {percentage.toFixed(1)}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot className="bg-gray-50">
+                    <tr>
+                      <td className="px-6 py-3 font-semibold text-gray-900">Total</td>
+                      <td className="px-6 py-3 text-right font-semibold text-gray-900">
+                        {rupiah(expenseByType.reduce((sum, t) => sum + t.total, 0))}
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="w-full bg-gray-300 rounded-full h-2">
+                          <div className="h-2 rounded-full bg-indigo-600 w-full"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-right font-semibold text-gray-900">100%</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Top Projects Table */}
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm">

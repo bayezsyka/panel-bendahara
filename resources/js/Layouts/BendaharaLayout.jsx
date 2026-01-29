@@ -259,7 +259,7 @@ export default function BendaharaLayout({ children, header }) {
 
 
             {/* DEMO MODE INDICATOR */}
-            <div className="fixed bottom-4 right-4 z-[100] pointer-events-none select-none">
+            {/* <div className="fixed bottom-4 right-4 z-[100] pointer-events-none select-none">
                 <div className="bg-orange-600/90 backdrop-blur-sm text-white px-4 py-2.5 rounded-xl shadow-2xl border-2 border-white/20 flex items-center gap-3 animate-fade-in-up">
                     <div className="bg-white/20 p-1.5 rounded-full">
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -271,7 +271,7 @@ export default function BendaharaLayout({ children, header }) {
                         <span className="text-[10px] font-medium text-white">Data Simulasi & Tidak Permanen</span>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </div>
     );
 }

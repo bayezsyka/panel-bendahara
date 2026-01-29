@@ -66,7 +66,9 @@ export default function Index({ projects, mandors, benderas }) {
     e.preventDefault()
     
     if (isEditing) {
-        put(route('bendahara.projects.update', currentProject.id), {
+        // Use slug for update route if available, otherwise id (though backend expects slug now)
+        const identifier = currentProject.slug || currentProject.id;
+        put(route('bendahara.projects.update', identifier), {
             onSuccess: () => {
                 setShowModal(false)
                 reset()
@@ -124,7 +126,7 @@ export default function Index({ projects, mandors, benderas }) {
           {filteredProjects.length > 0 ? (
             filteredProjects.map((project) => (
               <div key={project.id} className="group flex flex-col bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition duration-200 overflow-hidden">
-                  <Link href={route('bendahara.projects.show', project.id)} className="flex-1 p-5 block">
+                  <Link href={route('bendahara.projects.show', project.slug || project.id)} className="flex-1 p-5 block">
                       <div className="flex justify-between items-start mb-4">
                           <div className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                               project.status === 'ongoing' 
@@ -185,7 +187,7 @@ export default function Index({ projects, mandors, benderas }) {
                   </Link>
   
                   <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-between items-center">
-                      <Link href={route('bendahara.projects.show', project.id)} className="text-xs font-medium text-gray-600 hover:text-indigo-600">
+                      <Link href={route('bendahara.projects.show', project.slug || project.id)} className="text-xs font-medium text-gray-600 hover:text-indigo-600">
                           Lihat Detail
                       </Link>
                       
