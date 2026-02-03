@@ -152,7 +152,7 @@
                         <div>( {{ strtoupper($mandor->name) }} )</div>
                     </td>
                     <td>
-                        <strong>FINANCE</strong>
+                        <strong>Finance</strong>
                         <div class="signature-box"></div>
                         <div>( .................................... )</div>
                     </td>
