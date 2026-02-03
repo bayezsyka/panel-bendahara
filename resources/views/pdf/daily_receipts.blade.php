@@ -147,7 +147,7 @@
             <table class="footer-table">
                 <tr>
                     <td>
-                        <strong>Pelaksana</strong>
+                        <strong>Received by</strong>
                         <div class="signature-box"></div>
                         <div>( {{ strtoupper($mandor->name) }} )</div>
                     </td>
