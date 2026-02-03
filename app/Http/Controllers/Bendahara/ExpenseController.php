@@ -123,4 +123,28 @@ class ExpenseController extends Controller
 
         return redirect()->back()->with('message', 'Pengeluaran dihapus.');
     }
+
+    public function print(Expense $expense)
+    {
+        $expense->load(['project', 'expenseType', 'items', 'project.mandor', 'project.mandors']);
+
+        // Determine Pay To (Mandor Name)
+        // If project has multiple mandors, maybe list primary or all? 
+        // For now, let's try to get from project->mandor (legacy) or first of mandors
+        $payTo = '-';
+        if ($expense->project) {
+            if ($expense->project->mandor) {
+                $payTo = $expense->project->mandor->name;
+            } elseif ($expense->project->mandors->count() > 0) {
+                $payTo = $expense->project->mandors->first()->name;
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.receipt', [
+            'expense' => $expense,
+            'payTo' => $payTo
+        ]);
+
+        return $pdf->stream('kwitansi-' . $expense->id . '.pdf');
+    }
 }

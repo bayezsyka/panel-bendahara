@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
         Route::get('/export-all-pdf', [DashboardController::class, 'exportAllPdf'])->name('export.all.pdf');
         Route::get('/export-by-type-pdf', [DashboardController::class, 'exportByTypePdf'])->name('export.by.type.pdf');
         Route::resource('projects', ProjectController::class);
+        Route::get('/expenses/{expense}/print', [ExpenseController::class, 'print'])->name('expenses.print');
         Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy', 'update']);
         Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');
 
@@ -37,8 +38,9 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
         Route::put('/expense-requests/{expenseRequest}/approve', [ExpenseRequestController::class, 'approve'])->name('expense_requests.approve');
         Route::put('/expense-requests/{expenseRequest}/reject', [ExpenseRequestController::class, 'reject'])->name('expense_requests.reject');
 
+        Route::get('mandors/{mandor}/export-daily', [\App\Http\Controllers\Bendahara\MandorController::class, 'exportDailyExpenses'])->name('mandors.export-daily');
         Route::resource('mandors', \App\Http\Controllers\Bendahara\MandorController::class)
-            ->except(['create', 'show', 'edit']);
+            ->except(['create', 'edit']);
 
         Route::resource('benderas', \App\Http\Controllers\Bendahara\BenderaController::class)
             ->except(['create', 'show', 'edit']);
