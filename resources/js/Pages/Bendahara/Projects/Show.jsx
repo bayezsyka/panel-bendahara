@@ -97,6 +97,11 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
     ]
   })
 
+  // State to track if title is manually edited
+  const [isTitleTouched, setIsTitleTouched] = useState(false)
+
+
+
   const currentTotal = data.items.reduce((acc, item) => acc + (item.quantity * item.price), 0);
 
   const editForm = useForm({
@@ -117,6 +122,14 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
   });
 
   const [editingExpenseId, setEditingExpenseId] = useState(null)
+
+  // Effect to auto-fill title from first item
+  const firstItemName = data.items.length > 0 ? data.items[0].name : '';
+  React.useEffect(() => {
+    if (!isTitleTouched && !editingExpenseId && firstItemName) {
+        setData('title', firstItemName)
+    }
+  }, [firstItemName, isTitleTouched, editingExpenseId])
 
   const handleAddItem = () => {
       setData('items', [...data.items, { name: '', quantity: 1, price: 0 }]);
@@ -144,6 +157,8 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
         receipt_image: null,
         items: [{ name: '', quantity: 1, price: 0 }]
     })
+
+    setIsTitleTouched(false)
     setShowExpenseModal(true)
   }
 
@@ -162,6 +177,8 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
             price: item.price
         }))
     })
+
+    setIsTitleTouched(true)
     setShowExpenseModal(true)
   }
 
@@ -664,10 +681,12 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
               <InputLabel value="Judul Nota / Toko" />
               <TextInput 
                 value={data.title}
-                onChange={e => setData('title', e.target.value)}
+                onChange={e => {
+                    setData('title', e.target.value)
+                    setIsTitleTouched(true)
+                }}
                 className="mt-1 block w-full"
                 placeholder="Cth: TB. Sinar Jaya"
-                required
               />
               <InputError message={errors.title} className="mt-2" />
             </div>
