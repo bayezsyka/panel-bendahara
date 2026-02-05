@@ -91,6 +91,10 @@ class CustomerController extends Controller
             'customer' => $customer,
             'transactions' => $customer->receivableTransactions,
             'grades' => $grades,
+            'permissions' => [
+                'can_update_transaction' => auth()->user()->can('update', \App\Models\ReceivableTransaction::class),
+                'can_delete_transaction' => auth()->user()->can('delete', \App\Models\ReceivableTransaction::class),
+            ]
         ]);
     }
 

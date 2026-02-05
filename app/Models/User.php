@@ -25,6 +25,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_active',
+        'office_id',
     ];
 
     /**
@@ -48,13 +49,36 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'office_id' => 'integer',
         ];
+    }
+
+    // Role Helpers
+    public function isSuperAdmin()
+    {
+        return $this->role === 'superadmin';
+    }
+
+    public function isBendahara()
+    {
+        return $this->role === 'bendahara';
+    }
+
+    // Access Methods
+    public function hasAccessToFinance()
+    {
+        return in_array($this->role, ['superadmin', 'bendahara']);
+    }
+
+    public function hasAccessToReceivable()
+    {
+        return in_array($this->role, ['superadmin', 'bendahara']);
     }
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'role', 'is_active']) // Kolom apa yang dipantau
+            ->logOnly(['name', 'email', 'role', 'is_active', 'office_id']) // Kolom apa yang dipantau
             ->logOnlyDirty() // Hanya catat yang berubah
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "User ini telah di-{$eventName}");

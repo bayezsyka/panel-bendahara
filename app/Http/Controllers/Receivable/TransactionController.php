@@ -11,6 +11,7 @@ class TransactionController extends Controller
 {
     public function store(Request $request)
     {
+        $this->authorize('create', ReceivableTransaction::class);
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'date' => 'required|date',
@@ -33,7 +34,7 @@ class TransactionController extends Controller
             'bill_amount' => $validated['bill_amount'] ?? 0,
             'payment_amount' => $validated['payment_amount'] ?? 0,
             'notes' => $validated['notes'],
-            'office_id' => 1, // Default office
+            'office_id' => app(\App\Services\OfficeContextService::class)->getCurrentOfficeId(),
         ]);
 
         return Redirect::back()->with('message', 'Transaksi berhasil ditambahkan.');
@@ -41,6 +42,7 @@ class TransactionController extends Controller
 
     public function update(Request $request, ReceivableTransaction $transaction)
     {
+        $this->authorize('update', $transaction);
         $validated = $request->validate([
             'date' => 'required|date',
             'description' => 'required|string|max:255',
@@ -68,6 +70,7 @@ class TransactionController extends Controller
 
     public function destroy(ReceivableTransaction $transaction)
     {
+        $this->authorize('delete', $transaction);
         $transaction->delete();
         return Redirect::back()->with('message', 'Transaksi berhasil dihapus.');
     }

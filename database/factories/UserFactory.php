@@ -29,6 +29,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'bendahara_utama',
+            'office_id' => 1,
+            'is_active' => true,
         ];
     }
 
@@ -37,8 +40,32 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function superadmin(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'superadmin',
+            'office_id' => 1,
+        ]);
+    }
+
+    public function bendaharaUtama(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'bendahara_utama',
+            'office_id' => 1,
+        ]);
+    }
+
+    public function adminPlant(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'role' => 'admin_plant',
+            'office_id' => 2,
         ]);
     }
 }

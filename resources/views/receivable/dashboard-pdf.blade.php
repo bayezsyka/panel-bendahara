@@ -50,6 +50,16 @@
 <body>
     <div class="header">
         <h2>LAPORAN PIUTANG</h2>
+        <div style="margin-top: -10px; font-weight: bold; color: #666;">
+            STATUS:
+            @if (($status ?? 'all') === 'all')
+                SEMUA CUSTOMER
+            @elseif($status === 'lunas')
+                CUSTOMER LUNAS
+            @elseif($status === 'belum_lunas')
+                CUSTOMER BELUM LUNAS
+            @endif
+        </div>
     </div>
 
     <table>

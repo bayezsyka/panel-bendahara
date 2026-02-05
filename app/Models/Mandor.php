@@ -14,7 +14,18 @@ class Mandor extends Model
     protected $fillable = [
         'name',
         'whatsapp_number',
+        'office_id',
     ];
+
+    protected $casts = [
+        'office_id' => 'integer',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+    }
 
     /**
      * Relasi many-to-many dengan Project

@@ -47,15 +47,28 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function exportPdf()
+    public function exportPdf(\Illuminate\Http\Request $request)
     {
-        $customers = Customer::forCurrentOffice()
+        $status = $request->input('status', 'all');
+
+        $query = Customer::forCurrentOffice()
             ->withSum('receivableTransactions', 'bill_amount')
             ->withSum('receivableTransactions', 'payment_amount')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
 
-        $pdf = Pdf::loadView('receivable.dashboard-pdf', compact('customers'));
-        return $pdf->stream('laporan-piutang.pdf');
+        $customers = $query->get();
+
+        // Filter based on status
+        if ($status !== 'all') {
+            $customers = $customers->filter(function ($customer) use ($status) {
+                $balance = ($customer->receivable_transactions_sum_bill_amount ?? 0) - ($customer->receivable_transactions_sum_payment_amount ?? 0);
+                if ($status === 'lunas') return $balance <= 0;
+                if ($status === 'belum_lunas') return $balance > 0;
+                return true;
+            });
+        }
+
+        $pdf = Pdf::loadView('receivable.dashboard-pdf', compact('customers', 'status'));
+        return $pdf->stream('laporan-piutang-' . $status . '.pdf');
     }
 }

@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])
         // CRUD Users
         Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
         Route::get('/activity-logs', [\App\Http\Controllers\Superadmin\ActivityLogController::class, 'index'])->name('activity_logs.index');
+        Route::post('/switch-office', [\App\Http\Controllers\Superadmin\OfficeSwitcherController::class, 'switch'])->name('office.switch');
     });
 
 Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])

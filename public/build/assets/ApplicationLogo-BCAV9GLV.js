@@ -1,0 +1,1 @@
+import{j as a}from"./app-BqN6F9dy.js";function t(o){return a.jsx("img",{...o,src:"https://jkk.sangkolo.store/images/logo.png",alt:"Logo Bendahara",className:`object-contain ${o.className}`})}export{t as A};

@@ -22,9 +22,15 @@ class UserController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        $offices = [
+            ['id' => 1, 'name' => 'Kantor Utama'],
+            ['id' => 2, 'name' => 'Kantor Plant'],
+        ];
+
         return Inertia::render('Superadmin/Users/Index', [
             'users' => $users,
-            'filters' => request()->only(['search'])
+            'filters' => request()->only(['search']),
+            'offices' => $offices,
         ]);
     }
 
@@ -33,8 +39,9 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8', // Password wajib saat create
-            'role' => 'required|string|in:superadmin,bendahara,mandor,user', // Sesuaikan role yang ada
+            'password' => 'required|string|min:8',
+            'role' => 'required|string|in:superadmin,bendahara',
+            'office_id' => 'required|integer|in:1,2',
             'is_active' => 'boolean'
         ]);
 
@@ -43,6 +50,7 @@ class UserController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $validated['role'],
+            'office_id' => $validated['office_id'],
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
@@ -55,15 +63,17 @@ class UserController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
-            'role' => 'required|string|in:superadmin,bendahara,mandor,user',
+            'role' => 'required|string|in:superadmin,bendahara',
+            'office_id' => 'required|integer|in:1,2',
             'is_active' => 'boolean',
-            'password' => 'nullable|string|min:8', // Password opsional saat edit
+            'password' => 'nullable|string|min:8',
         ]);
 
         $user->fill([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'role' => $validated['role'],
+            'office_id' => $validated['office_id'],
             'is_active' => $validated['is_active'],
         ]);
 

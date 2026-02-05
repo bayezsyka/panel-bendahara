@@ -28,6 +28,7 @@ class ExpenseRequest extends Model
         'rejected_by',
         'rejected_at',
         'review_note',
+        'office_id',
     ];
 
     protected $casts = [
@@ -36,7 +37,14 @@ class ExpenseRequest extends Model
         'amount' => 'decimal:2',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
+        'office_id' => 'integer',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+    }
 
     public function mandor(): BelongsTo
     {

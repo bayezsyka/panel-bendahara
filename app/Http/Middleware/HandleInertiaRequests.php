@@ -33,10 +33,15 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+                'current_office' => $request->user() ? [
+                    'id' => app(\App\Services\OfficeContextService::class)->getCurrentOfficeId(),
+                    'name' => app(\App\Services\OfficeContextService::class)->getOfficeName(),
+                ] : null,
+                'can_switch_office' => $request->user() ? $request->user()->isSuperAdmin() : false,
             ],
             'pending_expense_requests_count' => function () {
                 // Hanya hitung jika user sudah login (opsional: cek role)
-                if (auth()->check()) {
+                if (\Illuminate\Support\Facades\Auth::check()) {
                     return \App\Models\ExpenseRequest::where('status', 'pending')->count();
                 }
                 return 0;

@@ -22,6 +22,7 @@ class Project extends Model
         'mandor_id',
         'bendera_id',
         'location',
+        'office_id',
     ];
 
     public function getRouteKeyName()
@@ -32,6 +33,8 @@ class Project extends Model
     protected static function boot()
     {
         parent::boot();
+
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
 
         static::saving(function ($project) {
             if ($project->isDirty('name') || empty($project->slug)) {
@@ -52,6 +55,7 @@ class Project extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'office_id' => 'integer',
     ];
 
     public function expenses(): HasMany

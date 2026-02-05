@@ -20,11 +20,18 @@ class Expense extends Model
         'receipt_image',
         'status',
         'transacted_at',
+        'office_id',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+    }
     protected $casts = [
         'transacted_at' => 'date',
         'amount' => 'decimal:2',
+        'office_id' => 'integer',
     ];
 
     public function project(): BelongsTo

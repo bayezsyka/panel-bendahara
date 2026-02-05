@@ -13,7 +13,18 @@ class Bendera extends Model
     protected $fillable = [
         'name',
         'code',
+        'office_id',
     ];
+
+    protected $casts = [
+        'office_id' => 'integer',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+    }
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {

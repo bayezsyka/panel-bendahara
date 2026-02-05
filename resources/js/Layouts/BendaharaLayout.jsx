@@ -29,7 +29,7 @@ export default function BendaharaLayout({ children, header }) {
         }
     }, [flash]);
 
-    const [activePanel, setActivePanel] = useState(route().current('receivable.*') ? 'receivable' : 'finance');
+    const activePanel = route().current('receivable.*') ? 'receivable' : 'finance';
 
     // Helper untuk mengecek link aktif
     const isActive = (routeName) => route().current(routeName);
@@ -121,28 +121,62 @@ export default function BendaharaLayout({ children, header }) {
                 {/* Menu Navigasi */}
                 <div className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-5rem)] custom-scrollbar">
                     
-                    {/* Panel Switcher Dropdown */}
-                    <div className="mb-4 px-1">
-                        <div className="relative">
-                            <select
-                                value={activePanel}
-                                onChange={(e) => setActivePanel(e.target.value)}
-                                className="w-full appearance-none bg-indigo-50 border border-indigo-100 text-indigo-900 text-xs font-semibold rounded-lg py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer transition-all duration-200 md:opacity-0 md:w-0 md:group-hover:opacity-100 md:group-hover:w-full overflow-hidden"
-                            >
-                                <option value="finance">PROYEK & FINANCE</option>
-                                <option value="receivable">PANEL PIUTANG</option>
-                            </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-indigo-600 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    {/* Panel Switcher Toggle (Premium Saklar Style) */}
+                    <div className="mb-6 px-2 min-h-[40px] flex items-center justify-center">
+                        {/* Expanded State (Hover) */}
+                        <div className="hidden md:group-hover:block w-full transition-all duration-300">
+                             <div className="relative p-1 bg-gray-100 rounded-xl flex items-center border border-gray-200/50">
+                                {/* Sliding Background */}
+                                <div 
+                                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                                        activePanel === 'finance' ? 'left-1' : 'left-[calc(50%+1px)]'
+                                    }`}
+                                ></div>
+
+                                {/* Finance Option */}
+                                <Link 
+                                    href={route('bendahara.dashboard')}
+                                    className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
+                                        activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                                >
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Finance</span>
+                                </Link>
+
+                                {/* Receivable Option */}
+                                <Link 
+                                    href={route('receivable.dashboard')}
+                                    className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
+                                        activePanel === 'receivable' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                                >
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Piutang</span>
+                                </Link>
                             </div>
-                            
-                            {/* Icon Only for Collapsed State */}
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none md:group-hover:opacity-0 transition-opacity duration-200">
+                        </div>
+
+                        {/* Collapsed State (Default) */}
+                        <div className="md:block md:group-hover:hidden transition-all duration-200">
+                            <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600 shadow-sm border border-indigo-100">
                                 {activePanel === 'finance' ? (
-                                    <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 ) : (
-                                    <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Mobile State (Selalu block dlm mobile flow) */}
+                        <div className="md:hidden w-full">
+                            {/* Copy of the expanded toggle for mobile */}
+                            <div className="relative p-1 bg-gray-100 rounded-xl flex items-center border border-gray-200/50">
+                                <div 
+                                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ${
+                                        activePanel === 'finance' ? 'left-1' : 'left-[calc(50%+1px)]'
+                                    }`}
+                                ></div>
+                                <Link href={route('bendahara.dashboard')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400'}`}>Finance</Link>
+                                <Link href={route('receivable.dashboard')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'receivable' ? 'text-indigo-600' : 'text-gray-400'}`}>Piutang</Link>
                             </div>
                         </div>
                     </div>
@@ -287,12 +321,62 @@ export default function BendaharaLayout({ children, header }) {
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
                         </button>
-                        <span className="font-bold text-gray-800">Bendahara Panel</span>
+                        <div className="flex flex-col min-w-0">
+                            <span className="font-bold text-gray-800 text-sm truncate">
+                                {activePanel === 'finance' ? 'Finance Panel' : 'Piutang Panel'}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider -mt-1 truncate">
+                                {auth.current_office?.name}
+                            </span>
+                        </div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
                         {auth.user.name.charAt(0)}
                     </div>
                 </div>
+
+                {/* Top Navbar / Header Desktop (Hanya muncul jika ada switcher atau info kantor) */}
+                <header className="hidden md:flex bg-white border-b border-gray-200 h-14 items-center px-8 justify-between sticky top-0 z-30">
+                    <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            Context: <span className="text-gray-900">{auth.current_office?.name}</span>
+                        </span>
+                    </div>
+
+                    {auth.can_switch_office && (
+                        <div className="relative group">
+                            <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold transition-all hover:bg-indigo-100 border border-indigo-100/50">
+                                <span>Ganti Kantor</span>
+                                <svg className="w-4 h-4 text-indigo-400 group-hover:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+
+                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
+                                <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pilih Tampilan</p>
+                                </div>
+                                <Link 
+                                    href={route('superadmin.office.switch')} 
+                                    method="post" 
+                                    data={{ office_id: 1 }}
+                                    className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 1 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 1 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                                    Kantor Utama (ID 1)
+                                </Link>
+                                <Link 
+                                    href={route('superadmin.office.switch')} 
+                                    method="post" 
+                                    data={{ office_id: 2 }}
+                                    className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 2 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
+                                    Kantor Plant (ID 2)
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+                </header>
 
                 <main className="flex-1 overflow-y-auto py-8">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
