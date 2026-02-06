@@ -25,6 +25,12 @@ class Mandor extends Model
     {
         parent::boot();
         static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+
+        static::creating(function ($model) {
+            if (!$model->office_id) {
+                $model->office_id = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
+            }
+        });
     }
 
     /**

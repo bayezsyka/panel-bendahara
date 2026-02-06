@@ -11,11 +11,40 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf; // Pastikan import ini ada
 
+use App\Models\PlantTransaction;
+
+use App\Services\OfficeContextService;
+
 class DashboardController extends Controller
 {
     // ... method index tetap sama ...
     public function index(Request $request)
     {
+        // Cek Office ID untuk redirect ke Dashboard Plant jika ID = 2 (Gunakan Service untuk Context)
+        if (app(OfficeContextService::class)->getCurrentOfficeId() === 2) {
+            $expenseTypes = ExpenseType::orderBy('name')->get();
+
+            // Kas Besar
+            $totalInKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
+            $totalOutKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
+            $balanceKasBesar = $totalInKasBesar - $totalOutKasBesar;
+
+            // Kas Kecil
+            $totalInKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
+            $totalOutKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
+            $balanceKasKecil = $totalInKasKecil - $totalOutKasKecil;
+
+            return Inertia::render('Bendahara/Plant/Dashboard', [
+                'expenseTypes' => $expenseTypes,
+                'totalInKasBesar' => $totalInKasBesar,
+                'totalOutKasBesar' => $totalOutKasBesar,
+                'balanceKasBesar' => $balanceKasBesar,
+                'totalInKasKecil' => $totalInKasKecil,
+                'totalOutKasKecil' => $totalOutKasKecil,
+                'balanceKasKecil' => $balanceKasKecil,
+            ]);
+        }
+
         // ... kode lama tetap sama (tetap gunakan logic 3/6 bulan untuk dashboard) ...
         $months = (int) $request->query('months', 6);
         $months = max(3, min($months, 24));
@@ -70,10 +99,12 @@ class DashboardController extends Controller
             ]);
 
         // Get all expense types for the filter
-        $expenseTypes = ExpenseType::orderBy('name')->get(['id', 'name']);
+        $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
+        $expenseTypes = ExpenseType::where('office_id', $officeId)->orderBy('name')->get(['id', 'name']);
 
         // Data pengeluaran per tipe biaya (untuk chart breakdown)
-        $expenseByType = ExpenseType::withSum('expenses', 'amount')
+        $expenseByType = ExpenseType::where('office_id', $officeId)
+            ->withSum('expenses', 'amount')
             ->having('expenses_sum_amount', '>', 0)
             ->orderByDesc('expenses_sum_amount')
             ->get()

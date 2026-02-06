@@ -11,9 +11,27 @@ class ExpenseType extends Model
     use HasFactory, LogsActivity;
 
     protected $fillable = [
+        'office_id',
+        'category',
         'name',
         'code',
     ];
+
+    protected $casts = [
+        'office_id' => 'integer',
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+
+        static::creating(function ($model) {
+            if (!$model->office_id) {
+                $model->office_id = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
+            }
+        });
+    }
 
     public function expenses(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

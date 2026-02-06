@@ -67,7 +67,8 @@ class ProjectController extends Controller
 
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
-        $expenseTypes = \App\Models\ExpenseType::all(); // Tambah ini
+        $officeId = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
+        $expenseTypes = \App\Models\ExpenseType::where('office_id', $officeId)->get(); // Filter by office
 
         return Inertia::render('Bendahara/Projects/Show', [
             'project' => $project,

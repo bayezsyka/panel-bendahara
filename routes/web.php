@@ -48,6 +48,12 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
 
         Route::resource('expense-types', \App\Http\Controllers\Bendahara\ExpenseTypeController::class)
             ->except(['create', 'show', 'edit']);
+
+        // PLANT FINANCE ROUTES
+        Route::get('/plant/export-pdf', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'exportPdf'])->name('plant.export-pdf');
+        Route::get('/plant/kas-besar', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'kasBesar'])->name('plant.kas-besar');
+        Route::get('/plant/kas-kecil', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'kasKecil'])->name('plant.kas-kecil');
+        Route::resource('plant-transactions', \App\Http\Controllers\Bendahara\PlantTransactionController::class)->only(['store', 'update', 'destroy']);
     });
 
 Route::get('/', function () {

@@ -32,7 +32,7 @@ const ExportActions = ({ expenseTypes, handleExport, handleExportByType, selecte
 
   const onExportByType = () => {
     if (!selectedExpenseType) {
-      alert('Pilih tipe biaya terlebih dahulu');
+      alert('Pilih tipe terlebih dahulu');
       return;
     }
     handleExportByType();
@@ -62,7 +62,7 @@ const ExportActions = ({ expenseTypes, handleExport, handleExportByType, selecte
           onChange={(e) => setSelectedExpenseType(e.target.value)}
           className="block w-full rounded-lg border-gray-200 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"
         >
-          <option value="">Pilih Tipe</option>
+          <option value="">Pilih Tipe Biaya</option>
           {expenseTypes.map(t => (
             <option key={t.id} value={t.id}>{t.name}</option>
           ))}
