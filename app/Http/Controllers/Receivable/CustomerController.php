@@ -17,7 +17,8 @@ class CustomerController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact', 'like', "%{$search}%");
+                    ->orWhere('contact', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
             });
         }
 
@@ -67,15 +68,35 @@ class CustomerController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'contact' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
         ]);
 
         $customer = Customer::create([
             'name' => $validated['name'],
             'contact' => $validated['contact'],
+            'address' => $validated['address'],
+            'description' => $validated['description'],
             'office_id' => 1,
         ]);
 
         return redirect()->back()->with('message', 'Customer berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $customer = Customer::forCurrentOffice()->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'contact' => 'nullable|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+        ]);
+
+        $customer->update($validated);
+
+        return redirect()->back()->with('message', 'Data customer berhasil diperbarui.');
     }
 
     public function show($id)
@@ -92,10 +113,29 @@ class CustomerController extends Controller
             'transactions' => $customer->receivableTransactions,
             'grades' => $grades,
             'permissions' => [
-                'can_update_transaction' => auth()->user()->can('update', \App\Models\ReceivableTransaction::class),
-                'can_delete_transaction' => auth()->user()->can('delete', \App\Models\ReceivableTransaction::class),
+                'can_update_transaction' => \Illuminate\Support\Facades\Auth::user()->can('update', \App\Models\ReceivableTransaction::class),
+                'can_delete_transaction' => \Illuminate\Support\Facades\Auth::user()->can('delete', \App\Models\ReceivableTransaction::class),
+                'can_update_customer' => true, // Bendahara usually can
             ]
         ]);
+    }
+
+    public function exportPdf($id)
+    {
+        $customer = Customer::forCurrentOffice()->findOrFail($id);
+        $customer->load(['receivableTransactions' => function ($query) {
+            $query->orderBy('date', 'asc');
+        }]);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan_customer', [
+            'customer' => $customer,
+            'transactions' => $customer->receivableTransactions,
+            'date' => now()->format('d/m/Y'),
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->stream("Laporan_Piutang_{$customer->name}.pdf");
     }
 
     public function destroy($id)

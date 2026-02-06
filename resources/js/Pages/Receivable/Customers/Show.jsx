@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -10,9 +10,19 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import Swal from 'sweetalert2';
 
 export default function Show({ customer, transactions, grades = [], permissions = {} }) {
+    const { auth } = usePage().props;
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditCustomerModalOpen, setIsEditCustomerModalOpen] = useState(false);
     const [transactionType, setTransactionType] = useState('bill'); // 'bill' or 'payment'
     const [editingTransaction, setEditingTransaction] = useState(null); // State for editing
+
+    // Form for Customer Edit
+    const customerForm = useForm({
+        name: customer.name,
+        address: customer.address || '',
+        contact: customer.contact || '',
+        description: customer.description || '',
+    });
 
     // Form for Adding/Editing Transaction
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
@@ -51,7 +61,15 @@ export default function Show({ customer, transactions, grades = [], permissions 
     
     // Formatting Helpers
     const formatCurrency = (val) => {
-        if (!val || val === 0) return '-';
+        if (val === 0) return '-';
+        if (val < 0) {
+            return `(${new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(Math.abs(val))})`;
+        }
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
@@ -219,12 +237,36 @@ export default function Show({ customer, transactions, grades = [], permissions 
                             <div className="flex items-center gap-2">
                                 <span className="bg-indigo-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-sm tracking-tighter">ID-{customer.id}</span>
                                 <h1 className="text-2xl font-black text-gray-900 tracking-tight">{customer.name}</h1>
+                                
+                                <button 
+                                    onClick={() => setIsEditCustomerModalOpen(true)}
+                                    className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    title="Edit Profil Customer"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                </button>
                             </div>
-                            {customer.contact && (
-                                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 mt-0.5">
-                                    <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                    {customer.contact}
-                                </div>
+                            
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
+                                {customer.address && (
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-600">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        {customer.address}
+                                    </div>
+                                )}
+                                {customer.contact && (
+                                    <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+                                        <svg className="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                        {customer.contact}
+                                    </div>
+                                )}
+                            </div>
+
+                            {customer.description && (
+                                <p className="text-[11px] text-gray-400 mt-2 bg-gray-50 px-2 py-1 rounded border border-gray-100 max-w-md italic">
+                                    <span className="font-bold uppercase text-[9px] mr-1 text-gray-500">Ket:</span>
+                                    {customer.description}
+                                </p>
                             )}
                         </div>
                     </div>
@@ -239,7 +281,7 @@ export default function Show({ customer, transactions, grades = [], permissions 
                                 </span>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Sisa Hutang</span>
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Sisa Piutang</span>
                                 <span className={`text-xl font-black tracking-tighter leading-none ${totalBalance > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                                     {formatCurrency(totalBalance)}
                                 </span>
@@ -248,6 +290,14 @@ export default function Show({ customer, transactions, grades = [], permissions 
 
                         {/* Actions Group */}
                         <div className="flex items-center gap-2">
+                            <a 
+                                href={route('receivable.customers.export', customer.id)} 
+                                target="_blank"
+                                className="inline-flex items-center p-2.5 bg-white border border-gray-100 rounded-xl text-gray-500 hover:text-rose-600 hover:bg-rose-50 transition-all shadow-sm group"
+                                title="Export PDF"
+                            >
+                                <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            </a>
                             {(auth.user.role === 'superadmin' || auth.user.role === 'bendahara_utama') && (
                                 <div className="flex gap-1 border-r border-gray-100 pr-2 mr-1">
                                     <button onClick={handleResetCustomer} className="p-2 text-amber-500 hover:bg-amber-50 rounded-xl transition-colors border border-transparent hover:border-amber-100" title="Reset">
@@ -282,7 +332,7 @@ export default function Show({ customer, transactions, grades = [], permissions 
                                     <th className="px-4 py-4 whitespace-nowrap text-right">Harga Satuan</th>
                                     <th className="px-6 py-4 whitespace-nowrap text-right text-gray-900 bg-gray-50">Tagihan</th>
                                     <th className="px-6 py-4 whitespace-nowrap text-right text-green-700 bg-green-50">Pembayaran</th>
-                                    <th className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-800 bg-gray-50/30">Sisa Hutang</th>
+                                    <th className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-800 bg-gray-50/30">Sisa Piutang</th>
                                     <th className="px-4 py-4 whitespace-nowrap text-center text-gray-400">#</th>
                                 </tr>
                             </thead>
@@ -523,6 +573,79 @@ export default function Show({ customer, transactions, grades = [], permissions 
                                 </SecondaryButton>
                                 <PrimaryButton disabled={processing} className={transactionType === 'bill' ? "!bg-indigo-600 hover:!bg-indigo-700" : "!bg-green-600 hover:!bg-green-700"}>
                                     {editingTransaction ? 'Simpan Perubahan' : (transactionType === 'bill' ? 'Simpan Tagihan' : 'Simpan Pembayaran')}
+                                </PrimaryButton>
+                            </div>
+                        </form>
+                    </div>
+                </Modal>
+
+                {/* Modal Edit Customer */}
+                <Modal show={isEditCustomerModalOpen} onClose={() => setIsEditCustomerModalOpen(false)}>
+                    <div className="p-6">
+                        <h2 className="text-lg font-medium text-gray-900 mb-4">
+                            Edit Profil Customer
+                        </h2>
+
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            customerForm.put(route('receivable.customers.update', customer.id), {
+                                onSuccess: () => setIsEditCustomerModalOpen(false),
+                            });
+                        }} className="space-y-4">
+                            <div>
+                                <InputLabel htmlFor="edit_name" value="Nama Customer" />
+                                <TextInput
+                                    id="edit_name"
+                                    type="text"
+                                    value={customerForm.data.name}
+                                    className="mt-1 block w-full"
+                                    onChange={(e) => customerForm.setData('name', e.target.value)}
+                                />
+                                <InputError message={customerForm.errors.name} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="edit_address" value="Alamat" />
+                                <TextInput
+                                    id="edit_address"
+                                    type="text"
+                                    value={customerForm.data.address}
+                                    className="mt-1 block w-full"
+                                    onChange={(e) => customerForm.setData('address', e.target.value)}
+                                />
+                                <InputError message={customerForm.errors.address} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="edit_contact" value="Kontak" />
+                                <TextInput
+                                    id="edit_contact"
+                                    type="text"
+                                    value={customerForm.data.contact}
+                                    className="mt-1 block w-full"
+                                    onChange={(e) => customerForm.setData('contact', e.target.value)}
+                                />
+                                <InputError message={customerForm.errors.contact} className="mt-2" />
+                            </div>
+
+                            <div>
+                                <InputLabel htmlFor="edit_description" value="Keterangan (Optional)" />
+                                <textarea
+                                    id="edit_description"
+                                    value={customerForm.data.description}
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    rows="2"
+                                    onChange={(e) => customerForm.setData('description', e.target.value)}
+                                ></textarea>
+                                <InputError message={customerForm.errors.description} className="mt-2" />
+                            </div>
+
+                            <div className="mt-6 flex justify-end gap-3">
+                                <SecondaryButton onClick={() => setIsEditCustomerModalOpen(false)}>
+                                    Batal
+                                </SecondaryButton>
+                                <PrimaryButton disabled={customerForm.processing}>
+                                    Simpan Perubahan
                                 </PrimaryButton>
                             </div>
                         </form>

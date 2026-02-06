@@ -166,7 +166,7 @@
         <table class="kop-table">
             <tr>
                 <td style="width: 15%; text-align:center;">
-                    <img src="https://jkk.sangkolo.store/images/logo.png" style="height: 60px;">
+                    <img src="{{ public_path('images/logo.png') }}" style="height: 60px;">
                 </td>
                 <td style="text-align: center;">
                     <div class="company">PT. JAYA KARYA KONTRUKSI</div>

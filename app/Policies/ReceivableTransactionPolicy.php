@@ -32,7 +32,7 @@ class ReceivableTransactionPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, ReceivableTransaction $receivableTransaction): bool
+    public function update(User $user, ?ReceivableTransaction $receivableTransaction = null): bool
     {
         return $user->isSuperAdmin() || ($user->isBendahara() && $user->office_id === 1);
     }
@@ -40,7 +40,7 @@ class ReceivableTransactionPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, ReceivableTransaction $receivableTransaction): bool
+    public function delete(User $user, ?ReceivableTransaction $receivableTransaction = null): bool
     {
         return $user->isSuperAdmin() || ($user->isBendahara() && $user->office_id === 1);
     }

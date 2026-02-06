@@ -14,15 +14,15 @@ export default function Index({ customers = [], filters = {} }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { data, setData, post, processing, errors, reset, clearErrors } = useForm({
         name: '',
+        address: '',
         contact: '',
+        description: '',
     });
 
     // Search & Filter State
     const [search, setSearch] = useState(filters?.search || '');
     const [status, setStatus] = useState(filters?.status || '');
     const [sortBy, setSortBy] = useState(typeof filters?.sort === 'string' ? filters.sort : 'updated_at');
-
-
 
     // Debounced Search Handler
     const performSearch = React.useCallback(
@@ -79,6 +79,13 @@ export default function Index({ customers = [], filters = {} }) {
     }
 
     const formatCurrency = (amount) => {
+        if (amount < 0) {
+            return `(${new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+            }).format(Math.abs(amount))})`;
+        }
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
@@ -177,7 +184,7 @@ export default function Index({ customers = [], filters = {} }) {
                             <TextInput
                                 type="text"
                                 className="w-full pl-10 !rounded-xl !border-gray-100 focus:!border-indigo-300 focus:!ring-indigo-100 transition-all"
-                                placeholder="Cari nama atau kontak..."
+                                placeholder="Cari nama, alamat, atau kontak..."
                                 value={search}
                                 onChange={onSearchChange}
                             />
@@ -237,13 +244,22 @@ export default function Index({ customers = [], filters = {} }) {
                                     </div>
                                     
                                     <div className="space-y-3.5">
-                                        {customer.contact ? (
-                                             <div className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg flex items-center gap-2 w-fit">
-                                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                        {customer.address && (
+                                              <div className="text-[11px] font-semibold text-gray-500 bg-amber-50 px-3 py-1.5 rounded-lg flex items-start gap-2 w-full mt-1 border border-amber-100/50">
+                                                 <svg className="w-3.5 h-3.5 mt-0.5 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                 <span className="line-clamp-2">{customer.address}</span>
+                                              </div>
+                                        )}
+
+                                        {customer.contact && (
+                                             <div className="text-[11px] font-semibold text-gray-400 bg-gray-50 px-3 py-1.5 rounded-lg flex items-center gap-2 w-fit">
+                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
                                                 {customer.contact}
                                              </div>
-                                        ) : (
-                                            <div className="h-7 text-xs italic text-gray-300">Kontak tidak tersedia</div>
+                                        )}
+
+                                        {!customer.address && !customer.contact && (
+                                            <div className="h-7 text-xs italic text-gray-300">Data info tidak tersedia</div>
                                         )}
 
                                         <div className="grid grid-cols-2 gap-3 py-1">
@@ -258,7 +274,7 @@ export default function Index({ customers = [], filters = {} }) {
                                         </div>
 
                                         <div className="pt-4 mt-2 border-t border-gray-100 flex justify-between items-center group-hover:bg-indigo-50/10 transition-colors">
-                                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Sisa Hutang</span>
+                                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Sisa Piutang</span>
                                             <span className={`text-lg font-black tracking-tighter ${isLunas ? 'text-gray-300' : 'text-rose-600'}`}>
                                                 {formatCurrency(balance)}
                                             </span>
@@ -308,6 +324,20 @@ export default function Index({ customers = [], filters = {} }) {
                         </div>
 
                         <div>
+                            <InputLabel htmlFor="address" value="Alamat" />
+                            <TextInput
+                                id="address"
+                                type="text"
+                                name="address"
+                                value={data.address}
+                                className="mt-1 block w-full"
+                                onChange={(e) => setData('address', e.target.value)}
+                                placeholder="Jl. Raya Utama No. 123"
+                            />
+                            <InputError message={errors.address} className="mt-2" />
+                        </div>
+
+                        <div>
                             <InputLabel htmlFor="contact" value="Kontak / No. HP (Optional)" />
                             <TextInput
                                 id="contact"
@@ -319,6 +349,20 @@ export default function Index({ customers = [], filters = {} }) {
                                 placeholder="08123456789"
                             />
                             <InputError message={errors.contact} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="description" value="Keterangan (Optional)" />
+                            <textarea
+                                id="description"
+                                name="description"
+                                value={data.description}
+                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                rows="2"
+                                onChange={(e) => setData('description', e.target.value)}
+                                placeholder="Catatan khusus customer ini..."
+                            ></textarea>
+                            <InputError message={errors.description} className="mt-2" />
                         </div>
 
                         <div className="mt-6 flex justify-end gap-3">

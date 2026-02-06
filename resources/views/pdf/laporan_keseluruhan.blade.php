@@ -164,7 +164,7 @@
 
     {{-- HEADER UTAMA LAPORAN --}}
     <div class="main-header">
-        <img src="https://jkk.sangkolo.store/images/logo.png" style="height: 50px; margin-bottom: 5px;">
+        <img src="{{ public_path('images/logo.png') }}" style="height: 50px; margin-bottom: 5px;">
         <div class="company-name">PT. JAYA KARYA KONSTRUKSI</div>
         <div style="font-size: 11px;">LAPORAN KEUANGAN KESELURUHAN PROYEK</div>
         <div style="font-size: 10px; margin-top: 5px;">Dicetak pada: {{ $generatedAt }}</div>

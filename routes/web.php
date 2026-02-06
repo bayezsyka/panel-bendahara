@@ -84,8 +84,10 @@ Route::middleware(['auth'])
         // Customers Management
         Route::get('/customers', [\App\Http\Controllers\Receivable\CustomerController::class, 'index'])->name('customers.index'); // New list route
         Route::post('/customers', [\App\Http\Controllers\Receivable\CustomerController::class, 'store'])->name('customers.store');
+        Route::put('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'update'])->name('customers.update');
         Route::post('/customers/reset-all', [\App\Http\Controllers\Receivable\CustomerController::class, 'resetAll'])->name('customers.reset-all');
         Route::get('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'show'])->name('customers.show');
+        Route::get('/customers/{customer}/export', [\App\Http\Controllers\Receivable\CustomerController::class, 'exportPdf'])->name('customers.export');
         Route::post('/customers/{customer}/reset', [\App\Http\Controllers\Receivable\CustomerController::class, 'reset'])->name('customers.reset');
         Route::delete('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'destroy'])->name('customers.destroy');
 
