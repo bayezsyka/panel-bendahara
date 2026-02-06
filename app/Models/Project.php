@@ -36,6 +36,12 @@ class Project extends Model
 
         static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
 
+        static::creating(function ($project) {
+            if (!$project->office_id) {
+                $project->office_id = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
+            }
+        });
+
         static::saving(function ($project) {
             if ($project->isDirty('name') || empty($project->slug)) {
                 $slug = Str::slug($project->name);

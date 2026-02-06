@@ -370,7 +370,7 @@ export default function Index({ customers = [], filters = {} }) {
                                 Batal
                             </SecondaryButton>
                             <PrimaryButton disabled={processing}>
-                                Simpan Customer
+                                {processing ? 'Menyimpan...' : 'Simpan Customer'}
                             </PrimaryButton>
                         </div>
                     </form>

@@ -572,7 +572,7 @@ export default function Show({ customer, transactions, grades = [], permissions 
                                     Batal
                                 </SecondaryButton>
                                 <PrimaryButton disabled={processing} className={transactionType === 'bill' ? "!bg-indigo-600 hover:!bg-indigo-700" : "!bg-green-600 hover:!bg-green-700"}>
-                                    {editingTransaction ? 'Simpan Perubahan' : (transactionType === 'bill' ? 'Simpan Tagihan' : 'Simpan Pembayaran')}
+                                    {processing ? 'Menyimpan...' : (editingTransaction ? 'Simpan Perubahan' : (transactionType === 'bill' ? 'Simpan Tagihan' : 'Simpan Pembayaran'))}
                                 </PrimaryButton>
                             </div>
                         </form>
@@ -645,7 +645,7 @@ export default function Show({ customer, transactions, grades = [], permissions 
                                     Batal
                                 </SecondaryButton>
                                 <PrimaryButton disabled={customerForm.processing}>
-                                    Simpan Perubahan
+                                    {customerForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                                 </PrimaryButton>
                             </div>
                         </form>

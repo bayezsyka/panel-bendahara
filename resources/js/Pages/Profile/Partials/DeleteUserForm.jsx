@@ -110,7 +110,7 @@ export default function DeleteUserForm({ className = '' }) {
                         </SecondaryButton>
 
                         <DangerButton className="ms-3" disabled={processing}>
-                            Delete Account
+                            {processing ? 'Menghapus...' : 'Delete Account'}
                         </DangerButton>
                     </div>
                 </form>

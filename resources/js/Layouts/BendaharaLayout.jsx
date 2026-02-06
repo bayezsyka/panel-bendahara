@@ -4,9 +4,26 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Swal from 'sweetalert2';
 
 export default function BendaharaLayout({ children, header }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, errors } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
+
+    // Listen for validation errors
+    useEffect(() => {
+        if (errors && Object.keys(errors).length > 0) {
+            const firstErrorMessage = Object.values(errors)[0];
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Tidak Valid',
+                text: firstErrorMessage,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+            });
+        }
+    }, [errors]);
 
     useEffect(() => {
         const timer = setInterval(() => {

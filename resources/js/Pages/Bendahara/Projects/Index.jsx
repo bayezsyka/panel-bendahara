@@ -325,7 +325,7 @@ export default function Index({ projects, mandors, benderas }) {
           <div className="flex justify-end gap-3">
             <SecondaryButton onClick={() => setShowModal(false)}>Batal</SecondaryButton>
             <PrimaryButton disabled={processing}>
-                {isEditing ? 'Simpan Perubahan' : 'Buat Proyek'}
+                {processing ? 'Menyimpan...' : (isEditing ? 'Simpan Perubahan' : 'Buat Proyek')}
             </PrimaryButton>
           </div>
         </form>

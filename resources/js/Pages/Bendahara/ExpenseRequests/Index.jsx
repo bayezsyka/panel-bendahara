@@ -324,12 +324,12 @@ export default function Index({ requests, expenseTypes }) {
                 <button
                     onClick={reject}
                     disabled={processing}
-                    className="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded-lg shadow-sm hover:bg-red-50"
+                    className="px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-200 rounded-lg shadow-sm hover:bg-red-50 disabled:opacity-50"
                 >
-                    Tolak
+                    {processing ? 'Proses...' : 'Tolak'}
                 </button>
                 <PrimaryButton onClick={approve} disabled={processing}>
-                    Setujui
+                    {processing ? 'Memproses...' : 'Setujui'}
                 </PrimaryButton>
             </div>
           </div>

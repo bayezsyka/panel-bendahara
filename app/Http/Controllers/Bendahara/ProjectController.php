@@ -53,6 +53,7 @@ class ProjectController extends Controller
 
     public function show(Request $request, Project $project)
     {
+        $this->authorize('view', $project);
         // Filter by Tipe Biaya
         $expenseTypeId = $request->input('expense_type_id');
 
@@ -76,8 +77,9 @@ class ProjectController extends Controller
         ]);
     }
 
-    public static function exportPdf(Request $request, Project $project)
+    public function exportPdf(Request $request, Project $project)
     {
+        $this->authorize('view', $project);
         $expenseTypeId = $request->query('expense_type_id');
         $expenseType = null;
 
@@ -128,6 +130,7 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
+        $this->authorize('update', $project);
         if ($project->status === 'completed' && $request->input('status') !== 'ongoing') {
             return redirect()->back()->with('message', 'Proyek sudah selesai dan terkunci. Ubah status ke "Sedang Berjalan" terlebih dahulu.');
         }
@@ -191,6 +194,7 @@ class ProjectController extends Controller
     }
     public function destroy(Project $project)
     {
+        $this->authorize('delete', $project);
         $project->delete();
         return redirect()->route('bendahara.projects.index')->with('message', 'Proyek Berhasil Dihapus');
     }

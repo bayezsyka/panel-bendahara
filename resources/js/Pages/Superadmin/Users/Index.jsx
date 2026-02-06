@@ -377,7 +377,7 @@ export default function Index({ auth, users, filters, offices = [] }) {
                             Batal
                         </SecondaryButton>
                         <PrimaryButton disabled={processing}>
-                            {isEditMode ? 'Simpan Data' : 'Buat User'}
+                            {processing ? 'Menyimpan...' : (isEditMode ? 'Simpan Data' : 'Buat User')}
                         </PrimaryButton>
                     </div>
                 </form>

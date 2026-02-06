@@ -173,7 +173,9 @@ export default function Index({ grades }) {
                         </div>
                         <div className="mt-6 flex justify-end gap-3">
                             <SecondaryButton onClick={closeModal} disabled={processing}>Batal</SecondaryButton>
-                            <PrimaryButton disabled={processing}>{editingGrade ? 'Simpan Perubahan' : 'Simpan'}</PrimaryButton>
+                            <PrimaryButton disabled={processing}>
+                                {processing ? 'Menyimpan...' : (editingGrade ? 'Simpan Perubahan' : 'Simpan')}
+                            </PrimaryButton>
                         </div>
                     </form>
                 </div>

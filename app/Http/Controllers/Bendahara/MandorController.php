@@ -59,15 +59,17 @@ class MandorController extends Controller
 
     public function store(Request $request)
     {
+        // Format nomor HP sebelum validasi agar pengecekan unique akurat
+        $request->merge([
+            'whatsapp_number' => $this->formatPhoneNumber($request->whatsapp_number)
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'whatsapp_number' => 'required|string|unique:mandors,whatsapp_number|min:10|max:15',
         ], [
             'whatsapp_number.unique' => 'Nomor WhatsApp sudah terdaftar.',
         ]);
-
-        // Format nomor HP (ganti 08 jadi 628)
-        $validated['whatsapp_number'] = $this->formatPhoneNumber($validated['whatsapp_number']);
 
         Mandor::create($validated);
 
@@ -76,12 +78,15 @@ class MandorController extends Controller
 
     public function update(Request $request, Mandor $mandor)
     {
+        // Format nomor HP sebelum validasi agar pengecekan unique akurat
+        $request->merge([
+            'whatsapp_number' => $this->formatPhoneNumber($request->whatsapp_number)
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'whatsapp_number' => 'required|string|min:10|max:15|unique:mandors,whatsapp_number,' . $mandor->id,
         ]);
-
-        $validated['whatsapp_number'] = $this->formatPhoneNumber($validated['whatsapp_number']);
 
         $mandor->update($validated);
 

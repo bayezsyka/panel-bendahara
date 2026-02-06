@@ -664,7 +664,9 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
           <div className="flex justify-end gap-3">
             <SecondaryButton onClick={() => setShowEditModal(false)}>Batal</SecondaryButton>
-            <PrimaryButton disabled={editForm.processing}>Simpan Perubahan</PrimaryButton>
+            <PrimaryButton disabled={editForm.processing}>
+                {editForm.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </PrimaryButton>
           </div>
         </form>
       </Modal>
@@ -816,7 +818,9 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
           <div className="flex justify-end gap-3 sticky bottom-0 bg-white pt-4 border-t border-gray-100">
             <SecondaryButton onClick={() => setShowExpenseModal(false)}>Batal</SecondaryButton>
-            <PrimaryButton disabled={processing}>{editingExpenseId ? 'Simpan Perubahan' : 'Simpan Pengeluaran'}</PrimaryButton>
+            <PrimaryButton disabled={processing}>
+                {processing ? 'Menyimpan...' : (editingExpenseId ? 'Simpan Perubahan' : 'Simpan Pengeluaran')}
+            </PrimaryButton>
           </div>
         </form>
       </Modal>
