@@ -145,7 +145,7 @@
                 <th width="12%">Harga Satuan</th>
                 <th width="12%">Tagihan</th>
                 <th width="12%">Pembayaran</th>
-                <th width="14%">Sisa Hutang</th>
+                <th width="14%">Sisa Piutang</th>
             </tr>
         </thead>
         <tbody>
