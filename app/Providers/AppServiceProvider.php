@@ -24,6 +24,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force timezone and locale to Asia/Jakarta and Indonesian
+        config(['app.timezone' => 'Asia/Jakarta']);
+        date_default_timezone_set('Asia/Jakarta');
+        \Carbon\Carbon::setLocale('id');
+        app()->setLocale('id');
+
         Vite::prefetch(concurrency: 3);
         Activity::saving(function (Activity $activity) {
             $activity->properties = $activity->properties->merge([

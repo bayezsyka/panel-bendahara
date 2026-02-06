@@ -163,7 +163,7 @@ class MandorController extends Controller
             }
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.daily_receipts', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.voucher.kas_keluar', [
             'mandor' => $mandor,
             'groupedData' => $groupedData,
             'date' => $date

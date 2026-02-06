@@ -115,10 +115,10 @@ class DashboardController extends Controller
             ->withProperties(['with_receipts' => $withReceipts])
             ->log('Melakukan export PDF laporan keseluruhan');
 
-        $pdf = Pdf::loadView('pdf.laporan_keseluruhan', [
+        $pdf = Pdf::loadView('pdf.laporan.rekapitulasi_keseluruhan', [
             'projects' => $projects,
             'withReceipts' => $withReceipts,
-            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'generatedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i'),
         ]);
 
         return $pdf->stream('Laporan-Keseluruhan-Proyek.pdf');
@@ -159,11 +159,11 @@ class DashboardController extends Controller
             ->withProperties(['expense_type' => $expenseType->name])
             ->log('Melakukan export PDF laporan berdasarkan tipe biaya: ' . $expenseType->name);
 
-        $pdf = Pdf::loadView('pdf.laporan_tipe_biaya', [
+        $pdf = Pdf::loadView('pdf.laporan.rekapitulasi_tipe_biaya', [
             'expenseType' => $expenseType,
             'groupedByProject' => $groupedByProject,
             'grandTotal' => $grandTotal,
-            'generatedAt' => now()->translatedFormat('d F Y H:i'),
+            'generatedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i'),
         ]);
 
         return $pdf->stream('Laporan-' . $expenseType->name . '.pdf');

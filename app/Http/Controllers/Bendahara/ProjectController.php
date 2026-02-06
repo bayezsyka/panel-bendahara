@@ -103,7 +103,7 @@ class ProjectController extends Controller
             $periodeLabel = "Kategori: " . $expenseType->name;
         }
 
-        $pdf = Pdf::loadView('pdf.laporan_proyek', [
+        $pdf = Pdf::loadView('pdf.laporan.biaya_proyek', [
             'project' => $project,
             'groupedExpenses' => $groupedExpenses,
             'expenses' => $expenses,

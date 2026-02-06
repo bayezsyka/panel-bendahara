@@ -5,81 +5,25 @@
     <meta charset="utf-8" />
     <title>Laporan Proyek</title>
     <style>
+        /* =========================
+           BASE
+        ========================== */
+        @page {
+            margin: 1cm 1cm 2cm 1cm;
+        }
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 12px;
             color: #111;
-            line-height: 1.4;
+            line-height: 1.35;
+            margin: 0;
+            padding: 0;
         }
 
-        .kop {
-            width: 100%;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
-
-        .kop-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .company {
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .judul {
-            text-align: center;
-            margin: 14px 0 12px 0;
-        }
-
-        .judul .h1 {
-            font-size: 14px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 2px;
-        }
-
-        .info-box {
-            width: 100%;
-            margin: 10px 0 14px 0;
-            border: 1px solid #000;
-            border-collapse: collapse;
-        }
-
-        .info-box td {
-            padding: 4px 6px;
-            border: 1px solid #000;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        .data-table th,
-        .data-table td {
-            border: 1px solid #000;
-            padding: 4px 6px;
-            vertical-align: top;
-            /* Pastikan teks mulai dari atas */
-        }
-
-        .data-table th {
-            background-color: #f0f0f0;
-            text-align: left;
-            font-weight: bold;
-        }
-
-        .week-header {
-            background-color: #e2e2e2;
-            font-weight: bold;
-            font-style: italic;
-        }
-
+        /* =========================
+           UTILITIES
+        ========================== */
         .text-right {
             text-align: right;
         }
@@ -92,7 +36,166 @@
             font-weight: bold;
         }
 
-        /* Styles untuk Lampiran Grid */
+        .muted {
+            color: #666;
+        }
+
+        /* =========================
+           HEADER TITLE
+        ========================== */
+        .judul {
+            text-align: left;
+            margin: 10px 0 20px 0;
+            width: 100%;
+            display: block;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .judul .h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 4px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .judul .sub {
+            font-size: 13px;
+            margin: 0;
+            color: #444;
+        }
+
+        /* =========================
+           INFO BOX
+        ========================== */
+        .info-box {
+            width: 100%;
+            margin: 0 0 12px 0;
+            border: 1px solid #000;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .info-box td {
+            padding: 6px 8px;
+            border: 1px solid #000;
+            vertical-align: middle;
+        }
+
+        .info-box .label {
+            width: 20%;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .info-box .value {
+            width: 30%;
+        }
+
+        /* =========================
+           MAIN DATA TABLE
+        ========================== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .data-table thead th {
+            background-color: #efefef;
+            text-align: center;
+            font-weight: bold;
+            vertical-align: middle;
+            padding: 7px 8px;
+        }
+
+        .data-table .col-no {
+            width: 6%;
+        }
+
+        .data-table .col-date {
+            width: 16%;
+        }
+
+        .data-table .col-ref {
+            width: 10%;
+        }
+
+        .data-table .col-amount {
+            width: 22%;
+        }
+
+        /* Weekly separator */
+        .week-header td {
+            background-color: #f6f6f6;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 10px;
+            color: #444;
+            padding: 5px 8px;
+        }
+
+        /* Group header */
+        .group-header td {
+            background-color: #d1e7dd;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 7px 8px;
+        }
+
+        /* Subtotal row */
+        .subtotal-row td {
+            background-color: #f8f9fa;
+        }
+
+        .subtotal-row .label-subtotal {
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        /* Grand total row */
+        .grand-total td {
+            font-size: 13px;
+            font-weight: bold;
+            padding: 10px 8px;
+        }
+
+        /* Inner item table */
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-top: 4px;
+        }
+
+        .item-table td {
+            border: none;
+            padding: 2px 0;
+            color: #333;
+            vertical-align: top;
+        }
+
+        .note {
+            margin-top: 5px;
+            font-size: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        /* =========================
+           ATTACHMENTS (LAMPIRAN)
+        ========================== */
         .page-break {
             page-break-before: always;
         }
@@ -102,7 +205,7 @@
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
-            margin-bottom: 15px;
+            margin: 0 0 14px 0;
         }
 
         .grid-table {
@@ -114,21 +217,24 @@
         .grid-cell {
             width: 50%;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #bbb;
             vertical-align: top;
-            height: 400px;
+            height: 380px;
         }
 
         .grid-meta {
-            margin-bottom: 8px;
+            margin: 0 0 8px 0;
             font-size: 11px;
+            padding: 0 0 6px 0;
             border-bottom: 1px dashed #999;
-            padding-bottom: 5px;
+            line-height: 1.25;
         }
 
         .grid-img-container {
             text-align: center;
+            width: 100%;
             display: block;
+            padding-top: 6px;
         }
 
         .grid-img {
@@ -137,77 +243,65 @@
             width: auto;
             height: auto;
             margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 4px;
+            background: #fff;
         }
 
         .empty-cell {
             border: none;
         }
 
-        /* Style Khusus Item Detail */
-        .item-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            margin-top: 3px;
+        /* Improve print consistency */
+        img {
+            page-break-inside: avoid;
         }
 
-        .item-table td {
-            border: none;
-            /* Hilangkan border tabel dalam */
-            padding: 1px 0;
-            color: #333;
+        table,
+        tr,
+        td,
+        th {
+            page-break-inside: avoid;
         }
     </style>
 </head>
 
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop">
-        <table class="kop-table">
-            <tr>
-                <td style="width: 15%; text-align:center;">
-                    <img src="{{ public_path('images/logo.png') }}" style="height: 60px;">
-                </td>
-                <td style="text-align: center;">
-                    <div class="company">PT. JAYA KARYA KONTRUKSI</div>
-                    <div style="font-size: 11px;">General Contractor & Supplier</div>
-                </td>
-                <td style="width: 15%;"></td>
-            </tr>
-        </table>
-    </div>
+    @include('pdf.komponen.footer')
+    @include('pdf.komponen.header')
 
     <div class="judul">
         <div class="h1">LAPORAN KEUANGAN PROYEK</div>
-        <div>{{ $project->name }}</div>
+        <div class="sub">{{ $project->name }}</div>
     </div>
 
     {{-- INFO PROYEK --}}
+
     <table class="info-box">
         <tr>
-            <td width="20%" class="text-bold">Nama Proyek</td>
-            <td width="30%">{{ $project->name }}</td>
-            <td width="20%" class="text-bold">Status</td>
-            <td>{{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}</td>
+            <td class="label">Nama Proyek</td>
+            <td class="value">{{ $project->name }}</td>
+            <td class="label">Status</td>
+            <td class="value">{{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}</td>
         </tr>
         <tr>
-            <td class="text-bold">Mandor</td>
-            <td>{{ $project->mandor ? $project->mandor->name : '-' }}</td>
-            <td class="text-bold">Lokasi</td>
-            <td>{{ $project->coordinates ?? '-' }}</td>
+            <td class="label">Mandor</td>
+            <td class="value">{{ $project->mandor ? $project->mandor->name : '-' }}</td>
+            <td class="label">Lokasi</td>
+            <td class="value">{{ $project->coordinates ?? '-' }}</td>
         </tr>
     </table>
 
-    {{-- TABEL PENGELUARAN DENGAN HIGHLIGHT MINGGUAN --}}
     {{-- TABEL PENGELUARAN GROUPED BY TIPE BIAYA --}}
+
     <table class="data-table">
         <thead>
             <tr>
-                <th width="5%" class="text-center">No</th>
-                <th width="15%">Tanggal</th>
-                <th>Keterangan & Rincian Item</th>
-                <th width="10%" class="text-center">Ref</th>
-                <th width="20%" class="text-right">Jumlah</th>
+                <th class="col-no text-center">No</th>
+                <th class="col-date text-center">Tanggal</th>
+                <th class="text-center">Keterangan & Rincian Item</th>
+                <th class="col-ref text-center">Ref</th>
+                <th class="col-amount text-center">Jumlah</th>
             </tr>
         </thead>
         <tbody>
@@ -217,8 +311,8 @@
 
             @foreach ($groupedExpenses as $typeName => $expensesInGroup)
                 {{-- HEADER GROUP TIPE BIAYA --}}
-                <tr style="background-color: #d1e7dd;">
-                    <td colspan="5" style="font-weight: bold; font-size: 13px; padding: 6px;">
+                <tr class="group-header">
+                    <td colspan="5">
                         KATEGORI: {{ strtoupper($typeName) }}
                     </td>
                 </tr>
@@ -231,7 +325,6 @@
                 @foreach ($expensesInGroup as $index => $expense)
                     @php
                         $subTotal += $expense->amount;
-                        // Hitung Minggu ke berapa dalam tahun ini
                         $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
                         $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
                         $weekKey = $yearNum . '-' . $weekNum;
@@ -239,8 +332,8 @@
 
                     {{-- Row Separator Minggu --}}
                     @if ($currentWeek !== $weekKey)
-                        <tr>
-                            <td colspan="5" class="week-header" style="font-size: 10px; color: #555;">
+                        <tr class="week-header">
+                            <td colspan="5">
                                 — Minggu ke-{{ $weekNum }} ({{ $yearNum }})
                             </td>
                         </tr>
@@ -249,18 +342,17 @@
 
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</td>
+                        <td class="text-center">{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}
+                        </td>
                         <td>
-                            {{-- JUDUL NOTA --}}
                             <strong>{{ $expense->title }}</strong>
 
-                            {{-- RINCIAN ITEM --}}
                             @if ($expense->items && $expense->items->count() > 0)
                                 <table class="item-table">
                                     @foreach ($expense->items as $item)
                                         <tr>
-                                            <td style="width: 50%; padding-left: 8px;">• {{ $item->name }}</td>
-                                            <td style="width: 25%; text-align: right; color: #555;">
+                                            <td style="width: 52%; padding-left: 10px;">• {{ $item->name }}</td>
+                                            <td style="width: 23%; text-align: right;" class="muted">
                                                 {{ $item->quantity }} x {{ number_format($item->price, 0, ',', '.') }}
                                             </td>
                                             <td style="width: 25%; text-align: right; font-weight: bold;">
@@ -271,9 +363,8 @@
                                 </table>
                             @endif
 
-                            {{-- DESKRIPSI TAMBAHAN --}}
                             @if ($expense->description)
-                                <div style="margin-top: 4px; font-size: 10px; color: #666; font-style: italic;">
+                                <div class="note">
                                     Catatan: {{ $expense->description }}
                                 </div>
                             @endif
@@ -284,33 +375,24 @@
                 @endforeach
 
                 {{-- SUB TOTAL PER TIPE --}}
-                <tr style="background-color: #f8f9fa;">
-                    <td colspan="4" class="text-right text-bold" style="font-style: italic;">Subtotal
-                        {{ $typeName }}</td>
-                    <td class="text-right text-bold border-top-double">Rp {{ number_format($subTotal, 0, ',', '.') }}
-                    </td>
+                <tr class="subtotal-row">
+                    <td colspan="4" class="text-right label-subtotal">Subtotal {{ $typeName }}</td>
+                    <td class="text-right text-bold">Rp {{ number_format($subTotal, 0, ',', '.') }}</td>
                 </tr>
 
                 @php $grandTotal += $subTotal; @endphp
             @endforeach
         </tbody>
         <tfoot>
-            <tr>
-                <td colspan="4" class="text-right text-bold" style="font-size: 14px; padding: 10px;">TOTAL
-                    KESELURUHAN PROYEK</td>
-                <td class="text-right text-bold" style="font-size: 14px; padding: 10px;">Rp
-                    {{ number_format($grandTotal, 0, ',', '.') }}</td>
+            <tr class="grand-total">
+                <td colspan="4" class="text-right">TOTAL KESELURUHAN PROYEK</td>
+                <td class="text-right">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>
 
-    <div style="margin-top: 10px; font-size: 10px; text-align: right; color: #777;">
-        Dicetak otomatis pada: {{ date('d F Y, H:i') }}
-    </div>
-
     {{-- LAMPIRAN FOTO (GRID 2x2) --}}
     @php
-        // Filter hanya yang punya gambar
         $expensesWithImages = $expenses->filter(function ($e) {
             return !empty($e->receipt_image) && file_exists(storage_path('app/public/' . $e->receipt_image));
         });
@@ -318,20 +400,19 @@
 
     @if ($expensesWithImages->count() > 0)
 
-        {{-- Loop per 4 item (Chunk) --}}
         @foreach ($expensesWithImages->chunk(4) as $chunkIndex => $chunk)
             <div class="page-break"></div>
             <div class="lampiran-title">LAMPIRAN BUKTI TRANSAKSI (Hal {{ $loop->iteration }})</div>
 
             <table class="grid-table">
-                {{-- Baris 1: Item 0 dan 1 --}}
                 <tr>
                     @foreach ($chunk->slice(0, 2) as $expense)
                         <td class="grid-cell">
                             <div class="grid-meta">
                                 <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
                                 -
-                                {{ $expense->title }} (Rp {{ number_format($expense->amount, 0, ',', '.') }})
+                                {{ $expense->title }}
+                                <span class="muted">(Rp {{ number_format($expense->amount, 0, ',', '.') }})</span>
                             </div>
                             <div class="grid-img-container">
                                 @php
@@ -344,13 +425,12 @@
                             </div>
                         </td>
                     @endforeach
-                    {{-- Jika ganjil (cuma 1 item di baris ini), isi sel kosong --}}
+
                     @if ($chunk->slice(0, 2)->count() < 2)
                         <td class="empty-cell"></td>
                     @endif
                 </tr>
 
-                {{-- Baris 2: Item 2 dan 3 --}}
                 @if ($chunk->count() > 2)
                     <tr>
                         @foreach ($chunk->slice(2, 2) as $expense)
@@ -358,7 +438,8 @@
                                 <div class="grid-meta">
                                     <strong>{{ \Carbon\Carbon::parse($expense->transacted_at)->format('d/m/Y') }}</strong>
                                     -
-                                    {{ $expense->title }} (Rp {{ number_format($expense->amount, 0, ',', '.') }})
+                                    {{ $expense->title }}
+                                    <span class="muted">(Rp {{ number_format($expense->amount, 0, ',', '.') }})</span>
                                 </div>
                                 <div class="grid-img-container">
                                     @php
@@ -371,6 +452,7 @@
                                 </div>
                             </td>
                         @endforeach
+
                         @if ($chunk->slice(2, 2)->count() < 2)
                             <td class="empty-cell"></td>
                         @endif

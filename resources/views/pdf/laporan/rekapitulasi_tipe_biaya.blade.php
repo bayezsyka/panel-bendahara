@@ -5,41 +5,36 @@
     <meta charset="utf-8" />
     <title>Laporan Tipe Biaya</title>
     <style>
+        @page {
+            margin: 1cm 1cm 2cm 1cm;
+        }
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 12px;
             color: #111;
             line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
-        .kop {
-            width: 100%;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-        }
 
-        .kop-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .company {
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
 
         .judul {
-            text-align: center;
-            margin: 14px 0 12px 0;
+            text-align: left;
+            margin: 10px 0 20px 0;
+            width: 100%;
+            display: block;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
         }
 
         .judul .h1 {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 2px;
+            margin: 0 0 4px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .info-box {
@@ -121,21 +116,8 @@
 </head>
 
 <body>
-    {{-- KOP SURAT --}}
-    <div class="kop">
-        <table class="kop-table">
-            <tr>
-                <td style="width: 15%; text-align:center;">
-                    <img src="{{ public_path('images/logo.png') }}" style="height: 60px;">
-                </td>
-                <td style="text-align: center;">
-                    <div class="company">PT. JAYA KARYA KONTRUKSI</div>
-                    <div style="font-size: 11px;">General Contractor & Supplier</div>
-                </td>
-                <td style="width: 15%;"></td>
-            </tr>
-        </table>
-    </div>
+    @include('pdf.komponen.footer')
+    @include('pdf.komponen.header')
 
     <div class="judul">
         <div class="h1">LAPORAN KEUANGAN PER TIPE BIAYA</div>
@@ -264,9 +246,7 @@
         </tfoot>
     </table>
 
-    <div style="margin-top: 10px; font-size: 10px; text-align: right; color: #777;">
-        Dicetak otomatis pada: {{ $generatedAt }}
-    </div>
+
 
 </body>
 

@@ -127,7 +127,7 @@ class CustomerController extends Controller
             $query->orderBy('date', 'asc');
         }]);
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan_customer', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.laporan.riwayat_piutang', [
             'customer' => $customer,
             'transactions' => $customer->receivableTransactions,
             'date' => now()->format('d/m/Y'),

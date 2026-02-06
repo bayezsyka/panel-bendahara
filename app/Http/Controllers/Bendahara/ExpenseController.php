@@ -140,7 +140,7 @@ class ExpenseController extends Controller
             }
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.receipt', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.voucher.kwitansi', [
             'expense' => $expense,
             'payTo' => $payTo
         ]);

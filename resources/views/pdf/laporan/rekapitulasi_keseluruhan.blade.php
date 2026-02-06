@@ -5,26 +5,21 @@
     <meta charset="utf-8" />
     <title>Laporan Keseluruhan Proyek</title>
     <style>
+        @page {
+            margin: 1cm 1cm 2cm 1cm;
+        }
+
         body {
             font-family: "Times New Roman", Times, serif;
             font-size: 12px;
             color: #111;
             line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
         /* Kop Surat Utama */
-        .main-header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-        }
 
-        .company-name {
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
 
         /* Section per Proyek (BAGIAN 1) */
         .project-section {
@@ -39,15 +34,20 @@
         }
 
         .judul {
-            text-align: center;
-            margin: 10px 0 12px 0;
+            text-align: left;
+            margin: 10px 0 20px 0;
+            width: 100%;
+            display: block;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
         }
 
         .judul .h1 {
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 2px;
+            margin: 0 0 4px 0;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         /* Info Box */
@@ -161,13 +161,13 @@
 </head>
 
 <body>
+    @include('pdf.komponen.footer')
 
     {{-- HEADER UTAMA LAPORAN --}}
-    <div class="main-header">
-        <img src="{{ public_path('images/logo.png') }}" style="height: 50px; margin-bottom: 5px;">
-        <div class="company-name">PT. JAYA KARYA KONSTRUKSI</div>
-        <div style="font-size: 11px;">LAPORAN KEUANGAN KESELURUHAN PROYEK</div>
-        <div style="font-size: 10px; margin-top: 5px;">Dicetak pada: {{ $generatedAt }}</div>
+    @include('pdf.komponen.header')
+
+    <div class="judul">
+        <div class="h1">LAPORAN KEUANGAN KESELURUHAN PROYEK</div>
     </div>
 
     {{-- =========================
@@ -408,6 +408,8 @@
             @endforeach
         @endforeach
     @endif
+
+
 
 </body>
 

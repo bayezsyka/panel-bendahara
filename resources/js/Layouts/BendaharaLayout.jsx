@@ -6,6 +6,14 @@ import Swal from 'sweetalert2';
 export default function BendaharaLayout({ children, header }) {
     const { auth, flash } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         if (flash?.message) {
@@ -342,6 +350,26 @@ export default function BendaharaLayout({ children, header }) {
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                             Context: <span className="text-gray-900">{auth.current_office?.name}</span>
                         </span>
+                    </div>
+
+                    {/* Jam di Tengah */}
+                    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100/50 shadow-sm">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs font-medium font-mono">
+                                {new Intl.DateTimeFormat('id-ID', {
+                                    day: 'numeric',
+                                    month: 'long', 
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: false
+                                }).format(currentTime)} WIB
+                            </span>
+                        </div>
                     </div>
 
                     {auth.can_switch_office && (
