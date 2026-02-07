@@ -11,10 +11,16 @@ class OfficeSwitcherController extends Controller
     {
         $validated = $request->validate([
             'office_id' => 'required|integer|in:1,2',
+            'from' => 'nullable|string',
         ]);
 
         session(['current_office_view' => $validated['office_id']]);
 
-        return back()->with('message', 'Tampilan kantor berhasil diubah.');
+        $route = 'bendahara.dashboard';
+        if ($request->from === 'receivable') {
+            $route = 'receivable.dashboard';
+        }
+
+        return redirect()->route($route)->with('message', 'Tampilan kantor berhasil diubah.');
     }
 }

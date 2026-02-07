@@ -58,7 +58,7 @@ class Expense extends Model
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()
-            ->logAll()
+            ->logOnly(['amount', 'title', 'status', 'transacted_at'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "Pengeluaran ini telah di-{$eventName}");
@@ -66,13 +66,17 @@ class Expense extends Model
 
     public function tapActivity(\Spatie\Activitylog\Contracts\Activity $activity, string $eventName)
     {
+        // Avoid N+1 issues by checking if relations are loaded or using simple attributes
+        $project_name = $this->relationLoaded('project') ? $this->project->name : (\App\Models\Project::find($this->project_id)?->name ?? '-');
+        $expense_type_name = $this->relationLoaded('expenseType') ? $this->expenseType->name : (\App\Models\ExpenseType::find($this->expense_type_id)?->name ?? '-');
+
         $activity->properties = $activity->properties->merge([
             'context' => [
                 'title' => $this->title,
                 'transacted_at' => $this->transacted_at ? $this->transacted_at->format('d M Y') : '-',
                 'amount' => 'Rp ' . number_format($this->amount, 0, ',', '.'),
-                'expense_type' => $this->expenseType ? $this->expenseType->name : '-',
-                'project' => $this->project ? $this->project->name : '-',
+                'expense_type' => $expense_type_name,
+                'project' => $project_name,
             ]
         ]);
     }

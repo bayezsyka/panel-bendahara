@@ -263,7 +263,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                   <PieChart>
                     <Pie
                       data={projectExpenses}
-                      dataKey="total"
+                      dataKey="expenses_sum_amount"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
@@ -581,7 +581,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right font-medium text-gray-900">
-                        {rupiah(project.total)}
+                        {rupiah(project.expenses_sum_amount)}
                       </td>
                     </tr>
                   ))

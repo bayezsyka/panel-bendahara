@@ -125,7 +125,7 @@ export default function BendaharaLayout({ children, header }) {
             >
                 {/* Header Sidebar (Logo) */}
                 <div className="flex items-center h-20 px-4 border-b border-gray-100 overflow-hidden whitespace-nowrap">
-                    <Link href={route('bendahara.dashboard')} className="flex items-center gap-3">
+                    <Link href={route(activePanel === 'finance' ? 'bendahara.dashboard' : 'receivable.dashboard')} className="flex items-center gap-3">
                         {/* Ikon Logo selalu terlihat */}
                         <div className="flex-shrink-0">
                             <ApplicationLogo className="w-10 h-10 text-indigo-600 fill-current" />
@@ -432,7 +432,7 @@ export default function BendaharaLayout({ children, header }) {
                                 <Link 
                                     href={route('superadmin.office.switch')} 
                                     method="post" 
-                                    data={{ office_id: 1 }}
+                                    data={{ office_id: 1, from: activePanel }}
                                     className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 1 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 1 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
@@ -441,7 +441,7 @@ export default function BendaharaLayout({ children, header }) {
                                 <Link 
                                     href={route('superadmin.office.switch')} 
                                     method="post" 
-                                    data={{ office_id: 2 }}
+                                    data={{ office_id: 2, from: activePanel }}
                                     className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 2 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
                                 >
                                     <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>

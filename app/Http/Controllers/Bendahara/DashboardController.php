@@ -21,7 +21,9 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Cek Office ID untuk redirect ke Dashboard Plant jika ID = 2 (Gunakan Service untuk Context)
-        if (app(OfficeContextService::class)->getCurrentOfficeId() === 2) {
+        $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
+
+        if ($officeId === 2) {
             $expenseTypes = ExpenseType::orderBy('name')->get();
 
             // Kas Besar
@@ -45,61 +47,56 @@ class DashboardController extends Controller
             ]);
         }
 
-        // ... kode lama tetap sama (tetap gunakan logic 3/6 bulan untuk dashboard) ...
-        $months = (int) $request->query('months', 6);
-        $months = max(3, min($months, 24));
-
         $now = now();
         $monthStart = $now->copy()->startOfMonth()->toDateString();
         $monthEnd = $now->copy()->endOfMonth()->toDateString();
 
-        // KPI: Total pengeluaran bulan ini (dari semua proyek)
-        $expenseThisMonth = (int) Expense::whereBetween('transacted_at', [$monthStart, $monthEnd])
-            ->sum('amount');
+        // Gunakan Cache untuk KPI (10 menit)
+        $kpis = \Illuminate\Support\Facades\Cache::remember('dashboard_kpi_' . $officeId, 600, function () use ($monthStart, $monthEnd) {
+            // KPI: Total pengeluaran bulan ini (dari semua proyek)
+            $expenseThisMonth = (int) Expense::whereBetween('transacted_at', [$monthStart, $monthEnd])
+                ->sum('amount');
 
-        // KPI: Total pengeluaran keseluruhan
-        $totalExpense = (int) Expense::sum('amount');
+            // KPI: Total pengeluaran keseluruhan
+            $totalExpense = (int) Expense::sum('amount');
 
-        // KPI: Jumlah proyek aktif
-        $activeProjects = Project::where('status', 'ongoing')->count();
+            // KPI: Jumlah proyek aktif
+            $activeProjects = Project::where('status', 'ongoing')->count();
 
-        // KPI: Jumlah proyek selesai
-        $completedProjects = Project::where('status', 'completed')->count();
+            // KPI: Jumlah proyek selesai
+            $completedProjects = Project::where('status', 'completed')->count();
 
-        // Data pengeluaran per proyek (top 5)
-        $topProjects = Project::withSum('expenses', 'amount')
-            ->orderByDesc('expenses_sum_amount')
-            ->limit(5)
-            ->get()
-            ->map(fn($p) => [
-                'id' => $p->id,
-                'name' => $p->name,
-                'status' => $p->status,
-                'total' => (int) ($p->expenses_sum_amount ?? 0),
-            ]);
+            return [
+                'expenseThisMonth' => $expenseThisMonth,
+                'totalExpense' => $totalExpense,
+                'activeProjects' => $activeProjects,
+                'completedProjects' => $completedProjects,
+            ];
+        });
 
-        $kpis = [
-            'expenseThisMonth' => $expenseThisMonth,
-            'totalExpense' => $totalExpense,
-            'activeProjects' => $activeProjects,
-            'completedProjects' => $completedProjects,
-            'asOf' => $now->toDateString(),
-        ];
+        // Tambahkan asOf ke KPI (tidak perlu di-cache karena waktu berubah)
+        $kpis['asOf'] = $now->toDateString();
+
+        $months = (int) $request->query('months', 6);
+        $months = max(3, min($months, 24));
 
         $expenseSeries = $this->monthlyExpenseSeries($months, $now);
 
-        $projectExpenses = Project::withSum('expenses', 'amount')
+        // Data pengeluaran per proyek (top 5) - Optimized
+        $topProjects = Project::select('id', 'name', 'status')
+            ->withSum('expenses', 'amount')
+            ->orderByDesc('expenses_sum_amount')
+            ->limit(5)
+            ->get();
+
+        $projectExpenses = Project::select('name')
+            ->withSum('expenses', 'amount')
             ->having('expenses_sum_amount', '>', 0)
             ->orderByDesc('expenses_sum_amount')
             ->limit(10)
-            ->get()
-            ->map(fn($p) => [
-                'name' => $p->name,
-                'total' => (int) ($p->expenses_sum_amount ?? 0),
-            ]);
+            ->get();
 
         // Get all expense types for the filter
-        $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
         $expenseTypes = ExpenseType::where('office_id', $officeId)->orderBy('name')->get(['id', 'name']);
 
         // Data pengeluaran per tipe biaya (untuk chart breakdown)
@@ -134,12 +131,27 @@ class DashboardController extends Controller
     // Method Baru: Export PDF Keseluruhan
     public function exportAllPdf(Request $request)
     {
+        // Increase memory limit for PDF generation
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 300);
+
         $withReceipts = $request->boolean('with_receipts', false);
 
-        // Ambil SEMUA project dengan relasi yang dibutuhkan
-        $projects = Project::with(['expenses' => function ($query) {
-            $query->orderBy('transacted_at', 'asc');
-        }, 'mandor'])->get();
+        // Optimasi: Gunakan cursor() untuk memory efficiency dan select kolom spesifik
+        // Note: DomPDF tetap butuh memory besar untuk rendering, tapi cursor() menghemat memory saat fetching data di PHP
+        $projects = Project::query()
+            ->select('id', 'name', 'mandor_id', 'status') // Select explicit columns
+            ->with(['expenses' => function ($query) use ($withReceipts) {
+                // Select only necessary columns from expenses
+                $query->select('id', 'project_id', 'amount', 'transacted_at', 'title')
+                    ->orderBy('transacted_at', 'asc');
+
+                // Jika butuh receipt, tambahkan kolomnya. Jika tidak, jangan load (hemat memory)
+                if ($withReceipts) {
+                    $query->addSelect('receipt_image');
+                }
+            }, 'mandor:id,name']) // Optimasi relation mandor
+            ->cursor(); // Gunakan cursor agar query tidak load semua ke memory sekaligus (LazyCollection)
 
         activity()
             ->causedBy($request->user())

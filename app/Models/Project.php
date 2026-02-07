@@ -62,6 +62,7 @@ class Project extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'office_id' => 'integer',
+        'expenses_sum_amount' => 'integer',
     ];
 
     public function expenses(): HasMany
@@ -118,7 +119,7 @@ class Project extends Model
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()
-            ->logAll()
+            ->logOnly(['name', 'status', 'progress'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "Proyek ini telah di-{$eventName}");
