@@ -14,9 +14,35 @@ class ProjectPolicy
     /**
      * Determine whether the user can view the project.
      */
+    public function viewAny(User $user): bool
+    {
+        return $user->canAccessPanel(User::PANEL_FINANCE);
+    }
+
+    /**
+     * Determine whether the user can view the project.
+     */
     public function view(User $user, Project $project): bool
     {
-        return $project->office_id === app(OfficeContextService::class)->getCurrentOfficeId();
+        if (!$user->canAccessPanel(User::PANEL_FINANCE)) {
+            return false;
+        }
+
+        // Superadmin can view all projects
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        // Bendahara restricted to own office
+        return $user->office_id === $project->office_id;
+    }
+
+    /**
+     * Determine whether the user can create projects.
+     */
+    public function create(User $user): bool
+    {
+        return $user->canManage(User::PANEL_FINANCE);
     }
 
     /**
@@ -24,7 +50,16 @@ class ProjectPolicy
      */
     public function update(User $user, Project $project): bool
     {
-        return $project->office_id === app(OfficeContextService::class)->getCurrentOfficeId();
+        if (!$user->canManage(User::PANEL_FINANCE)) {
+            return false;
+        }
+
+        // Superadmin Utama can update all
+        if ($user->isSuperAdmin() && $user->isKantorUtama()) {
+            return true;
+        }
+
+        return $user->office_id === $project->office_id;
     }
 
     /**
@@ -32,6 +67,6 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        return $project->office_id === app(OfficeContextService::class)->getCurrentOfficeId();
+        return $this->update($user, $project);
     }
 }

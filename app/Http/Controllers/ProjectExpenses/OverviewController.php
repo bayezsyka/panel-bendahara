@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
@@ -15,13 +15,18 @@ use App\Models\PlantTransaction;
 
 use App\Services\OfficeContextService;
 
-class DashboardController extends Controller
+class OverviewController extends Controller
 {
     // ... method index tetap sama ...
     public function index(Request $request)
     {
         // Cek Office ID untuk redirect ke Dashboard Plant jika ID = 2 (Gunakan Service untuk Context)
         $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
+
+        $requiredPanel = ($officeId === 2) ? \App\Models\User::PANEL_PLANT_CASH : \App\Models\User::PANEL_FINANCE;
+        if (!request()->user()->canAccessPanel($requiredPanel)) {
+            abort(403, 'Anda tidak memiliki akses ke panel ini.');
+        }
 
         if ($officeId === 2) {
             $expenseTypes = ExpenseType::orderBy('name')->get();
@@ -115,7 +120,7 @@ class DashboardController extends Controller
         // Data pengeluaran per tipe biaya per bulan (untuk trend analysis)
         $expenseByTypeMonthly = $this->monthlyExpenseByTypeSeries($months, $now);
 
-        return Inertia::render('Bendahara/Dashboard', [
+        return Inertia::render('ProjectExpenses/Overview', [
             'title' => 'Dashboard Bendahara',
             'months' => $months,
             'kpis' => $kpis,

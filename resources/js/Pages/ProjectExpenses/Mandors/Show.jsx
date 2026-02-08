@@ -28,7 +28,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
 
             <PageHeader
                 title={`Pelaksana: ${mandor.name}`}
-                backLink={route('bendahara.mandors.index')}
+                backLink={route('projectexpense.mandors.index')}
                 backLabel="Daftar Pelaksana"
                 meta={
                     <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
@@ -51,7 +51,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
                                 onClick={() => {
                                     const date = document.getElementById('exportDate').value;
                                     if(date) {
-                                        window.open(route('bendahara.mandors.export-daily', { mandor: mandor.id, date: date }), '_blank');
+                                        window.open(route('projectexpense.mandors.export-daily', { mandor: mandor.id, date: date }), '_blank');
                                     } else {
                                         alert('Pilih tanggal terlebih dahulu');
                                     }
@@ -146,7 +146,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
                                     </Link>
                     
                                     <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex justify-center items-center">
-                                        <Link href={route('bendahara.projects.show', project.slug || project.id)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                                        <Link href={route('projectexpense.projects.show', project.slug || project.id)} className="text-sm font-medium text-indigo-600 hover:text-indigo-800">
                                             Lihat Detail Proyek
                                         </Link>
                                     </div>
@@ -215,7 +215,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
                                         <td className="px-6 py-4 align-top">
                                              {expense.project ? (
                                                 <Link 
-                                                    href={route('bendahara.projects.show', expense.project.slug || expense.project.id)}
+                                                    href={route('projectexpense.projects.show', expense.project.slug || expense.project.id)}
                                                     className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 hover:bg-indigo-200"
                                                 >
                                                     {expense.project.name}
@@ -255,7 +255,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
                                             <div className="flex flex-col gap-2 items-end">
                                                 <span>{formatRupiah(expense.amount)}</span>
                                                 <a 
-                                                    href={route('bendahara.expenses.print', expense.id)} 
+                                                    href={route('projectexpense.expenses.print', expense.id)} 
                                                     target="_blank"
                                                     className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition"
                                                     title="Cetak Kwitansi"

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mandor;
@@ -16,7 +16,7 @@ class MandorController extends Controller
             $query->where('status', 'ongoing');
         }])->latest()->get();
 
-        return Inertia::render('Bendahara/Mandors/Index', [
+        return Inertia::render('ProjectExpenses/Mandors/Index', [
             'mandors' => $mandors
         ]);
     }
@@ -49,7 +49,7 @@ class MandorController extends Controller
         // Group expenses by type for additional stats if needed, or send expense types
         $expenseTypes = \App\Models\ExpenseType::all();
 
-        return Inertia::render('Bendahara/Mandors/Show', [
+        return Inertia::render('ProjectExpenses/Mandors/Show', [
             'mandor' => $mandor,
             'stats' => $stats,
             'expenses' => $expenses,

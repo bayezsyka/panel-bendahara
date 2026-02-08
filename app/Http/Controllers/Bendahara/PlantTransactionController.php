@@ -176,11 +176,19 @@ class PlantTransactionController extends Controller
         if (app(\App\Services\OfficeContextService::class)->getCurrentOfficeId() !== 2) {
             abort(403, 'Akses ditolak. Anda berada di konteks Kantor Utama.');
         }
+
+        if (!Auth::user()->canAccessPanel(\App\Models\User::PANEL_PLANT_CASH)) {
+            abort(403, 'Anda tidak memiliki akses ke panel ini.');
+        }
     }
 
     public function store(Request $request)
     {
         $this->ensurePlantContext();
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+            abort(403, 'Anda tidak memiliki izin mengubah data ini.');
+        }
+
         $request->validate([
             'transaction_date' => 'required|date',
             'type' => 'required|in:in,out',
@@ -197,7 +205,9 @@ class PlantTransactionController extends Controller
             'amount' => $request->amount,
             'description' => $request->description,
             'expense_type_id' => $request->expense_type_id,
+            'expense_category' => $request->type === 'in' ? 'Sumber Dana' : 'Tipe Biaya',
             'created_by' => Auth::id(),
+            'office_id' => 2, // Explicitly set office ID
         ]);
 
         return redirect()->back()->with('message', 'Transaksi berhasil disimpan');
@@ -206,6 +216,10 @@ class PlantTransactionController extends Controller
     public function update(Request $request, PlantTransaction $plantTransaction)
     {
         $this->ensurePlantContext();
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+            abort(403, 'Anda tidak memiliki izin mengubah data ini.');
+        }
+
         $request->validate([
             'transaction_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
@@ -226,6 +240,10 @@ class PlantTransactionController extends Controller
     public function destroy(PlantTransaction $plantTransaction)
     {
         $this->ensurePlantContext();
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+            abort(403, 'Anda tidak memiliki izin mengubah data ini.');
+        }
+
         $plantTransaction->delete();
         return redirect()->back()->with('message', 'Transaksi berhasil dihapus');
     }

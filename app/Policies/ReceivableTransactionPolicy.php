@@ -10,7 +10,7 @@ class ReceivableTransactionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAccessToReceivable();
+        return $user->canAccessPanel(User::PANEL_RECEIVABLE);
     }
 
     /**
@@ -18,7 +18,7 @@ class ReceivableTransactionPolicy
      */
     public function view(User $user, ReceivableTransaction $receivableTransaction): bool
     {
-        return $user->hasAccessToReceivable();
+        return $user->canAccessPanel(User::PANEL_RECEIVABLE);
     }
 
     /**
@@ -26,7 +26,7 @@ class ReceivableTransactionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasAccessToReceivable();
+        return $user->canCreate(User::PANEL_RECEIVABLE);
     }
 
     /**
@@ -34,7 +34,7 @@ class ReceivableTransactionPolicy
      */
     public function update(User $user, ?ReceivableTransaction $receivableTransaction = null): bool
     {
-        return $user->isSuperAdmin() || ($user->isBendahara() && $user->office_id === 1);
+        return $user->canManage(User::PANEL_RECEIVABLE);
     }
 
     /**
@@ -42,7 +42,7 @@ class ReceivableTransactionPolicy
      */
     public function delete(User $user, ?ReceivableTransaction $receivableTransaction = null): bool
     {
-        return $user->isSuperAdmin() || ($user->isBendahara() && $user->office_id === 1);
+        return $user->canManage(User::PANEL_RECEIVABLE);
     }
 
     /**

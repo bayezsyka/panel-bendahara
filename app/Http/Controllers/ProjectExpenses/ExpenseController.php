@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;

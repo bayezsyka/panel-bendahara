@@ -91,7 +91,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
   }
 
   const handleExport = (withReceipts) => {
-    const url = route('bendahara.export.all.pdf', { with_receipts: withReceipts ? 1 : 0 });
+    const url = route('projectexpense.export.all.pdf', { with_receipts: withReceipts ? 1 : 0 });
     window.open(url, '_blank');
   };
 
@@ -100,7 +100,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
       alert('Pilih tipe biaya terlebih dahulu');
       return;
     }
-    const url = route('bendahara.export.by.type.pdf', { expense_type_id: selectedExpenseType });
+    const url = route('projectexpense.export.by.type.pdf', { expense_type_id: selectedExpenseType });
     window.open(url, '_blank');
   };
 
@@ -543,7 +543,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Pengeluaran Tertinggi</h3>
               <Link 
-                href="/bendahara/projects" 
+                href={route('projectexpense.projects.index')} 
                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
               >
                 Lihat Semua →
@@ -565,7 +565,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                     <tr key={project.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <Link 
-                          href={`/bendahara/projects/${project.id}`}
+                          href={route('projectexpense.projects.show', project.slug || project.id)}
                           className="font-medium text-gray-900 hover:text-indigo-600"
                         >
                           {project.name}

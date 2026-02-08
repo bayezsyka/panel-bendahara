@@ -155,11 +155,18 @@ class ActivityLogController extends Controller
                 return route('superadmin.users.index', ['search' => $log->properties['attributes']['name'] ?? '']);
 
             case 'App\Models\Project':
-                return $log->subject ? route('bendahara.projects.show', $log->subject) : null;
+                return $log->subject ? route('projectexpense.projects.show', $log->subject) : null;
 
-                // Tambahkan model lain di sini
-                // case 'App\Models\Expense':
-                //     return route('bendahara.expenses.show', $log->subject_id);
+            case 'App\Models\Mandor':
+                return $log->subject ? route('projectexpense.mandors.show', $log->subject) : null;
+
+            case 'App\Models\Expense':
+                return $log->subject && $log->subject->project_id
+                    ? route('projectexpense.projects.show', $log->subject->project_id)
+                    : null;
+
+            case 'App\Models\ExpenseRequest':
+                return route('projectexpense.expense-requests.index');
 
             default:
                 return null;

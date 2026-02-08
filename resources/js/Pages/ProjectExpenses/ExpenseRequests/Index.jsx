@@ -50,7 +50,7 @@ export default function Index({ requests, expenseTypes }) {
   const approve = () => {
     if (!active) return
     router.put(
-      route('bendahara.expense_requests.approve', active.id),
+      route('projectexpense.expense-requests.approve', active.id),
       {
         title: data.title,
         amount: data.amount,
@@ -68,7 +68,7 @@ export default function Index({ requests, expenseTypes }) {
   const reject = () => {
     if (!active) return
     router.put(
-      route('bendahara.expense_requests.reject', active.id),
+      route('projectexpense.expense-requests.reject', active.id),
       {
         review_note: data.review_note
       },
@@ -85,7 +85,7 @@ export default function Index({ requests, expenseTypes }) {
 
       <PageHeader
         title="Permintaan Pending"
-        backLink={route('bendahara.dashboard')}
+        backLink={route('projectexpense.overview')}
         backLabel="Dashboard"
         badge={requests.length > 0 ? {
           text: `${requests.length} Menunggu`,

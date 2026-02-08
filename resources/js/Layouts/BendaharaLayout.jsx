@@ -59,6 +59,18 @@ export default function BendaharaLayout({ children, header }) {
     // Helper untuk mengecek link aktif
     const isActive = (routeName) => route().current(routeName);
 
+    // Helper untuk mengecek akses panel
+    const canAccessPanel = (panelName) => {
+        if (!auth.user) return false;
+        if (auth.user.role === 'superadmin') return true; 
+        // Bendahara Logic
+        const allowed = auth.user.allowed_panels || [];
+        return allowed.includes(panelName);
+    };
+
+    const hasFinanceAccess = canAccessPanel('finance') || canAccessPanel('plant_cash'); // Plant cash is part of finance context in sidebar
+    const hasReceivableAccess = canAccessPanel('receivable');
+
     // --- KOMPONEN LINK SIDEBAR ---
     const SidebarLink = ({ name, routeName, icon, badge }) => (
         <Link
@@ -125,7 +137,7 @@ export default function BendaharaLayout({ children, header }) {
             >
                 {/* Header Sidebar (Logo) */}
                 <div className="flex items-center h-20 px-4 border-b border-gray-100 overflow-hidden whitespace-nowrap">
-                    <Link href={route(activePanel === 'finance' ? 'bendahara.dashboard' : 'receivable.dashboard')} className="flex items-center gap-3">
+                    <Link href={route(activePanel === 'finance' ? 'projectexpense.overview' : 'receivable.dashboard')} className="flex items-center gap-3">
                         {/* Ikon Logo selalu terlihat */}
                         <div className="flex-shrink-0">
                             <ApplicationLogo className="w-10 h-10 text-indigo-600 fill-current" />
@@ -147,6 +159,7 @@ export default function BendaharaLayout({ children, header }) {
                 <div className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-5rem)] custom-scrollbar">
                     
                     {/* Panel Switcher Toggle (Premium Saklar Style) */}
+                    {(hasFinanceAccess && hasReceivableAccess) && (
                     <div className="mb-6 px-2 min-h-[40px] flex items-center justify-center">
                         {/* Expanded State (Hover) */}
                         <div className="hidden md:group-hover:block w-full transition-all duration-300">
@@ -159,14 +172,14 @@ export default function BendaharaLayout({ children, header }) {
                                 ></div>
 
                                 {/* Finance Option */}
-                                <Link 
-                                    href={route('bendahara.dashboard')}
-                                    className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
-                                        activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
-                                    }`}
-                                >
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Finance</span>
-                                </Link>
+                                    <Link 
+                                        href={route('projectexpense.overview')}
+                                        className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
+                                            activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
+                                        }`}
+                                    >
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Finance</span>
+                                    </Link>
 
                                 {/* Receivable Option */}
                                 <Link 
@@ -200,11 +213,12 @@ export default function BendaharaLayout({ children, header }) {
                                         activePanel === 'finance' ? 'left-1' : 'left-[calc(50%+1px)]'
                                     }`}
                                 ></div>
-                                <Link href={route('bendahara.dashboard')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400'}`}>Finance</Link>
+                                <Link href={route('projectexpense.overview')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400'}`}>Finance</Link>
                                 <Link href={route('receivable.dashboard')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'receivable' ? 'text-indigo-600' : 'text-gray-400'}`}>Piutang</Link>
                             </div>
                         </div>
                     </div>
+                    )}
 
                     {/* Label Group Menu (Hanya muncul saat hover) */}
                     <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
@@ -213,12 +227,11 @@ export default function BendaharaLayout({ children, header }) {
                     
                     {activePanel === 'finance' ? (
                         <>
-                        <>
                             {auth.current_office?.id === 2 ? (
                                 <>
                                     <SidebarLink 
                                         name="Dashboard" 
-                                        routeName="bendahara.dashboard" 
+                                        routeName="projectexpense.overview" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
                                     />
                                     <SidebarLink 
@@ -233,7 +246,7 @@ export default function BendaharaLayout({ children, header }) {
                                     />
                                     <SidebarLink 
                                         name="Tipe" 
-                                        routeName="bendahara.expense-types.index" 
+                                        routeName="projectexpense.expense-types.index" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
                                     />
                                 </>
@@ -241,43 +254,42 @@ export default function BendaharaLayout({ children, header }) {
                                 <>
                                     <SidebarLink 
                                         name="Dashboard" 
-                                        routeName="bendahara.dashboard" 
+                                        routeName="projectexpense.overview" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
                                     />
                                     
                                     <SidebarLink 
                                         name="Proyek Konstruksi" 
-                                        routeName="bendahara.projects.index" 
+                                        routeName="projectexpense.projects.index" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
                                     />
                 
                                     <SidebarLink 
                                         name="Pelaksana" 
-                                        routeName="bendahara.mandors.index" 
+                                        routeName="projectexpense.mandors.index" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                                     />
                 
                                     <SidebarLink 
                                         name="Bendera" 
-                                        routeName="bendahara.benderas.index" 
+                                        routeName="projectexpense.benderas.index" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
                                     />
                 
                                     <SidebarLink 
                                         name="Tipe Biaya" 
-                                        routeName="bendahara.expense-types.index" 
+                                        routeName="projectexpense.expense-types.index" 
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
                                     />
                 
                                     <SidebarLink 
                                         name="Pending WhatsApp" 
-                                        routeName="bendahara.expense_requests.index"
+                                        routeName="projectexpense.expense-requests.index"
                                         badge={usePage().props.pending_expense_requests_count}
                                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                                     />
                                 </>
                             )}
-                        </>
                         </>
                     ) : (
                         <>
@@ -306,13 +318,15 @@ export default function BendaharaLayout({ children, header }) {
                     {auth.user.role === 'superadmin' && activePanel === 'finance' && (
                         <>
                             <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                                Admin
+                                Superadmin
                             </p>
+                            
                             <SidebarLink 
                                 name="Kelola User" 
                                 routeName="superadmin.users.index" 
                                 icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
                             />
+                            
                             <SidebarLink 
                                 name="Aktivitas Log" 
                                 routeName="superadmin.activity_logs.index" 

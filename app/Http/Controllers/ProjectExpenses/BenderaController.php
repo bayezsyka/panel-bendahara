@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bendera;
@@ -13,7 +13,7 @@ class BenderaController extends Controller
     {
         $benderas = Bendera::latest()->get();
 
-        return Inertia::render('Bendahara/Benderas/Index', [
+        return Inertia::render('ProjectExpenses/Benderas/Index', [
             'benderas' => $benderas
         ]);
     }

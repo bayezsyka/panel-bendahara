@@ -10,29 +10,34 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import Swal from 'sweetalert2';
 
-export default function Index({ benderas }) {
+export default function Index({ expenseTypes, currentOfficeId }) {
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     
+    const isPlant = currentOfficeId === 2;
+
     const { data, setData, post, put, delete: destroy, processing, errors, reset, clearErrors } = useForm({
         id: '',
         name: '',
         code: '',
+        category: 'out',
     });
 
     const openAddModal = () => {
         setIsEditing(false);
         reset();
+        setData('category', 'out'); // Default
         clearErrors();
         setShowModal(true);
     };
 
-    const openEditModal = (bendera) => {
+    const openEditModal = (expenseType) => {
         setIsEditing(true);
         setData({
-            id: bendera.id,
-            name: bendera.name,
-            code: bendera.code || '',
+            id: expenseType.id,
+            name: expenseType.name,
+            code: expenseType.code || '',
+            category: expenseType.category || 'out',
         });
         clearErrors();
         setShowModal(true);
@@ -41,11 +46,11 @@ export default function Index({ benderas }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isEditing) {
-            put(route('bendahara.benderas.update', data.id), {
+            put(route('projectexpense.expense-types.update', data.id), {
                 onSuccess: () => { setShowModal(false); reset(); }
             });
         } else {
-            post(route('bendahara.benderas.store'), {
+            post(route('projectexpense.expense-types.store'), {
                 onSuccess: () => { setShowModal(false); reset(); }
             });
         }
@@ -53,8 +58,8 @@ export default function Index({ benderas }) {
 
     const handleDelete = (id) => {
         Swal.fire({
-            title: 'Hapus Bendera?',
-            text: 'Data bendera ini akan dihapus permanen. Pastikan tidak ada proyek yang menggunakan bendera ini (validasi sistem mungkin akan menolak jika ada).',
+            title: 'Hapus Tipe?',
+            text: 'Data tipe ini akan dihapus. Pastikan tidak sedang digunakan.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',
@@ -63,22 +68,22 @@ export default function Index({ benderas }) {
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                destroy(route('bendahara.benderas.destroy', id));
+                destroy(route('projectexpense.expense-types.destroy', id));
             }
         });
     };
 
     return (
         <BendaharaLayout>
-            <Head title="Kelola Bendera" />
+            <Head title={isPlant ? "Kelola Tipe" : "Kelola Tipe Biaya"} />
 
             <PageHeader
-                title="Data Bendera"
-                backLink={route('bendahara.dashboard')}
+                title={isPlant ? "Data Tipe" : "Data Tipe Biaya"}
+                backLink={route('projectexpense.overview')}
                 backLabel="Dashboard"
                 actions={
                     <PrimaryButton onClick={openAddModal}>
-                        + Tambah Bendera
+                        {isPlant ? "+ Tambah Tipe" : "+ Tambah Tipe Biaya"}
                     </PrimaryButton>
                 }
             />
@@ -88,26 +93,40 @@ export default function Index({ benderas }) {
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Bendera (PT/CV)</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{isPlant ? "Nama Tipe" : "Nama Tipe Biaya"}</th>
+                                {isPlant && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>}
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {benderas.length > 0 ? (
-                                benderas.map((bendera) => (
-                                    <tr key={bendera.id} className="hover:bg-gray-50">
+                            {expenseTypes.length > 0 ? (
+                                expenseTypes.map((type) => (
+                                    <tr key={type.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {bendera.name}
+                                            {type.name}
                                         </td>
+                                        {isPlant && (
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                                {type.category === 'in' ? (
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                        Pemasukan
+                                                    </span>
+                                                ) : (
+                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                        Pengeluaran
+                                                    </span>
+                                                )}
+                                            </td>
+                                        )}
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <button 
-                                                onClick={() => openEditModal(bendera)}
+                                                onClick={() => openEditModal(type)}
                                                 className="text-indigo-600 hover:text-indigo-900 mr-4"
                                             >
                                                 Edit
                                             </button>
                                             <button 
-                                                onClick={() => handleDelete(bendera.id)}
+                                                onClick={() => handleDelete(type.id)}
                                                 className="text-red-600 hover:text-red-900"
                                             >
                                                 Hapus
@@ -117,8 +136,8 @@ export default function Index({ benderas }) {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="2" className="px-6 py-12 text-center text-gray-500">
-                                        Belum ada data bendera.
+                                    <td colSpan={isPlant ? 3 : 2} className="px-6 py-12 text-center text-gray-500">
+                                        Belum ada data tipe.
                                     </td>
                                 </tr>
                             )}
@@ -131,16 +150,30 @@ export default function Index({ benderas }) {
             <Modal show={showModal} onClose={() => setShowModal(false)}>
                 <form onSubmit={handleSubmit} className="p-6">
                     <h2 className="text-lg font-medium text-gray-900 mb-4">
-                        {isEditing ? 'Edit Data Bendera' : 'Tambah Bendera Baru'}
+                        {isEditing ? (isPlant ? 'Edit Tipe' : 'Edit Tipe Biaya') : (isPlant ? 'Tambah Tipe Baru' : 'Tambah Tipe Biaya Baru')}
                     </h2>
+                    {isPlant && (
+                        <div className="mb-4">
+                            <InputLabel value="Kategori Transaksi" />
+                            <select
+                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                value={data.category}
+                                onChange={(e) => setData('category', e.target.value)}
+                            >
+                                <option value="out">Pengeluaran (Kas Keluar)</option>
+                                <option value="in">Pemasukan (Kas Masuk)</option>
+                            </select>
+                            <InputError message={errors.category} className="mt-2" />
+                        </div>
+                    )}
 
                     <div className="mb-6">
-                        <InputLabel value="Nama Bendera / Perusahaan" />
+                        <InputLabel value={isPlant ? "Nama Tipe" : "Nama Tipe Biaya"} />
                         <TextInput
                             value={data.name}
                             onChange={e => setData('name', e.target.value)}
                             className="mt-1 block w-full"
-                            placeholder="Contoh: PT. Jasa Konstruksi Karya atau JKK Langsung"
+                            placeholder={isPlant ? "Contoh: Material, BBM, Upah, Penjualan Scrap" : "Contoh: Gaji, Listrik, Material Project"}
                             required
                         />
                         <InputError message={errors.name} className="mt-2" />

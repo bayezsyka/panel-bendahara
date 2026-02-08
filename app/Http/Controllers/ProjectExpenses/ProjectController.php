@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -17,7 +17,7 @@ class ProjectController extends Controller
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
 
-        return Inertia::render('Bendahara/Projects/Index', [
+        return Inertia::render('ProjectExpenses/Projects/Index', [
             'projects' => $projects,
             'mandors' => $mandors,
             'benderas' => $benderas
@@ -70,7 +70,7 @@ class ProjectController extends Controller
         $officeId = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
         $expenseTypes = \App\Models\ExpenseType::where('office_id', $officeId)->get(); // Filter by office
 
-        return Inertia::render('Bendahara/Projects/Show', [
+        return Inertia::render('ProjectExpenses/Projects/Show', [
             'project' => $project,
             'mandors' => $mandors,
             'benderas' => $benderas,

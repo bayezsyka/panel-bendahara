@@ -37,5 +37,8 @@ class AppServiceProvider extends ServiceProvider
                 'user_agent' => Request::header('User-Agent'),
             ]);
         });
+
+        // Register Policy
+        \Illuminate\Support\Facades\Gate::policy(\App\Models\User::class, \App\Policies\UserPolicy::class);
     }
 }

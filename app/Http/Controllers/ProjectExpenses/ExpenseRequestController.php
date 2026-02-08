@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
@@ -22,7 +22,7 @@ class ExpenseRequestController extends Controller
 
         $expenseTypes = \App\Models\ExpenseType::all();
 
-        return Inertia::render('Bendahara/ExpenseRequests/Index', [
+        return Inertia::render('ProjectExpenses/ExpenseRequests/Index', [
             'requests' => $requests,
             'expenseTypes' => $expenseTypes,
         ]);

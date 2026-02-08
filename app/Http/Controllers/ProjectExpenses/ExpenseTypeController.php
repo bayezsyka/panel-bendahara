@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Bendahara;
+namespace App\Http\Controllers\ProjectExpenses;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseType;
@@ -17,7 +17,7 @@ class ExpenseTypeController extends Controller
         $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
         $expenseTypes = ExpenseType::where('office_id', $officeId)->latest()->get();
 
-        return Inertia::render('Bendahara/ExpenseTypes/Index', [
+        return Inertia::render('ProjectExpenses/ExpenseTypes/Index', [
             'expenseTypes' => $expenseTypes,
             'currentOfficeId' => $officeId
         ]);

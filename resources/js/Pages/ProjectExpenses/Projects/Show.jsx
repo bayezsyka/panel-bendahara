@@ -24,7 +24,7 @@ const SelectedProjectExportActions = ({ project, expenseTypes }) => {
   const [selectedType, setSelectedType] = useState('');
 
   const onExportAll = () => {
-    window.open(route('bendahara.projects.export', { project: project.slug || project.id }), '_blank');
+    window.open(route('projectexpense.projects.export', { project: project.slug || project.id }), '_blank');
     setOpen(false);
   };
 
@@ -33,7 +33,7 @@ const SelectedProjectExportActions = ({ project, expenseTypes }) => {
       alert('Pilih tipe biaya terlebih dahulu');
       return;
     }
-    window.open(route('bendahara.projects.export', { project: project.slug || project.id, expense_type_id: selectedType }), '_blank');
+    window.open(route('projectexpense.projects.export', { project: project.slug || project.id, expense_type_id: selectedType }), '_blank');
     setOpen(false);
   };
 
@@ -187,7 +187,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
     
     if (editingExpenseId) {
         // Edit Mode
-        router.post(route('bendahara.expenses.update', editingExpenseId), {
+        router.post(route('projectexpense.expenses.update', editingExpenseId), {
             _method: 'put',
             ...data
         }, {
@@ -201,7 +201,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
         })
     } else {
         // Create Mode
-        post(route('bendahara.expenses.store'), {
+        post(route('projectexpense.expenses.store'), {
             onSuccess: () => {
                 setShowExpenseModal(false)
                 reset()
@@ -213,7 +213,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
   const submitEditProject = (e) => {
     e.preventDefault()
-    editForm.put(route('bendahara.projects.update', project.slug || project.id), {
+    editForm.put(route('projectexpense.projects.update', project.slug || project.id), {
         onSuccess: () => setShowEditModal(false)
     })
   }
@@ -230,7 +230,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
-        router.delete(route('bendahara.expenses.destroy', id));
+        router.delete(route('projectexpense.expenses.destroy', id));
       }
     });
   }
@@ -252,7 +252,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
       }
     }).then((result) => {
       if (result.isConfirmed) {
-        router.delete(route('bendahara.projects.destroy', project.slug || project.id));
+        router.delete(route('projectexpense.projects.destroy', project.slug || project.id));
       }
     });
   }
@@ -263,7 +263,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
 
       <PageHeader
         title={project.name}
-        backLink={route('bendahara.projects.index')}
+        backLink={route('projectexpense.projects.index')}
         backLabel="Daftar Proyek"
         badge={{
           text: isCompleted ? 'Selesai' : 'Berjalan',

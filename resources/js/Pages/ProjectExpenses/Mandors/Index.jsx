@@ -47,11 +47,11 @@ export default function Index({ mandors }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isEditing) {
-            put(route('bendahara.mandors.update', data.id), {
+            put(route('projectexpense.mandors.update', data.id), {
                 onSuccess: () => { setShowModal(false); reset(); }
             });
         } else {
-            post(route('bendahara.mandors.store'), {
+            post(route('projectexpense.mandors.store'), {
                 onSuccess: () => { setShowModal(false); reset(); }
             });
         }
@@ -69,7 +69,7 @@ export default function Index({ mandors }) {
             cancelButtonText: 'Batal'
         }).then((result) => {
             if (result.isConfirmed) {
-                destroy(route('bendahara.mandors.destroy', id));
+                destroy(route('projectexpense.mandors.destroy', id));
             }
         });
     };
@@ -80,7 +80,7 @@ export default function Index({ mandors }) {
 
             <PageHeader
                 title="Data Pelaksana"
-                backLink={route('bendahara.dashboard')}
+                backLink={route('projectexpense.overview')}
                 backLabel="Dashboard"
                 actions={
                     <PrimaryButton onClick={openAddModal}>
@@ -110,7 +110,7 @@ export default function Index({ mandors }) {
                     filteredMandors.map((mandor) => (
                          <div key={mandor.id} className="group flex flex-col bg-white border border-gray-200 rounded-xl hover:border-indigo-300 hover:shadow-md transition duration-200 overflow-hidden relative">
                             {/* Card Content (Clickable) */}
-                            <Link href={route('bendahara.mandors.show', mandor.id)} className="flex-1 p-5 block">
+                            <Link href={route('projectexpense.mandors.show', mandor.id)} className="flex-1 p-5 block">
                                 <div className="flex items-start gap-4">
                                      <div className="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg">
                                         {mandor.name.charAt(0)}
