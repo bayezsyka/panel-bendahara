@@ -6,44 +6,42 @@
     <title>Laporan Piutang - {{ $customer->name }}</title>
     <style>
         @page {
-            margin: 1cm 1cm 2cm 1cm;
+            margin: 1.5cm 1cm 2cm 1cm;
         }
 
         body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 11px;
+            font-size: 10px;
             color: #111;
-            line-height: 1.4;
+            line-height: 1.35;
             margin: 0;
             padding: 0;
         }
 
-
-
         .judul {
             text-align: center;
-            margin: 14px 0 12px 0;
+            margin-bottom: 20px;
             width: 100%;
-            display: block;
         }
 
         .judul .h1 {
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .info-box {
             width: 100%;
-            margin: 10px 0 14px 0;
+            margin-bottom: 15px;
             border: 1px solid #000;
             border-collapse: collapse;
         }
 
         .info-box td {
-            padding: 4px 6px;
+            padding: 5px 8px;
             border: 1px solid #000;
+            vertical-align: top;
         }
 
         .data-table {
@@ -55,16 +53,54 @@
         .data-table th,
         .data-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 5px 6px;
             vertical-align: top;
+            word-wrap: break-word;
         }
 
         .data-table th {
-            background-color: #f0f0f0;
+            background-color: #f2f2f2;
             text-align: center;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 10px;
+            font-size: 8px;
+        }
+
+        /* Portrait Column Widths */
+        .col-no {
+            width: 3%;
+        }
+
+        .col-date {
+            width: 10%;
+        }
+
+        .col-desc {
+            width: 18%;
+        }
+
+        .col-mutu {
+            width: 7%;
+        }
+
+        .col-vol {
+            width: 7%;
+        }
+
+        .col-harga {
+            width: 12%;
+        }
+
+        .col-tagihan {
+            width: 13%;
+        }
+
+        .col-bayar {
+            width: 13%;
+        }
+
+        .col-sisa {
+            width: 15%;
         }
 
         .text-right {
@@ -77,6 +113,10 @@
 
         .text-bold {
             font-weight: bold;
+        }
+
+        tr {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -109,15 +149,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="12%">Tanggal</th>
-                <th>Keterangan / Lokasi</th>
-                <th width="8%">Mutu</th>
-                <th width="10%">Vol (m³)</th>
-                <th width="12%">Harga Satuan</th>
-                <th width="12%">Tagihan</th>
-                <th width="12%">Pembayaran</th>
-                <th width="14%">Sisa Piutang</th>
+                <th class="col-no">No</th>
+                <th class="col-date">Tanggal</th>
+                <th class="col-desc">Keterangan / Lokasi</th>
+                <th class="col-mutu">Mutu</th>
+                <th class="col-vol">Vol (m³)</th>
+                <th class="col-harga">Harga Satuan</th>
+                <th class="col-tagihan">Tagihan</th>
+                <th class="col-bayar">Pembayaran</th>
+                <th class="col-sisa">Sisa Piutang</th>
             </tr>
         </thead>
         <tbody>
