@@ -83,27 +83,12 @@ Route::middleware(['auth'])
     ->prefix('receivable')
     ->name('receivable.')
     ->group(function () {
-        // Dashboard Stats
-        Route::get('/', [\App\Http\Controllers\Receivable\DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/export-pdf', [\App\Http\Controllers\Receivable\DashboardController::class, 'exportPdf'])->name('export-pdf');
-
-        // Customers Management
-        Route::get('/customers', [\App\Http\Controllers\Receivable\CustomerController::class, 'index'])->name('customers.index'); // New list route
-        Route::post('/customers', [\App\Http\Controllers\Receivable\CustomerController::class, 'store'])->name('customers.store');
-        Route::put('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'update'])->name('customers.update');
-        Route::post('/customers/reset-all', [\App\Http\Controllers\Receivable\CustomerController::class, 'resetAll'])->name('customers.reset-all');
-        Route::get('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'show'])->name('customers.show');
-        Route::get('/customers/{customer}/export', [\App\Http\Controllers\Receivable\CustomerController::class, 'exportPdf'])->name('customers.export');
-        Route::post('/customers/{customer}/reset', [\App\Http\Controllers\Receivable\CustomerController::class, 'reset'])->name('customers.reset');
-        Route::delete('/customers/{customer}', [\App\Http\Controllers\Receivable\CustomerController::class, 'destroy'])->name('customers.destroy');
-
-        // Transaction Actions
-        Route::post('/transactions', [\App\Http\Controllers\Receivable\TransactionController::class, 'store'])->name('transactions.store');
-        Route::put('/transactions/{transaction}', [\App\Http\Controllers\Receivable\TransactionController::class, 'update'])->name('transactions.update');
-        Route::delete('/transactions/{transaction}', [\App\Http\Controllers\Receivable\TransactionController::class, 'destroy'])->name('transactions.destroy');
-
-        // Concrete Grades (Mutu)
-        Route::resource('grades', \App\Http\Controllers\Receivable\ConcreteGradeController::class)->except(['create', 'edit', 'show']);
+        // Redacting all routes to clean up the panel
+        Route::get('/', function () {
+            return Inertia::render('Receivable/Dashboard', [
+                'message' => 'Panel Piutang sedang dibersihkan.'
+            ]);
+        })->name('dashboard');
     });
 
 require __DIR__ . '/auth.php';
