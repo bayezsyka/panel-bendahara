@@ -63,7 +63,7 @@ class User extends Authenticatable
     const OFFICE_PLANT = 2;
 
     const PANEL_FINANCE = 'finance'; // Biaya Proyek/Operasional
-    const PANEL_PLANT_CASH = 'plant_cash'; // Kas Besar/Kecil
+    const PANEL_CASH = 'kas'; // Kas Besar/Kecil
     const PANEL_RECEIVABLE = 'receivable'; // Piutang
 
     // Role Helpers
@@ -90,18 +90,46 @@ class User extends Authenticatable
     // Unified Access Logic
     public function canAccessPanel(string $panel): bool
     {
-        // Superadmin Utama can access everything
-        if ($this->isSuperAdmin() && $this->isKantorUtama()) {
-            return true;
-        }
-
-        // Superadmin Plant can view everything (read-only access check handled separately, but they can 'open' the panel)
-        if ($this->isSuperAdmin() && $this->isKantorPlant()) {
+        // Superadmin access to everything
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
         // Bendahara restricted to assigned panels
-        return in_array($panel, $this->allowed_panels ?? []);
+        // This decouples the panel access from the office ID as requested
+
+        // Handle legacy constant mapping for migration safety
+        $panelsToCheck = [$panel];
+        // 'kas' might be stored as 'plant_cash' in legacy data
+        if ($panel === self::PANEL_CASH) {
+            $panelsToCheck[] = 'plant_cash';
+        }
+
+        foreach ($panelsToCheck as $p) {
+            if (in_array($p, $this->allowed_panels ?? [])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user uses the layout with sidebar
+     */
+    public function hasPanelAccess(): bool
+    {
+        return $this->canAccessPanel(self::PANEL_FINANCE) ||
+            $this->canAccessPanel(self::PANEL_CASH) ||
+            $this->canAccessPanel(self::PANEL_RECEIVABLE);
+    }
+
+    public function getHomeRoute(): string
+    {
+        if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
+        if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.dashboard';
+        if ($this->canAccessPanel(self::PANEL_CASH)) return 'kas.dashboard';
+        return 'no.access';
     }
 
     /**
@@ -126,24 +154,31 @@ class User extends Authenticatable
 
         // 3. Bendahara Utama
         if ($this->isBendahara() && $this->isKantorUtama()) {
-            // Full CRUD on assigned panels (Finance, Receivable)
-            // But they must have the panel assigned
             if (!$this->canAccessPanel($context)) return false;
 
-            // "misal panel piutang, di panel itu dia bisa crud lengkap"
-            // Assuming same for Finance
             if ($context === self::PANEL_FINANCE || $context === self::PANEL_RECEIVABLE) {
                 return true;
             }
-            // Cannot manage Plant Cash usually? User didn't specify. Assuming Office boundaries.
-            if ($context === self::PANEL_PLANT_CASH) {
-                return false;
+            if ($context === self::PANEL_CASH) {
+                return true; // Utama can manage Cash if assigned
             }
         }
 
-        // 4. Bendahara Plant
-        if ($this->isBendahara() && $this->isKantorPlant()) {
-            return $this->checkBendaharaPlantWriteAccess($context);
+        // 4. Bendahara Plant / Generic Bendahara
+        // Since we are decoupling from office, we should check access.
+        // But for Receivable/Finance, the office rules might still apply?
+        // "Hak akses piutang: kantor 1 crud, kantor 2 create only". 
+        // So checking `isKantorPlant` is still valid for Receivable/Finance context.
+
+        if ($this->isBendahara()) {
+            // Fallback for generic Bendahara logic
+            if ($context === self::PANEL_CASH && $this->canAccessPanel(self::PANEL_CASH)) {
+                return true;
+            }
+
+            if ($this->isKantorPlant()) {
+                return $this->checkBendaharaPlantWriteAccess($context);
+            }
         }
 
         return false;
@@ -151,23 +186,19 @@ class User extends Authenticatable
 
     private function checkBendaharaPlantWriteAccess(string $context): bool
     {
-        if (!$this->canAccessPanel($context) && !$this->isSuperAdmin()) return false; // Superadmin bypass access check for view, but for write? 
-        // If Superadmin Plant is editing, he effectively has permissions of Bendahara Plant.
+        if (!$this->canAccessPanel($context) && !$this->isSuperAdmin()) return false;
 
-        if ($context === self::PANEL_PLANT_CASH) {
-            return true; // "Kantor Plant" manages "Plant Cash"
+        if ($context === self::PANEL_CASH) {
+            return true;
         }
 
         if ($context === self::PANEL_RECEIVABLE) {
             // "dia cuma bisa nambahin data aja, gabisa crud selain create"
-            // This method checks generic "Manage" (Edit/Delete).
-            // So return FALSE for general update/delete. 
-            // We need a separate canCreate()
             return false;
         }
 
         if ($context === self::PANEL_FINANCE) {
-            return false; // Plant shouldn't manage Utama finance
+            return false;
         }
 
         return false;
@@ -177,10 +208,7 @@ class User extends Authenticatable
     {
         if ($this->canManage($context)) return true;
 
-        // Special case: Bendahara/Superadmin Plant in Receivable
-        // "dia cuma bisa nambahin data aja"
         if ($this->isKantorPlant() && $context === self::PANEL_RECEIVABLE) {
-            // Must have access (Superadmin has access implies yes)
             if ($this->isBendahara() && !$this->canAccessPanel($context)) return false;
             return true;
         }
@@ -199,23 +227,7 @@ class User extends Authenticatable
         return $this->canAccessPanel(self::PANEL_RECEIVABLE);
     }
 
-    /**
-     * Get the default route name for this user after login.
-     */
-    public function getHomeRoute(): string
-    {
-        // Prioritize Finance Panel
-        if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
-
-        // Then Receivable
-        if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.dashboard';
-
-        // Then Plant Cash
-        if ($this->canAccessPanel(self::PANEL_PLANT_CASH)) return 'bendahara.plant.kas-besar';
-
-        // Lastly, if no specific panel access, return No Access page
-        return 'no.access';
-    }
+    // Removed duplicate getHomeRoute()
 
     public function getActivitylogOptions(): LogOptions
     {

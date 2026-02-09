@@ -13,6 +13,36 @@ use Carbon\Carbon;
 
 class PlantTransactionController extends Controller
 {
+    /**
+     * Dashboard Kas (Pengganti Dashboard Plant di ProjectExpense)
+     */
+    public function dashboard(Request $request)
+    {
+        $this->ensurePlantContext();
+
+        $expenseTypes = ExpenseType::where('office_id', 2)->orderBy('name')->get();
+
+        // Kas Besar
+        $totalInKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
+        $totalOutKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
+        $balanceKasBesar = $totalInKasBesar - $totalOutKasBesar;
+
+        // Kas Kecil
+        $totalInKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
+        $totalOutKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
+        $balanceKasKecil = $totalInKasKecil - $totalOutKasKecil;
+
+        return Inertia::render('Bendahara/Plant/Dashboard', [
+            'expenseTypes' => $expenseTypes,
+            'totalInKasBesar' => $totalInKasBesar,
+            'totalOutKasBesar' => $totalOutKasBesar,
+            'balanceKasBesar' => $balanceKasBesar,
+            'totalInKasKecil' => $totalInKasKecil,
+            'totalOutKasKecil' => $totalOutKasKecil,
+            'balanceKasKecil' => $balanceKasKecil,
+        ]);
+    }
+
     public function exportPdf(Request $request)
     {
         $this->ensurePlantContext();
@@ -173,11 +203,12 @@ class PlantTransactionController extends Controller
 
     private function ensurePlantContext()
     {
-        if (app(\App\Services\OfficeContextService::class)->getCurrentOfficeId() !== 2) {
-            abort(403, 'Akses ditolak. Anda berada di konteks Kantor Utama.');
-        }
+        // Removed strict office context check as per user request to decouple panels from office context
+        // if (app(\App\Services\OfficeContextService::class)->getCurrentOfficeId() !== 2) {
+        //    abort(403, 'Akses ditolak. Anda berada di konteks Kantor Utama.');
+        // }
 
-        if (!Auth::user()->canAccessPanel(\App\Models\User::PANEL_PLANT_CASH)) {
+        if (!Auth::user()->canAccessPanel(\App\Models\User::PANEL_CASH)) {
             abort(403, 'Anda tidak memiliki akses ke panel ini.');
         }
     }
@@ -185,7 +216,7 @@ class PlantTransactionController extends Controller
     public function store(Request $request)
     {
         $this->ensurePlantContext();
-        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_CASH)) {
             abort(403, 'Anda tidak memiliki izin mengubah data ini.');
         }
 
@@ -216,7 +247,7 @@ class PlantTransactionController extends Controller
     public function update(Request $request, PlantTransaction $plantTransaction)
     {
         $this->ensurePlantContext();
-        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_CASH)) {
             abort(403, 'Anda tidak memiliki izin mengubah data ini.');
         }
 
@@ -240,7 +271,7 @@ class PlantTransactionController extends Controller
     public function destroy(PlantTransaction $plantTransaction)
     {
         $this->ensurePlantContext();
-        if (!Auth::user()->canManage(\App\Models\User::PANEL_PLANT_CASH)) {
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_CASH)) {
             abort(403, 'Anda tidak memiliki izin mengubah data ini.');
         }
 

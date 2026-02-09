@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 export default function BendaharaLayout({ children, header }) {
     const { auth, flash, errors } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
 
     // Listen for validation errors
@@ -24,6 +25,11 @@ export default function BendaharaLayout({ children, header }) {
             });
         }
     }, [errors]);
+
+    // Close user menu when sidebar closes or route changes
+    useEffect(() => {
+        setIsUserMenuOpen(false);
+    }, [route().current()]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -54,7 +60,12 @@ export default function BendaharaLayout({ children, header }) {
         }
     }, [flash]);
 
-    const activePanel = route().current('receivable.*') ? 'receivable' : 'finance';
+    let activePanel = 'finance';
+    if (route().current('receivable.*')) {
+        activePanel = 'receivable';
+    } else if (route().current('kas.*')) {
+        activePanel = 'kas';
+    }
 
     // Helper untuk mengecek link aktif
     const isActive = (routeName) => route().current(routeName);
@@ -63,13 +74,15 @@ export default function BendaharaLayout({ children, header }) {
     const canAccessPanel = (panelName) => {
         if (!auth.user) return false;
         if (auth.user.role === 'superadmin') return true; 
+        
         // Bendahara Logic
         const allowed = auth.user.allowed_panels || [];
         return allowed.includes(panelName);
     };
 
-    const hasFinanceAccess = canAccessPanel('finance') || canAccessPanel('plant_cash'); // Plant cash is part of finance context in sidebar
+    const hasFinanceAccess = canAccessPanel('finance');
     const hasReceivableAccess = canAccessPanel('receivable');
+    const hasKasAccess = canAccessPanel('kas') || canAccessPanel('plant_cash'); // Allow both for migration safety
 
     // --- KOMPONEN LINK SIDEBAR ---
     const SidebarLink = ({ name, routeName, icon, badge }) => (
@@ -86,15 +99,15 @@ export default function BendaharaLayout({ children, header }) {
                 {icon}
             </div>
             
-            {/* Teks: Muncul saat parent di-hover */}
+            {/* Teks: Muncul saat parent di-hover (DESKTOP ONLY) */}
             {/* Menggunakan max-w dan opacity untuk transisi smooth */}
-            <span className={`ml-3 transition-all duration-200 ease-in-out md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs`}>
+            <span className={`hidden md:block ml-3 transition-all duration-200 ease-in-out md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs`}>
                 {name}
             </span>
 
-            {/* Badge Notification */}
+            {/* Badge Notification (DESKTOP ONLY) */}
             {badge > 0 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm transition-opacity duration-200">
+                <span className="hidden md:inline-flex absolute right-2 top-1/2 -translate-y-1/2 items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-sm transition-opacity duration-200">
                     {badge}
                 </span>
             )}
@@ -119,6 +132,14 @@ export default function BendaharaLayout({ children, header }) {
                     className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm md:hidden transition-opacity"
                 ></div>
             )}
+            
+            {/* --- BACKDROP USER MENU (Transparent) --- */}
+            {isUserMenuOpen && (
+                <div 
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="fixed inset-0 z-40 bg-transparent cursor-default"
+                ></div>
+            )}
 
             {/* --- SIDEBAR UTAMA --- */}
             <aside 
@@ -137,7 +158,7 @@ export default function BendaharaLayout({ children, header }) {
             >
                 {/* Header Sidebar (Logo) */}
                 <div className="flex items-center h-20 px-4 border-b border-gray-100 overflow-hidden whitespace-nowrap">
-                    <Link href={route(activePanel === 'finance' ? 'projectexpense.overview' : 'receivable.dashboard')} className="flex items-center gap-3">
+                    <Link href={route(activePanel === 'finance' ? 'projectexpense.overview' : (activePanel === 'kas' ? 'kas.dashboard' : 'receivable.dashboard'))} className="flex items-center gap-3">
                         {/* Ikon Logo selalu terlihat */}
                         <div className="flex-shrink-0">
                             <ApplicationLogo className="w-10 h-10 text-indigo-600 fill-current" />
@@ -149,234 +170,215 @@ export default function BendaharaLayout({ children, header }) {
                                 Bendahara<span className="text-indigo-600">App</span>
                             </span>
                             <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase mt-0.5">
-                                {activePanel === 'finance' ? 'Panel Keuangan' : 'Panel Piutang'}
+                                {activePanel === 'finance' ? 'Panel Keuangan' : (activePanel === 'kas' ? 'Panel Kas' : 'Panel Piutang')}
                             </span>
                         </div>
                     </Link>
                 </div>
 
                 {/* Menu Navigasi */}
-                <div className="p-3 space-y-1 overflow-y-auto h-[calc(100vh-5rem)] custom-scrollbar">
-                    
-                    {/* Panel Switcher Toggle (Premium Saklar Style) */}
-                    {(hasFinanceAccess && hasReceivableAccess) && (
-                    <div className="mb-6 px-2 min-h-[40px] flex items-center justify-center">
-                        {/* Expanded State (Hover) */}
-                        <div className="hidden md:group-hover:block w-full transition-all duration-300">
-                             <div className="relative p-1 bg-gray-100 rounded-xl flex items-center border border-gray-200/50">
-                                {/* Sliding Background */}
-                                <div 
-                                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-                                        activePanel === 'finance' ? 'left-1' : 'left-[calc(50%+1px)]'
-                                    }`}
-                                ></div>
-
-                                {/* Finance Option */}
-                                    <Link 
-                                        href={route('projectexpense.overview')}
-                                        className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
-                                            activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
-                                        }`}
-                                    >
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Finance</span>
-                                    </Link>
-
-                                {/* Receivable Option */}
-                                <Link 
-                                    href={route('receivable.dashboard')}
-                                    className={`relative z-10 flex-1 py-1.5 text-center transition-colors duration-200 ${
-                                        activePanel === 'receivable' ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
-                                    }`}
-                                >
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Piutang</span>
-                                </Link>
-                            </div>
-                        </div>
-
-                        {/* Collapsed State (Default) */}
-                        <div className="md:block md:group-hover:hidden transition-all duration-200">
-                            <div className="p-2.5 bg-indigo-50 rounded-xl text-indigo-600 shadow-sm border border-indigo-100">
-                                {activePanel === 'finance' ? (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Mobile State (Selalu block dlm mobile flow) */}
-                        <div className="md:hidden w-full">
-                            {/* Copy of the expanded toggle for mobile */}
-                            <div className="relative p-1 bg-gray-100 rounded-xl flex items-center border border-gray-200/50">
-                                <div 
-                                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-lg shadow-sm transition-all duration-300 ${
-                                        activePanel === 'finance' ? 'left-1' : 'left-[calc(50%+1px)]'
-                                    }`}
-                                ></div>
-                                <Link href={route('projectexpense.overview')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'finance' ? 'text-indigo-600' : 'text-gray-400'}`}>Finance</Link>
-                                <Link href={route('receivable.dashboard')} className={`relative z-10 flex-1 py-1.5 text-center text-[10px] font-black uppercase tracking-widest ${activePanel === 'receivable' ? 'text-indigo-600' : 'text-gray-400'}`}>Piutang</Link>
-                            </div>
-                        </div>
-                    </div>
-                    )}
-
-                    {/* Label Group Menu (Hanya muncul saat hover) */}
-                    <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                        {activePanel === 'finance' ? 'Menu Utama' : 'Menu Piutang'}
-                    </p>
-                    
-                    {activePanel === 'finance' ? (
-                        <>
-                            {auth.current_office?.id === 2 ? (
-                                <>
-                                    <SidebarLink 
-                                        name="Dashboard" 
-                                        routeName="projectexpense.overview" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
-                                    />
-                                    <SidebarLink 
-                                        name="Kas Besar" 
-                                        routeName="bendahara.plant.kas-besar" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>}
-                                    />
-                                    <SidebarLink 
-                                        name="Kas Kecil" 
-                                        routeName="bendahara.plant.kas-kecil" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                                    />
-                                    <SidebarLink 
-                                        name="Tipe" 
-                                        routeName="projectexpense.expense-types.index" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
-                                    />
-                                </>
-                            ) : (
-                                <>
-                                    <SidebarLink 
-                                        name="Dashboard" 
-                                        routeName="projectexpense.overview" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
-                                    />
-                                    
-                                    <SidebarLink 
-                                        name="Proyek Konstruksi" 
-                                        routeName="projectexpense.projects.index" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-                                    />
-                
-                                    <SidebarLink 
-                                        name="Pelaksana" 
-                                        routeName="projectexpense.mandors.index" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
-                                    />
-                
-                                    <SidebarLink 
-                                        name="Bendera" 
-                                        routeName="projectexpense.benderas.index" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-                                    />
-                
-                                    <SidebarLink 
-                                        name="Tipe Biaya" 
-                                        routeName="projectexpense.expense-types.index" 
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
-                                    />
-                
-                                    <SidebarLink 
-                                        name="Pending WhatsApp" 
-                                        routeName="projectexpense.expense-requests.index"
-                                        badge={usePage().props.pending_expense_requests_count}
-                                        icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                                    />
-                                </>
-                            )}
-                        </>
-                    ) : (
-                        <>
-                            <SidebarLink 
-                                name="Dashboard" 
-                                routeName="receivable.dashboard" 
-                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
-                            />
-                            
-                            {/* Panel Piutang sedang dalam pembersihan. Link dinonaktifkan sementara. */}
-                            {/* <SidebarLink 
-                                name="Customer" 
-                                routeName="receivable.customers.index" 
-                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-                            />
-                            
-                             <SidebarLink 
-                                name="Mutu Beton" 
-                                routeName="receivable.grades.index" 
-                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>}
-                            /> */}
-                        </>
-                    )}
-
-                    {/* Menu Khusus Superadmin */}
-                    {auth.user.role === 'superadmin' && activePanel === 'finance' && (
-                        <>
-                            <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-4 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                                Superadmin
-                            </p>
-                            
-                            <SidebarLink 
-                                name="Kelola User" 
-                                routeName="superadmin.users.index" 
-                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
-                            />
-                            
-                            <SidebarLink 
-                                name="Aktivitas Log" 
-                                routeName="superadmin.activity_logs.index" 
-                                icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                            />
-                        </>
-                    )}
-
-
-                    {/* Divider & Menu Akun */}
-                    <div className="pt-4 mt-4 border-t border-gray-100">
+                <div className="flex flex-col h-[calc(100vh-5rem)]">
+                    <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar space-y-1">
+                        
+                        {/* Label Menu */}
                         <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                            Akun
+                            {activePanel === 'finance' ? 'Menu Utama' : (activePanel === 'kas' ? 'Menu Kas' : 'Menu Piutang')}
                         </p>
                         
-                        <Link 
-                            href={route('profile.edit')}
-                            className="group/link flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 overflow-hidden whitespace-nowrap"
-                        >
-                            <div className="flex-shrink-0 w-5 h-5 text-gray-500 group-hover/link:text-indigo-600 transition-colors">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                            <span className="ml-3 transition-all duration-200 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
-                                Profil Saya
-                            </span>
-                             <span className="md:hidden ml-3">Profil Saya</span>
-                        </Link>
+                        {/* FINANCE PANEL LINKS */}
+                        {activePanel === 'finance' && (
+                            <>
+                                <SidebarLink 
+                                    name="Dashboard" 
+                                    routeName="projectexpense.overview" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
+                                />
+                                
+                                <SidebarLink 
+                                    name="Proyek Konstruksi" 
+                                    routeName="projectexpense.projects.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                                />
 
-                        <Link 
-                            href={route('logout')} 
-                            method="post" 
-                            as="button"
-                            className="w-full text-left group/link flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-red-500 hover:bg-red-50 transition-all duration-200 overflow-hidden whitespace-nowrap"
-                        >
-                            <div className="flex-shrink-0 w-5 h-5 text-red-400 group-hover/link:text-red-600 transition-colors">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                            </div>
-                            <span className="ml-3 transition-all duration-200 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs">
-                                Keluar
-                            </span>
-                            <span className="md:hidden ml-3">Keluar</span>
-                        </Link>
+                                <SidebarLink 
+                                    name="Pelaksana" 
+                                    routeName="projectexpense.mandors.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>}
+                                />
+
+                                <SidebarLink 
+                                    name="Bendera" 
+                                    routeName="projectexpense.benderas.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                                />
+
+                                <SidebarLink 
+                                    name="Tipe Biaya" 
+                                    routeName="projectexpense.expense-types.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
+                                />
+
+                                <SidebarLink 
+                                    name="Pending WhatsApp" 
+                                    routeName="projectexpense.expense-requests.index"
+                                    badge={usePage().props.pending_expense_requests_count}
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                                />
+                            </>
+                        )}
+
+                        {/* KAS PANEL LINKS */}
+                        {activePanel === 'kas' && (
+                            <>
+                                <SidebarLink 
+                                    name="Dashboard" 
+                                    routeName="kas.dashboard" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>}
+                                />
+                                <SidebarLink 
+                                    name="Kas Besar" 
+                                    routeName="kas.kas-besar" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>}
+                                />
+                                <SidebarLink 
+                                    name="Kas Kecil" 
+                                    routeName="kas.kas-kecil" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                                />
+                            </>
+                        )}
+
+                        {/* RECEIVABLE PANEL LINKS */}
+                        {activePanel === 'receivable' && (
+                            <>
+                                <SidebarLink 
+                                    name="Dashboard" 
+                                    routeName="receivable.dashboard" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+                                />
+                            </>
+                        )}
+                    </div>
+
+                    {/* NEW USER PROFILE SECTION (Bottom) */}
+                    <div className="border-t border-gray-100 p-2 relative z-50">
+                         <div className="group">
+                             {/* User Button */}
+                             <button 
+                                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                className={`w-full flex items-center p-2 rounded-xl transition-colors duration-200 outline-none ${isUserMenuOpen ? 'bg-indigo-50' : 'hover:bg-gray-50'}`}
+                            >
+                                 <div className="flex-shrink-0 relative">
+                                     <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                                         {auth.user.name.charAt(0)}
+                                     </div>
+                                     <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                 </div>
+                                 <div className="ml-3 text-left transition-all duration-200 md:opacity-0 md:max-w-0 md:group-hover:opacity-100 md:group-hover:max-w-xs overflow-hidden whitespace-nowrap hidden md:block">
+                                     <p className="text-sm font-bold text-gray-800 truncate">{auth.user.name}</p>
+                                     <p className="text-[10px] font-medium text-gray-500 truncate">{auth.user.email}</p>
+                                 </div>
+                                 <div className="ml-3 text-left md:hidden block">
+                                     <p className="text-sm font-bold text-gray-800 truncate">{auth.user.name}</p>
+                                     <p className="text-[10px] font-medium text-gray-500 truncate">{auth.user.email}</p>
+                                 </div>
+                                 
+                                 {/* Chevron Indicator */}
+                                 <div className={`ml-auto transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 ${isUserMenuOpen ? 'md:opacity-100' : ''}`}>
+                                    <svg className={`w-4 h-4 text-gray-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                 </div>
+                             </button>
+
+                             {/* Popover Menu */}
+                             <div className={`absolute bottom-full left-2 right-2 mb-2 bg-white rounded-2xl shadow-[0_0_50px_-12px_rgb(0,0,0,0.25)] border border-gray-100 p-2 transition-all duration-200 transform origin-bottom ${isUserMenuOpen ? 'opacity-100 scale-100 visible translate-y-0' : 'opacity-0 scale-95 invisible translate-y-2'}`}>
+                                 {/* Triangle Pointer */}
+                                 <div className="absolute -bottom-1.5 left-6 w-3 h-3 bg-white border-b border-r border-gray-100 transform rotate-45"></div>
+
+                                 <div className="space-y-1">
+                                     {/* Profil Saya */}
+                                     <Link 
+                                         href={route('profile.edit')}
+                                         className="flex items-center w-full px-3 py-2 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                                     >
+                                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                         Profil Saya
+                                     </Link>
+
+                                     {/* Superadmin Menu */}
+                                     {auth.user.role === 'superadmin' && (
+                                         <>
+                                             <Link 
+                                                 href={route('superadmin.users.index')}
+                                                 className="flex items-center w-full px-3 py-2 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                                             >
+                                                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                                 Kelola User
+                                             </Link>
+                                             <Link 
+                                                 href={route('superadmin.activity_logs.index')}
+                                                 className="flex items-center w-full px-3 py-2 text-xs font-medium text-gray-600 rounded-lg hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                                             >
+                                                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                 Activity Log
+                                             </Link>
+                                         </>
+                                     )}
+
+                                     <div className="h-px bg-gray-100 my-1"></div>
+
+                                     {/* Pindah Panel Section */}
+                                     <div className="px-2 py-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pindah Panel</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {hasFinanceAccess && (
+                                                <Link 
+                                                    href={route('projectexpense.overview')}
+                                                    className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${activePanel === 'finance' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                >
+                                                    <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                    <span className="text-[9px] font-bold">Finance</span>
+                                                </Link>
+                                            )}
+                                            {hasReceivableAccess && (
+                                                <Link 
+                                                    href={route('receivable.dashboard')}
+                                                    className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${activePanel === 'receivable' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                >
+                                                    <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                                    <span className="text-[9px] font-bold py-0.5">Piutang</span>
+                                                </Link>
+                                            )}
+                                            {hasKasAccess && (
+                                                <Link 
+                                                    href={route('kas.dashboard')}
+                                                    className={`col-span-2 flex flex-row items-center justify-center gap-2 p-2 rounded-xl border transition-all ${activePanel === 'kas' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+                                                    <span className="text-[9px] font-bold">Panel Kas</span>
+                                                </Link>
+                                            )}
+                                        </div>
+                                     </div>
+
+                                     <div className="h-px bg-gray-100 my-1"></div>
+
+                                     {/* Logout */}
+                                     <Link 
+                                         href={route('logout')} 
+                                         method="post" 
+                                         as="button"
+                                         className="flex items-center w-full px-3 py-2 text-xs font-medium text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                     >
+                                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                         Keluar Aplikasi
+                                     </Link>
+                                 </div>
+                             </div>
+                         </div>
                     </div>
                 </div>
             </aside>
-
+            
             {/* --- KONTEN UTAMA --- */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Konten sekarang akan bergeser otomatis karena sidebar menggunakan relative positioning di desktop */}
@@ -392,7 +394,7 @@ export default function BendaharaLayout({ children, header }) {
                         </button>
                         <div className="flex flex-col min-w-0">
                             <span className="font-bold text-gray-800 text-sm truncate">
-                                {activePanel === 'finance' ? 'Finance Panel' : 'Piutang Panel'}
+                                {activePanel === 'finance' ? 'Finance Panel' : (activePanel === 'kas' ? 'Kas Panel' : 'Piutang Panel')}
                             </span>
                             <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider -mt-1 truncate">
                                 {auth.current_office?.name}
@@ -406,12 +408,9 @@ export default function BendaharaLayout({ children, header }) {
 
                 {/* Top Navbar / Header Desktop (Hanya muncul jika ada switcher atau info kantor) */}
                 <header className="hidden md:flex bg-white border-b border-gray-200 h-14 items-center px-8 justify-between sticky top-0 z-30">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                            Context: <span className="text-gray-900">{auth.current_office?.name}</span>
-                        </span>
-                    </div>
+                    {/* Context Indicator & Switcher */}
+                    {/* Context Switcher Removed */}
+                    <div></div>
 
                     {/* Jam di Tengah */}
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
@@ -433,38 +432,6 @@ export default function BendaharaLayout({ children, header }) {
                         </div>
                     </div>
 
-                    {auth.can_switch_office && (
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold transition-all hover:bg-indigo-100 border border-indigo-100/50">
-                                <span>Ganti Kantor</span>
-                                <svg className="w-4 h-4 text-indigo-400 group-hover:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                            </button>
-
-                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 transform group-hover:translate-y-0 translate-y-2">
-                                <div className="px-4 py-2 border-b border-gray-50 mb-1">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pilih Tampilan</p>
-                                </div>
-                                <Link 
-                                    href={route('superadmin.office.switch')} 
-                                    method="post" 
-                                    data={{ office_id: 1, from: activePanel }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 1 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 1 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                                    Kantor Utama (ID 1)
-                                </Link>
-                                <Link 
-                                    href={route('superadmin.office.switch')} 
-                                    method="post" 
-                                    data={{ office_id: 2, from: activePanel }}
-                                    className={`flex items-center gap-3 px-4 py-2.5 text-xs font-bold transition-colors ${auth.current_office?.id === 2 ? 'bg-indigo-50 text-indigo-600' : 'text-gray-600 hover:bg-gray-50'}`}
-                                >
-                                    <div className={`w-2 h-2 rounded-full ${auth.current_office?.id === 2 ? 'bg-indigo-600' : 'bg-gray-300'}`}></div>
-                                    Kantor Plant (ID 2)
-                                </Link>
-                            </div>
-                        </div>
-                    )}
                 </header>
 
                 <main className="flex-1 overflow-y-auto py-8">

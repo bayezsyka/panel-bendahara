@@ -35,7 +35,7 @@ export default function Dashboard({ totalInKasBesar, totalOutKasBesar, balanceKa
             params.append('type', exportFilters.filter_type);
         }
 
-        const url = `${route('bendahara.plant.export-pdf')}?${params.toString()}`;
+        const url = `${route('kas.export-pdf')}?${params.toString()}`;
         window.open(url, '_blank');
         setShowExportModal(false);
     };
@@ -80,7 +80,7 @@ export default function Dashboard({ totalInKasBesar, totalOutKasBesar, balanceKa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Kas Besar Card */}
                     <Link 
-                        href={route('bendahara.plant.kas-besar')}
+                        href={route('kas.kas-besar')}
                         className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-indigo-200 transition-all group"
                     >
                         <div className="flex items-center justify-between mb-4">
@@ -114,7 +114,7 @@ export default function Dashboard({ totalInKasBesar, totalOutKasBesar, balanceKa
 
                     {/* Kas Kecil Card */}
                     <Link 
-                        href={route('bendahara.plant.kas-kecil')}
+                        href={route('kas.kas-kecil')}
                         className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-200 transition-all group"
                     >
                         <div className="flex items-center justify-between mb-4">

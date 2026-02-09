@@ -9,18 +9,21 @@ class OfficeSwitcherController extends Controller
 {
     public function switch(Request $request)
     {
-        $validated = $request->validate([
-            'office_id' => 'required|integer|in:1,2',
-            'from' => 'nullable|string',
-        ]);
+        // Toggle logic if office_id not provided
+        $currentOffice = session('current_office_view', 1);
 
-        session(['current_office_view' => $validated['office_id']]);
-
-        $route = 'bendahara.dashboard';
-        if ($request->from === 'receivable') {
-            $route = 'receivable.dashboard';
+        if ($request->has('office_id')) {
+            $validated = $request->validate([
+                'office_id' => 'required|integer|in:1,2',
+            ]);
+            $newOffice = $validated['office_id'];
+        } else {
+            // Toggle
+            $newOffice = ($currentOffice == 1) ? 2 : 1;
         }
 
-        return redirect()->route($route)->with('message', 'Tampilan kantor berhasil diubah.');
+        session(['current_office_view' => $newOffice]);
+
+        return redirect()->back()->with('message', 'Tampilan kantor berhasil diubah ke ' . ($newOffice == 1 ? 'Utama' : 'Plant'));
     }
 }

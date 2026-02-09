@@ -41,7 +41,7 @@ export default function KasKecil({ transactions, expenseTypes, totalIn, totalOut
     const handleSubmit = (e) => {
         e.preventDefault();
         if (editingId) {
-            put(route('bendahara.plant-transactions.update', editingId), {
+            put(route('kas.transactions.update', editingId), {
                 onSuccess: () => {
                     setShowModal(false);
                     setEditingId(null);
@@ -50,7 +50,7 @@ export default function KasKecil({ transactions, expenseTypes, totalIn, totalOut
                 }
             });
         } else {
-            post(route('bendahara.plant-transactions.store'), {
+            post(route('kas.transactions.store'), {
                 onSuccess: () => {
                     setShowModal(false);
                     reset();
@@ -84,7 +84,7 @@ export default function KasKecil({ transactions, expenseTypes, totalIn, totalOut
             confirmButtonText: 'Ya, Hapus!'
         }).then((result) => {
             if (result.isConfirmed) {
-                router.delete(route('bendahara.plant-transactions.destroy', id), {
+                router.delete(route('kas.transactions.destroy', id), {
                     onSuccess: () => Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success')
                 });
             }
@@ -106,7 +106,7 @@ export default function KasKecil({ transactions, expenseTypes, totalIn, totalOut
     };
 
     const handleFilter = (key, value) => {
-        router.get(route('bendahara.plant.kas-kecil'), {
+        router.get(route('kas.kas-kecil'), {
             ...filters,
             [key]: value || undefined
         }, {
@@ -116,7 +116,7 @@ export default function KasKecil({ transactions, expenseTypes, totalIn, totalOut
     };
 
     const clearFilters = () => {
-        router.get(route('bendahara.plant.kas-kecil'), {}, {
+        router.get(route('kas.kas-kecil'), {}, {
             preserveState: true,
             replace: true
         });

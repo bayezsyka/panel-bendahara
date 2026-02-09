@@ -20,36 +20,10 @@ class OverviewController extends Controller
     // ... method index tetap sama ...
     public function index(Request $request)
     {
-        // Cek Office ID untuk redirect ke Dashboard Plant jika ID = 2 (Gunakan Service untuk Context)
-        $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
-
-        $requiredPanel = ($officeId === 2) ? \App\Models\User::PANEL_PLANT_CASH : \App\Models\User::PANEL_FINANCE;
+        // Removed Office Context Check - Global View
+        $requiredPanel = \App\Models\User::PANEL_FINANCE;
         if (!request()->user()->canAccessPanel($requiredPanel)) {
             abort(403, 'Anda tidak memiliki akses ke panel ini.');
-        }
-
-        if ($officeId === 2) {
-            $expenseTypes = ExpenseType::orderBy('name')->get();
-
-            // Kas Besar
-            $totalInKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
-            $totalOutKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
-            $balanceKasBesar = $totalInKasBesar - $totalOutKasBesar;
-
-            // Kas Kecil
-            $totalInKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
-            $totalOutKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
-            $balanceKasKecil = $totalInKasKecil - $totalOutKasKecil;
-
-            return Inertia::render('Bendahara/Plant/Dashboard', [
-                'expenseTypes' => $expenseTypes,
-                'totalInKasBesar' => $totalInKasBesar,
-                'totalOutKasBesar' => $totalOutKasBesar,
-                'balanceKasBesar' => $balanceKasBesar,
-                'totalInKasKecil' => $totalInKasKecil,
-                'totalOutKasKecil' => $totalOutKasKecil,
-                'balanceKasKecil' => $balanceKasKecil,
-            ]);
         }
 
         $now = now();
@@ -57,7 +31,7 @@ class OverviewController extends Controller
         $monthEnd = $now->copy()->endOfMonth()->toDateString();
 
         // Gunakan Cache untuk KPI (10 menit)
-        $kpis = \Illuminate\Support\Facades\Cache::remember('dashboard_kpi_' . $officeId, 600, function () use ($monthStart, $monthEnd) {
+        $kpis = \Illuminate\Support\Facades\Cache::remember('dashboard_kpi_global', 600, function () use ($monthStart, $monthEnd) {
             // KPI: Total pengeluaran bulan ini (dari semua proyek)
             $expenseThisMonth = (int) Expense::whereBetween('transacted_at', [$monthStart, $monthEnd])
                 ->sum('amount');
@@ -102,11 +76,10 @@ class OverviewController extends Controller
             ->get();
 
         // Get all expense types for the filter
-        $expenseTypes = ExpenseType::where('office_id', $officeId)->orderBy('name')->get(['id', 'name']);
+        $expenseTypes = ExpenseType::orderBy('name')->get(['id', 'name']);
 
         // Data pengeluaran per tipe biaya (untuk chart breakdown)
-        $expenseByType = ExpenseType::where('office_id', $officeId)
-            ->withSum('expenses', 'amount')
+        $expenseByType = ExpenseType::withSum('expenses', 'amount')
             ->having('expenses_sum_amount', '>', 0)
             ->orderByDesc('expenses_sum_amount')
             ->get()

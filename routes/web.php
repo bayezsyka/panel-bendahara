@@ -13,6 +13,7 @@ use App\Http\Controllers\ProjectExpenses\MandorController;
 use App\Http\Controllers\ProjectExpenses\BenderaController;
 use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
 use App\Http\Controllers\Superadmin\UserController;
+use App\Http\Controllers\Bendahara\PlantTransactionController;
 
 Route::middleware(['auth', 'verified', 'role:superadmin'])
     ->prefix('superadmin')
@@ -25,7 +26,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])
     });
 
 // PROJECT EXPENSES MODULAR ROUTES
-Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'check.plant.access'])
     ->prefix('projectexpense')
     ->name('projectexpense.')
     ->group(function () {
@@ -51,19 +52,39 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
         Route::resource('expense-types', ExpenseTypeController::class)->except(['create', 'show', 'edit']);
     });
 
-// LEGACY BENDAHARA ROUTES (PLANT & REDIRECTS)
+// KAS PANEL ROUTES
 Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
-    ->prefix('bendahara')
-    ->name('bendahara.')
+    ->prefix('kas')
+    ->name('kas.')
     ->group(function () {
-        // Keeping dashboard for compatibility, redirects or points to overview
-        Route::get('/dashboard', [OverviewController::class, 'index'])->name('dashboard');
+        Route::get('/', function () {
+            return Inertia::render('Cash/Dashboard', [
+                'title' => 'Dashboard Kas (Under Construction)',
+                'message' => 'Panel Kas sedang dalam tahap pengembangan ulang.'
+            ]);
+        })->name('dashboard');
 
-        // PLANT FINANCE ROUTES
-        Route::get('/plant/export-pdf', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'exportPdf'])->name('plant.export-pdf');
-        Route::get('/plant/kas-besar', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'kasBesar'])->name('plant.kas-besar');
-        Route::get('/plant/kas-kecil', [\App\Http\Controllers\Bendahara\PlantTransactionController::class, 'kasKecil'])->name('plant.kas-kecil');
-        Route::resource('plant-transactions', \App\Http\Controllers\Bendahara\PlantTransactionController::class)->only(['store', 'update', 'destroy']);
+        // Placeholder routes to prevent Ziggy checks from breaking if frontend still references them
+        Route::get('/kas-besar', function () {
+            return redirect()->route('kas.dashboard');
+        })->name('kas-besar');
+        Route::get('/kas-kecil', function () {
+            return redirect()->route('kas.dashboard');
+        })->name('kas-kecil');
+        Route::get('/export-pdf', function () {
+            return redirect()->route('kas.dashboard');
+        })->name('export-pdf');
+
+        // Transaction CRUD placeholders
+        Route::post('/transactions', function () {
+            return redirect()->back();
+        })->name('transactions.store');
+        Route::put('/transactions/{id}', function () {
+            return redirect()->back();
+        })->name('transactions.update');
+        Route::delete('/transactions/{id}', function () {
+            return redirect()->back();
+        })->name('transactions.destroy');
     });
 
 Route::get('/', function () {
@@ -94,7 +115,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
     ->prefix('receivable')
     ->name('receivable.')
     ->group(function () {

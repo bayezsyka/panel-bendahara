@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'check.plant.access' => \App\Http\Middleware\CheckPlantAccess::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

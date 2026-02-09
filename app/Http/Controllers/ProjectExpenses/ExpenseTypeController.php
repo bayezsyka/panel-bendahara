@@ -14,12 +14,13 @@ class ExpenseTypeController extends Controller
 {
     public function index()
     {
-        $officeId = app(OfficeContextService::class)->getCurrentOfficeId();
-        $expenseTypes = ExpenseType::where('office_id', $officeId)->latest()->get();
+        // Global view: Show all expense types regardless of office
+        $expenseTypes = ExpenseType::latest()->get();
+        // $officeId = app(OfficeContextService::class)->getCurrentOfficeId(); // Removed context dependency
 
         return Inertia::render('ProjectExpenses/ExpenseTypes/Index', [
             'expenseTypes' => $expenseTypes,
-            'currentOfficeId' => $officeId
+            'currentOfficeId' => 1 // Default to 1 or null
         ]);
     }
 

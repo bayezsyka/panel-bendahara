@@ -34,7 +34,7 @@ class Project extends Model
     {
         parent::boot();
 
-        static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
+        // static::addGlobalScope(new \App\Models\Scopes\OfficeScope);
 
         static::creating(function ($project) {
             if (!$project->office_id) {
