@@ -25,6 +25,7 @@ return new class extends Migration
             $table->decimal('price_per_m3', 15, 2)->nullable(); // Harga per kubik (custom per pengiriman)
             $table->decimal('total_price', 15, 2)->nullable(); // Total harga (volume * price)
             $table->text('notes')->nullable();
+            $table->boolean('is_billed')->default(false);
             $table->unsignedBigInteger('office_id')->default(1)->index();
             $table->timestamps();
 

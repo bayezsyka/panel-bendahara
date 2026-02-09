@@ -65,6 +65,8 @@ export default function BendaharaLayout({ children, header }) {
         activePanel = 'receivable';
     } else if (route().current('kas.*')) {
         activePanel = 'kas';
+    } else if (route().current('delivery.*')) {
+        activePanel = 'delivery';
     }
 
     // Helper untuk mengecek link aktif
@@ -82,7 +84,8 @@ export default function BendaharaLayout({ children, header }) {
 
     const hasFinanceAccess = canAccessPanel('finance');
     const hasReceivableAccess = canAccessPanel('receivable');
-    const hasKasAccess = canAccessPanel('kas') || canAccessPanel('plant_cash'); // Allow both for migration safety
+    const hasKasAccess = canAccessPanel('kas') || canAccessPanel('plant_cash');
+    const hasDeliveryAccess = true; // Temporary allow all authenticated roles (bendahara/superadmin) as per route middleware
 
     // --- KOMPONEN LINK SIDEBAR ---
     const SidebarLink = ({ name, routeName, icon, badge }) => (
@@ -159,7 +162,7 @@ export default function BendaharaLayout({ children, header }) {
             >
                 {/* Header Sidebar (Logo) */}
                 <div className="flex items-center h-20 px-4 border-b border-gray-100 overflow-hidden whitespace-nowrap">
-                    <Link href={route(activePanel === 'finance' ? 'projectexpense.overview' : (activePanel === 'kas' ? 'kas.dashboard' : 'receivable.dashboard'))} className="flex items-center gap-3">
+                    <Link href={route(activePanel === 'finance' ? 'projectexpense.overview' : (activePanel === 'kas' ? 'kas.dashboard' : (activePanel === 'delivery' ? 'delivery.projects.index' : 'receivable.dashboard')))} className="flex items-center gap-3">
                         {/* Ikon Logo selalu terlihat */}
                         <div className="flex-shrink-0">
                             <ApplicationLogo className="w-10 h-10 text-indigo-600 fill-current" />
@@ -171,7 +174,7 @@ export default function BendaharaLayout({ children, header }) {
                                 Bendahara<span className="text-indigo-600">App</span>
                             </span>
                             <span className="text-[10px] text-gray-400 font-medium tracking-wider uppercase mt-0.5">
-                                {activePanel === 'finance' ? 'Panel Keuangan' : (activePanel === 'kas' ? 'Panel Kas' : 'Panel Piutang')}
+                                {activePanel === 'finance' ? 'Panel Keuangan' : (activePanel === 'kas' ? 'Panel Kas' : (activePanel === 'delivery' ? 'Panel Pengiriman' : 'Panel Piutang'))}
                             </span>
                         </div>
                     </Link>
@@ -183,7 +186,7 @@ export default function BendaharaLayout({ children, header }) {
                         
                         {/* Label Menu */}
                         <p className="px-3 text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                            {activePanel === 'finance' ? 'Menu Utama' : (activePanel === 'kas' ? 'Menu Kas' : 'Menu Piutang')}
+                            {activePanel === 'finance' ? 'Menu Utama' : (activePanel === 'kas' ? 'Menu Kas' : (activePanel === 'delivery' ? 'Menu Pengiriman' : 'Menu Piutang'))}
                         </p>
                         
                         {/* FINANCE PANEL LINKS */}
@@ -271,6 +274,32 @@ export default function BendaharaLayout({ children, header }) {
                                     name="Dashboard" 
                                     routeName="receivable.dashboard" 
                                     icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+                                />
+                            </>
+                        )}
+
+                        {/* DELIVERY PANEL LINKS */}
+                        {activePanel === 'delivery' && (
+                            <>
+                                <SidebarLink 
+                                    name="Proyek Pengiriman" 
+                                    routeName="delivery.projects.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
+                                />
+                                <SidebarLink 
+                                    name="Customer" 
+                                    routeName="delivery.customers.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+                                />
+                                <SidebarLink 
+                                    name="Mutu Beton" 
+                                    routeName="delivery.concrete-grades.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a2 2 0 00-1.96 1.414l-.727 2.903a2 2 0 01-3.664 0l-.727-2.903a2 2 0 00-1.96-1.414l-2.387.477a2 2 0 00-1.022.547l-2.296 2.296a2 2 0 01-3.411-1.411l.732-2.93a2 2 0 00-.547-1.022l-2.296-2.296a2 2 0 011.411-3.411l2.93.732a2 2 0 001.022-.547l2.296-2.296a2 2 0 013.411 1.411l-.732 2.93a2 2 0 00.547 1.022l2.296 2.296a2 2 0 01-1.411 3.411l-2.93-.732a2 2 0 00-1.022.547l-2.296 2.296a2 2 0 01-3.411-1.411l.732-2.93a2 2 0 00-.547-1.022l-2.296-2.296a2 2 0 011.411-3.411l2.93.732a2 2 0 001.022-.547l2.296-2.296z" /></svg>}
+                                />
+                                <SidebarLink 
+                                    name="Rekap Pengiriman" 
+                                    routeName="delivery.shipments.index" 
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
                                 />
                             </>
                         )}
@@ -373,6 +402,15 @@ export default function BendaharaLayout({ children, header }) {
                                                      <span className="text-xs font-bold">Kas Panel</span>
                                                  </Link>
                                              )}
+                                             {hasDeliveryAccess && (
+                                                 <Link 
+                                                     href={route('delivery.projects.index')}
+                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'delivery' ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' : 'bg-white border-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-50'}`}
+                                                 >
+                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                                                     <span className="text-xs font-bold">Delivery Panel</span>
+                                                 </Link>
+                                             )}
                                          </div>
                                       </div>
 
@@ -410,7 +448,7 @@ export default function BendaharaLayout({ children, header }) {
                         </button>
                         <div className="flex flex-col min-w-0">
                             <span className="font-bold text-gray-800 text-sm truncate">
-                                {activePanel === 'finance' ? 'Finance Panel' : (activePanel === 'kas' ? 'Kas Panel' : 'Piutang Panel')}
+                                {activePanel === 'finance' ? 'Finance Panel' : (activePanel === 'kas' ? 'Kas Panel' : (activePanel === 'delivery' ? 'Delivery Panel' : 'Piutang Panel'))}
                             </span>
                             <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider -mt-1 truncate">
                                 {auth.current_office?.name}

@@ -16,6 +16,10 @@ use App\Http\Controllers\Superadmin\UserController;
 use App\Http\Controllers\Bendahara\PlantTransactionController;
 use App\Http\Controllers\Bendahara\CashSourceController;
 use App\Http\Controllers\Bendahara\CashExpenseTypeController;
+use App\Http\Controllers\Delivery\ConcreteGradeController;
+use App\Http\Controllers\Delivery\CustomerController;
+use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController;
+use App\Http\Controllers\Delivery\ShipmentController;
 
 Route::middleware(['auth', 'verified', 'role:superadmin'])
     ->prefix('superadmin')
@@ -120,6 +124,18 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
                 'message' => 'Panel Piutang sedang dibersihkan.'
             ]);
         })->name('dashboard');
+    });
+
+// DELIVERY PANEL ROUTES
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
+    ->prefix('delivery')
+    ->name('delivery.')
+    ->group(function () {
+        Route::resource('concrete-grades', ConcreteGradeController::class);
+        Route::resource('customers', CustomerController::class);
+        Route::get('projects/{project}/export-recap-pdf', [DeliveryProjectController::class, 'exportRecapPdf'])->name('projects.export-recap-pdf');
+        Route::resource('projects', DeliveryProjectController::class);
+        Route::resource('shipments', ShipmentController::class);
     });
 
 require __DIR__ . '/auth.php';

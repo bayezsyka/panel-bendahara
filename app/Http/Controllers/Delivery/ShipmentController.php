@@ -1,0 +1,171 @@
+<?php
+
+namespace App\Http\Controllers\Delivery;
+
+use App\Http\Controllers\Controller;
+use App\Models\Delivery\ConcreteGrade;
+use App\Models\Delivery\DeliveryProject;
+use App\Models\Delivery\DeliveryShipment;
+use App\Services\OfficeContextService;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+
+class ShipmentController extends Controller
+{
+    protected $officeService;
+
+    public function __construct(OfficeContextService $officeService)
+    {
+        $this->officeService = $officeService;
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $officeId = $this->officeService->getCurrentOfficeId();
+
+        $query = DeliveryShipment::query()
+            ->whereHas('project', function ($q) use ($officeId) {
+                $q->where('office_id', $officeId);
+            })
+            ->with(['project.customer', 'concreteGrade'])
+            ->latest('date')
+            ->latest('id');
+
+        if ($request->project_id) {
+            $query->where('delivery_project_id', $request->project_id);
+        }
+
+        $shipments = $query->paginate(20)->withQueryString();
+
+        return Inertia::render('Delivery/Shipment/Index', [
+            'shipments' => $shipments,
+            'filters' => $request->only(['project_id'])
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create(Request $request)
+    {
+        $officeId = $this->officeService->getCurrentOfficeId();
+
+        $projects = DeliveryProject::where('office_id', $officeId)
+            ->with('customer')
+            ->get();
+
+        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+
+        $selectedProject = null;
+        if ($request->project_id) {
+            $selectedProject = DeliveryProject::with('defaultConcreteGrade')->find($request->project_id);
+        }
+
+        return Inertia::render('Delivery/Shipment/Create', [
+            'projects' => $projects,
+            'concreteGrades' => $concreteGrades,
+            'selectedProjectId' => $request->project_id,
+            'defaultValues' => $selectedProject ? [
+                'concrete_grade_id' => $selectedProject->default_concrete_grade_id,
+                'price_per_m3' => $selectedProject->defaultConcreteGrade ? $selectedProject->defaultConcreteGrade->price : 0
+            ] : null
+        ]);
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'delivery_project_id' => 'required|exists:delivery_projects,id',
+            'date' => 'required|date',
+            'docket_number' => 'required|string|max:255',
+            'rit_number' => 'required|integer|min:1',
+            'concrete_grade_id' => 'required|exists:concrete_grades,id',
+            'slump' => 'nullable|string|max:50',
+            'volume' => 'required|numeric|min:0',
+            'vehicle_number' => 'nullable|string|max:50',
+            'driver_name' => 'nullable|string|max:255',
+            'price_per_m3' => 'required|numeric|min:0',
+            'total_price' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $shipment = DeliveryShipment::create($validated);
+
+        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id)
+            ->with('message', 'Surat Jalan Berhasil Dicatat');
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(DeliveryShipment $shipment)
+    {
+        return Inertia::render('Delivery/Shipment/Show', [
+            'shipment' => $shipment->load(['deliveryProject.customer', 'concreteGrade'])
+        ]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(DeliveryShipment $shipment)
+    {
+        $officeId = $this->officeService->getCurrentOfficeId();
+
+        $projects = DeliveryProject::where('office_id', $officeId)
+            ->with('customer')
+            ->get();
+
+        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+
+        return Inertia::render('Delivery/Shipment/Edit', [
+            'shipment' => $shipment,
+            'projects' => $projects,
+            'concreteGrades' => $concreteGrades,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, DeliveryShipment $shipment)
+    {
+        $validated = $request->validate([
+            'delivery_project_id' => 'required|exists:delivery_projects,id',
+            'date' => 'required|date',
+            'docket_number' => 'required|string|max:255',
+            'rit_number' => 'required|integer|min:1',
+            'concrete_grade_id' => 'required|exists:concrete_grades,id',
+            'slump' => 'nullable|string|max:50',
+            'volume' => 'required|numeric|min:0',
+            'vehicle_number' => 'nullable|string|max:50',
+            'driver_name' => 'nullable|string|max:255',
+            'price_per_m3' => 'required|numeric|min:0',
+            'total_price' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ]);
+
+        $shipment->update($validated);
+
+        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id)
+            ->with('message', 'Surat Jalan Berhasil Diperbarui');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(DeliveryShipment $shipment)
+    {
+        $projectId = $shipment->delivery_project_id;
+        $shipment->delete();
+
+        return redirect()->route('delivery.projects.show', $projectId)
+            ->with('message', 'Surat Jalan Berhasil Dihapus');
+    }
+}

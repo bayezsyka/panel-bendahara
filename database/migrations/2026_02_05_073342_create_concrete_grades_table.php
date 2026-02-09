@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('concrete_grades', function (Blueprint $table) {
             $table->id();
-            $table->string('name'); // Nama Mutu (K-225, K-300)
+            $table->string('code'); // Kode Mutu (K-225, K-300)
             $table->decimal('price', 15, 2)->default(0);
             $table->string('description')->nullable();
             $table->unsignedBigInteger('office_id')->default(1)->index();
