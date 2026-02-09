@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => app(\App\Services\OfficeContextService::class)->getOfficeName(),
                 ] : null,
                 'can_switch_office' => $request->user() ? $request->user()->isSuperAdmin() : false,
+                'can_manage_projects' => $request->user() ? !($request->user()->isSuperAdmin() && $request->user()->office_id === 2) : false,
             ],
             'pending_expense_requests_count' => function () {
                 // Hanya hitung jika user sudah login (opsional: cek role)

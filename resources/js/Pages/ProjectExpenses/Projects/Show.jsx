@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react'
-import { Head, Link, useForm, router } from '@inertiajs/react'
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
 import PageHeader from '@/Components/PageHeader'
 import Dropdown, { DropDownContext } from '@/Components/Dropdown'
@@ -77,6 +77,8 @@ const SelectedProjectExportActions = ({ project, expenseTypes }) => {
 };
 
 export default function Show({ project, mandors, benderas, expenseTypes }) {
+  const { auth } = usePage().props;
+  const { can_manage_projects } = auth;
   const [showExpenseModal, setShowExpenseModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false) 
   const [showImageModal, setShowImageModal] = useState(null)
@@ -303,7 +305,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
         actions={
           <div className="flex items-center gap-2">
             {/* Edit Button */}
-            {!isCompleted && (
+            {can_manage_projects && !isCompleted && (
               <button 
                 onClick={() => setShowEditModal(true)}
                 className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
@@ -314,13 +316,15 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
             )}
             
             {/* Delete Button */}
-            <button 
-              onClick={handleDeleteProject}
-              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
-              title="Hapus Proyek"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
+            {can_manage_projects && (
+                <button 
+                onClick={handleDeleteProject}
+                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                title="Hapus Proyek"
+                >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+            )}
 
             <div className="w-px h-6 bg-gray-200 mx-1"></div>
             
@@ -342,7 +346,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
             </Dropdown>
             
             {/* Add Expense Button */}
-            {!isCompleted ? (
+            {can_manage_projects && (!isCompleted ? (
               <button 
                 onClick={openCreateExpenseModal}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm"
@@ -354,6 +358,12 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
               <div className="px-3 py-2 bg-gray-100 text-gray-500 font-medium rounded-lg border border-gray-200 cursor-not-allowed text-sm">
                 Terkunci
               </div>
+            ))}
+
+            {!can_manage_projects && (
+                <div className="px-3 py-2 bg-gray-50 text-gray-400 font-medium rounded-lg border border-gray-100 cursor-not-allowed text-sm italic">
+                    View Only
+                </div>
             )}
           </div>
         }
@@ -529,7 +539,7 @@ export default function Show({ project, mandors, benderas, expenseTypes }) {
                     {formatRupiah(expense.amount)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
-                    {!isCompleted && (
+                    {can_manage_projects && !isCompleted && (
                       <div className="flex flex-col gap-2 align-end">
                           <button 
                             onClick={() => openEditExpenseModal(expense)}
