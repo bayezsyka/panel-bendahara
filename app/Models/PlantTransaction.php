@@ -14,7 +14,8 @@ class PlantTransaction extends Model
         'cash_type', // 'kas_besar', 'kas_kecil'
         'amount',
         'description',
-        'expense_type_id',
+        'cash_source_id',
+        'cash_expense_type_id',
         'created_by',
     ];
 
@@ -23,9 +24,14 @@ class PlantTransaction extends Model
         'amount' => 'decimal:2',
     ];
 
-    public function expenseType()
+    public function cashSource()
     {
-        return $this->belongsTo(ExpenseType::class);
+        return $this->belongsTo(CashSource::class);
+    }
+
+    public function cashExpenseType()
+    {
+        return $this->belongsTo(CashExpenseType::class);
     }
 
     public function creator()

@@ -14,6 +14,8 @@ use App\Http\Controllers\ProjectExpenses\BenderaController;
 use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
 use App\Http\Controllers\Superadmin\UserController;
 use App\Http\Controllers\Bendahara\PlantTransactionController;
+use App\Http\Controllers\Bendahara\CashSourceController;
+use App\Http\Controllers\Bendahara\CashExpenseTypeController;
 
 Route::middleware(['auth', 'verified', 'role:superadmin'])
     ->prefix('superadmin')
@@ -57,34 +59,27 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
     ->prefix('kas')
     ->name('kas.')
     ->group(function () {
-        Route::get('/', function () {
-            return Inertia::render('Cash/Dashboard', [
-                'title' => 'Dashboard Kas (Under Construction)',
-                'message' => 'Panel Kas sedang dalam tahap pengembangan ulang.'
-            ]);
-        })->name('dashboard');
+        Route::get('/', [PlantTransactionController::class, 'dashboard'])->name('dashboard');
 
         // Placeholder routes to prevent Ziggy checks from breaking if frontend still references them
-        Route::get('/kas-besar', function () {
-            return redirect()->route('kas.dashboard');
-        })->name('kas-besar');
-        Route::get('/kas-kecil', function () {
-            return redirect()->route('kas.dashboard');
-        })->name('kas-kecil');
+        // Kas Routes
+        Route::get('/kas-besar', [PlantTransactionController::class, 'kasBesar'])->name('kas-besar');
+        Route::get('/kas-kecil', [PlantTransactionController::class, 'kasKecil'])->name('kas-kecil');
+
+        // Master Data Kas
+        Route::resource('sources', CashSourceController::class)->names('sources');
+        Route::resource('expense-types', CashExpenseTypeController::class)->names('expense-types');
+
         Route::get('/export-pdf', function () {
             return redirect()->route('kas.dashboard');
         })->name('export-pdf');
 
         // Transaction CRUD placeholders
-        Route::post('/transactions', function () {
-            return redirect()->back();
-        })->name('transactions.store');
-        Route::put('/transactions/{id}', function () {
-            return redirect()->back();
-        })->name('transactions.update');
-        Route::delete('/transactions/{id}', function () {
-            return redirect()->back();
-        })->name('transactions.destroy');
+        // Transaction CRUD
+        Route::post('/transactions', [PlantTransactionController::class, 'store'])->name('transactions.store');
+        Route::put('/transactions/{plantTransaction}', [PlantTransactionController::class, 'update'])->name('transactions.update');
+        Route::delete('/transactions/{plantTransaction}', [PlantTransactionController::class, 'destroy'])->name('transactions.destroy');
+        Route::post('/transfer', [PlantTransactionController::class, 'transfer'])->name('transfer');
     });
 
 Route::get('/', function () {

@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Bendahara;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PlantTransaction;
-use App\Models\ExpenseType;
+use App\Models\CashSource;
+use App\Models\CashExpenseType;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -20,26 +21,39 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        $expenseTypes = ExpenseType::where('office_id', 2)->orderBy('name')->get();
-
         // Kas Besar
         $totalInKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
         $totalOutKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
         $balanceKasBesar = $totalInKasBesar - $totalOutKasBesar;
+
+        $kasBesarTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', 'kas_besar')
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
 
         // Kas Kecil
         $totalInKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
         $totalOutKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
         $balanceKasKecil = $totalInKasKecil - $totalOutKasKecil;
 
-        return Inertia::render('Bendahara/Plant/Dashboard', [
-            'expenseTypes' => $expenseTypes,
+        $kasKecilTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', 'kas_kecil')
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Cash/Dashboard', [
             'totalInKasBesar' => $totalInKasBesar,
             'totalOutKasBesar' => $totalOutKasBesar,
             'balanceKasBesar' => $balanceKasBesar,
+            'kasBesarTransactions' => $kasBesarTransactions,
             'totalInKasKecil' => $totalInKasKecil,
             'totalOutKasKecil' => $totalOutKasKecil,
             'balanceKasKecil' => $balanceKasKecil,
+            'kasKecilTransactions' => $kasKecilTransactions,
         ]);
     }
 
@@ -49,10 +63,11 @@ class PlantTransactionController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
         $type = $request->query('type'); // in, out
-        $expenseTypeId = $request->query('expense_type_id');
+        $cashSourceId = $request->query('cash_source_id');
+        $cashExpenseTypeId = $request->query('cash_expense_type_id');
         $cashType = $request->query('cash_type'); // kas_besar, kas_kecil
 
-        $query = PlantTransaction::with('expenseType');
+        $query = PlantTransaction::with(['cashSource', 'cashExpenseType']);
 
         $initialBalance = 0;
         $periodText = 'Semua Periode';
@@ -74,7 +89,8 @@ class PlantTransactionController extends Controller
 
             if ($cashType) $prevQuery->where('cash_type', $cashType);
             if ($type) $prevQuery->where('type', $type);
-            if ($expenseTypeId) $prevQuery->where('expense_type_id', $expenseTypeId);
+            if ($cashSourceId) $prevQuery->where('cash_source_id', $cashSourceId);
+            if ($cashExpenseTypeId) $prevQuery->where('cash_expense_type_id', $cashExpenseTypeId);
 
             $prevIn = (clone $prevQuery)->where('type', 'in')->sum('amount');
             $prevOut = (clone $prevQuery)->where('type', 'out')->sum('amount');
@@ -97,10 +113,15 @@ class PlantTransactionController extends Controller
             $query->where('type', $type);
             $periodText .= ($type == 'in' ? ' (Hanya Kas Masuk)' : ' (Hanya Kas Keluar)');
         }
-        if ($expenseTypeId) {
-            $query->where('expense_type_id', $expenseTypeId);
-            $et = ExpenseType::find($expenseTypeId);
-            if ($et) $periodText .= ' - Tipe: ' . $et->name;
+        if ($cashSourceId) {
+            $query->where('cash_source_id', $cashSourceId);
+            $cs = CashSource::find($cashSourceId);
+            if ($cs) $periodText .= ' - Sumber: ' . $cs->name;
+        }
+        if ($cashExpenseTypeId) {
+            $query->where('cash_expense_type_id', $cashExpenseTypeId);
+            $cet = CashExpenseType::find($cashExpenseTypeId);
+            if ($cet) $periodText .= ' - Tipe: ' . $cet->name;
         }
 
         $transactions = $query->orderBy('transaction_date', 'asc')->orderBy('id', 'asc')->get();
@@ -122,7 +143,7 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        $query = PlantTransaction::with('expenseType')
+        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
             ->where('cash_type', 'kas_besar')
             ->orderByDesc('transaction_date')
             ->orderByDesc('id');
@@ -132,28 +153,36 @@ class PlantTransactionController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Filter berdasarkan expense_type_id jika ada
-        if ($request->filled('expense_type_id')) {
-            $query->where('expense_type_id', $request->expense_type_id);
+        // Filter berdasarkan cash_source_id jika ada
+        if ($request->filled('cash_source_id')) {
+            $query->where('cash_source_id', $request->cash_source_id);
+        }
+
+        // Filter berdasarkan cash_expense_type_id jika ada
+        if ($request->filled('cash_expense_type_id')) {
+            $query->where('cash_expense_type_id', $request->cash_expense_type_id);
         }
 
         $transactions = $query->get();
-        $expenseTypes = ExpenseType::orderBy('name')->get();
+        $cashSources = CashSource::orderBy('name')->get();
+        $cashExpenseTypes = CashExpenseType::orderBy('name')->get();
 
         // Hitung total masuk dan keluar
         $totalIn = PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
         $totalOut = PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
         $balance = $totalIn - $totalOut;
 
-        return Inertia::render('Bendahara/Plant/KasBesar', [
+        return Inertia::render('Cash/KasBesar', [
             'transactions' => $transactions,
-            'expenseTypes' => $expenseTypes,
+            'cashSources' => $cashSources,
+            'cashExpenseTypes' => $cashExpenseTypes,
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
             'filters' => [
                 'type' => $request->type,
-                'expense_type_id' => $request->expense_type_id,
+                'cash_source_id' => $request->cash_source_id,
+                'cash_expense_type_id' => $request->cash_expense_type_id,
             ]
         ]);
     }
@@ -165,7 +194,7 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        $query = PlantTransaction::with('expenseType')
+        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
             ->where('cash_type', 'kas_kecil')
             ->orderByDesc('transaction_date')
             ->orderByDesc('id');
@@ -175,39 +204,36 @@ class PlantTransactionController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Filter berdasarkan expense_type_id jika ada
-        if ($request->filled('expense_type_id')) {
-            $query->where('expense_type_id', $request->expense_type_id);
+        // Filter berdasarkan cash_expense_type_id jika ada
+        if ($request->filled('cash_expense_type_id')) {
+            $query->where('cash_expense_type_id', $request->cash_expense_type_id);
         }
 
         $transactions = $query->get();
-        $expenseTypes = ExpenseType::orderBy('name')->get();
+        $cashSources = CashSource::orderBy('name')->get();
+        $cashExpenseTypes = CashExpenseType::orderBy('name')->get();
 
         // Hitung total masuk dan keluar
         $totalIn = PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
         $totalOut = PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
         $balance = $totalIn - $totalOut;
 
-        return Inertia::render('Bendahara/Plant/KasKecil', [
+        return Inertia::render('Cash/KasKecil', [
             'transactions' => $transactions,
-            'expenseTypes' => $expenseTypes,
+            'cashSources' => $cashSources,
+            'cashExpenseTypes' => $cashExpenseTypes,
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
             'filters' => [
                 'type' => $request->type,
-                'expense_type_id' => $request->expense_type_id,
+                'cash_expense_type_id' => $request->cash_expense_type_id,
             ]
         ]);
     }
 
     private function ensurePlantContext()
     {
-        // Removed strict office context check as per user request to decouple panels from office context
-        // if (app(\App\Services\OfficeContextService::class)->getCurrentOfficeId() !== 2) {
-        //    abort(403, 'Akses ditolak. Anda berada di konteks Kantor Utama.');
-        // }
-
         if (!Auth::user()->canAccessPanel(\App\Models\User::PANEL_CASH)) {
             abort(403, 'Anda tidak memiliki akses ke panel ini.');
         }
@@ -226,7 +252,8 @@ class PlantTransactionController extends Controller
             'cash_type' => 'required|in:kas_besar,kas_kecil',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',
-            'expense_type_id' => 'required|exists:expense_types,id',
+            'cash_source_id' => 'required_if:type,in|nullable|exists:cash_sources,id',
+            'cash_expense_type_id' => 'required_if:type,out|nullable|exists:cash_expense_types,id',
         ]);
 
         PlantTransaction::create([
@@ -235,13 +262,51 @@ class PlantTransactionController extends Controller
             'cash_type' => $request->cash_type,
             'amount' => $request->amount,
             'description' => $request->description,
-            'expense_type_id' => $request->expense_type_id,
-            'expense_category' => $request->type === 'in' ? 'Sumber Dana' : 'Tipe Biaya',
+            'cash_source_id' => $request->type === 'in' ? $request->cash_source_id : null,
+            'cash_expense_type_id' => $request->type === 'out' ? $request->cash_expense_type_id : null,
             'created_by' => Auth::id(),
-            'office_id' => 2, // Explicitly set office ID
         ]);
 
         return redirect()->back()->with('message', 'Transaksi berhasil disimpan');
+    }
+
+    public function transfer(Request $request)
+    {
+        $this->ensurePlantContext();
+        if (!Auth::user()->canManage(\App\Models\User::PANEL_CASH)) {
+            abort(403, 'Anda tidak memiliki izin mengubah data ini.');
+        }
+
+        $request->validate([
+            'transaction_date' => 'required|date',
+            'amount' => 'required|numeric|min:0',
+            'description' => 'required|string',
+        ]);
+
+        // Wrap in transaction to ensure atomicity
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+            // 1. Catat Pengeluaran di Kas Besar
+            PlantTransaction::create([
+                'transaction_date' => $request->transaction_date,
+                'type' => 'out',
+                'cash_type' => 'kas_besar',
+                'amount' => $request->amount,
+                'description' => 'Transfer ke Kas Kecil: ' . $request->description,
+                'created_by' => Auth::id(),
+            ]);
+
+            // 2. Catat Pemasukan di Kas Kecil
+            PlantTransaction::create([
+                'transaction_date' => $request->transaction_date,
+                'type' => 'in',
+                'cash_type' => 'kas_kecil',
+                'amount' => $request->amount,
+                'description' => 'Terima dari Kas Besar: ' . $request->description,
+                'created_by' => Auth::id(),
+            ]);
+        });
+
+        return redirect()->back()->with('message', 'Transfer ke Kas Kecil berhasil!');
     }
 
     public function update(Request $request, PlantTransaction $plantTransaction)
@@ -255,14 +320,16 @@ class PlantTransactionController extends Controller
             'transaction_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',
-            'expense_type_id' => 'required|exists:expense_types,id',
+            'cash_source_id' => 'required_if:type,in|nullable|exists:cash_sources,id',
+            'cash_expense_type_id' => 'required_if:type,out|nullable|exists:cash_expense_types,id',
         ]);
 
         $plantTransaction->update([
             'transaction_date' => $request->transaction_date,
             'amount' => $request->amount,
             'description' => $request->description,
-            'expense_type_id' => $request->expense_type_id,
+            'cash_source_id' => $plantTransaction->type === 'in' ? $request->cash_source_id : null,
+            'cash_expense_type_id' => $plantTransaction->type === 'out' ? $request->cash_expense_type_id : null,
         ]);
 
         return redirect()->back()->with('message', 'Transaksi berhasil diperbarui');
