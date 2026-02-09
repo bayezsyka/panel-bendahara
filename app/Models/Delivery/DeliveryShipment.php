@@ -29,6 +29,7 @@ class DeliveryShipment extends Model
     {
         static::saving(function (DeliveryShipment $shipment) {
             $shipment->total_price = $shipment->volume * $shipment->price_per_m3;
+            $shipment->total_price_with_tax = $shipment->total_price * 1.11; // PPN 11%
         });
     }
 
@@ -38,6 +39,14 @@ class DeliveryShipment extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(DeliveryProject::class, 'delivery_project_id');
+    }
+
+    /**
+     * Alias for project() relationship for backward compatibility.
+     */
+    public function deliveryProject(): BelongsTo
+    {
+        return $this->project();
     }
 
     /**

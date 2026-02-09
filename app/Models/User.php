@@ -127,7 +127,7 @@ class User extends Authenticatable
     public function getHomeRoute(): string
     {
         if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
-        if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.dashboard';
+        if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.index';
         if ($this->canAccessPanel(self::PANEL_CASH)) return 'kas.dashboard';
         return 'no.access';
     }

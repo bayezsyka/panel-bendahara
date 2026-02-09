@@ -20,6 +20,7 @@ use App\Http\Controllers\Delivery\ConcreteGradeController;
 use App\Http\Controllers\Delivery\CustomerController;
 use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController;
 use App\Http\Controllers\Delivery\ShipmentController;
+use App\Http\Controllers\Receivable\ReceivableController;
 
 Route::middleware(['auth', 'verified', 'role:superadmin'])
     ->prefix('superadmin')
@@ -98,7 +99,9 @@ Route::get('/', function () {
 
 Route::get('/no-access', function () {
     if (Auth::check()) {
-        $route = Auth::user()->getHomeRoute();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $route = $user->getHomeRoute();
         if ($route !== 'no.access') {
             return redirect()->route($route);
         }
@@ -118,12 +121,13 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
     ->prefix('receivable')
     ->name('receivable.')
     ->group(function () {
-        // Redacting all routes to clean up the panel
-        Route::get('/', function () {
-            return Inertia::render('Receivable/Dashboard', [
-                'message' => 'Panel Piutang sedang dibersihkan.'
-            ]);
-        })->name('dashboard');
+        Route::get('/', [ReceivableController::class, 'dashboard'])->name('dashboard');
+        Route::get('/list', [ReceivableController::class, 'index'])->name('index');
+        Route::get('/payments', [ReceivableController::class, 'payments'])->name('payments.index');
+        Route::get('/customer/{customer}', [ReceivableController::class, 'showCustomer'])->name('customer.show');
+        Route::get('/project/{project}', [ReceivableController::class, 'showProject'])->name('project.show');
+        Route::post('/project/{project}/payment', [ReceivableController::class, 'storePayment'])->name('project.payment.store');
+        Route::get('/project/{project}/export-invoice', [ReceivableController::class, 'exportInvoice'])->name('project.export-invoice');
     });
 
 // DELIVERY PANEL ROUTES

@@ -16,4 +16,18 @@ class Customer extends Model
     {
         return $this->hasMany(DeliveryProject::class);
     }
+
+    public function projects()
+    {
+        // Relasi ke DeliveryProject (Proyek Pengiriman)
+        return $this->hasMany(DeliveryProject::class);
+    }
+
+    // Accessor untuk Total Piutang Akumulatif
+    public function getTotalReceivableAttribute()
+    {
+        return $this->projects->sum(function ($project) {
+            return $project->remaining_balance;
+        });
+    }
 }

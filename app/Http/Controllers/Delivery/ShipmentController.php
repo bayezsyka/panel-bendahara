@@ -106,9 +106,8 @@ class ShipmentController extends Controller
      */
     public function show(DeliveryShipment $shipment)
     {
-        return Inertia::render('Delivery/Shipment/Show', [
-            'shipment' => $shipment->load(['deliveryProject.customer', 'concreteGrade'])
-        ]);
+        // Redirect to the project detail page where shipment is displayed in context
+        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id);
     }
 
     /**
