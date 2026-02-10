@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('delivery_shipments', function (Blueprint $table) {
-            $table->decimal('total_price_with_tax', 15, 2)->nullable()->after('total_price');
-        });
+        if (!Schema::hasColumn('delivery_shipments', 'total_price_with_tax')) {
+            Schema::table('delivery_shipments', function (Blueprint $table) {
+                $table->decimal('total_price_with_tax', 15, 2)->nullable()->after('total_price');
+            });
+        }
     }
 
     /**

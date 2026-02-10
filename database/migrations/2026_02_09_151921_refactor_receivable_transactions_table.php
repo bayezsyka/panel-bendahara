@@ -12,12 +12,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('receivable_transactions', function (Blueprint $table) {
-            $table->foreignId('delivery_project_id')->nullable()->after('customer_id')->constrained('delivery_projects')->onDelete('cascade');
-            $table->string('type')->default('payment')->after('delivery_project_id'); // payment, bill, discount
-            $table->decimal('amount', 15, 2)->default(0)->after('type');
+            if (!Schema::hasColumn('receivable_transactions', 'delivery_project_id')) {
+                $table->foreignId('delivery_project_id')->nullable()->after('customer_id')->constrained('delivery_projects')->onDelete('cascade');
+            }
+            if (!Schema::hasColumn('receivable_transactions', 'type')) {
+                $table->string('type')->default('payment')->after('delivery_project_id'); // payment, bill, discount
+            }
+            if (!Schema::hasColumn('receivable_transactions', 'amount')) {
+                $table->decimal('amount', 15, 2)->default(0)->after('type');
+            }
 
-            // Cleanup old columns if they exist
-            $table->dropColumn(['bill_amount', 'payment_amount', 'grade', 'volume', 'price_per_m3']);
+            // Cleanup old columns - only if they exist
+            $columnsToDrop = [];
+            foreach (['bill_amount', 'payment_amount', 'grade', 'volume', 'price_per_m3'] as $col) {
+                if (Schema::hasColumn('receivable_transactions', $col)) {
+                    $columnsToDrop[] = $col;
+                }
+            }
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 

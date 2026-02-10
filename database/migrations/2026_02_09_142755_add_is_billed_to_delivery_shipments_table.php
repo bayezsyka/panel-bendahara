@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('delivery_shipments', function (Blueprint $table) {
-            $table->boolean('is_billed')->default(false)->after('notes');
-        });
+        if (!Schema::hasColumn('delivery_shipments', 'is_billed')) {
+            Schema::table('delivery_shipments', function (Blueprint $table) {
+                $table->boolean('is_billed')->default(false)->after('notes');
+            });
+        }
     }
 
     /**
