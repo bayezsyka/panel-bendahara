@@ -25,9 +25,5 @@ class DatabaseSeeder extends Seeder
                 'role' => 'superadmin',
             ]
         );
-
-        $this->call([
-            ReceivableSeeder::class,
-        ]);
     }
 }

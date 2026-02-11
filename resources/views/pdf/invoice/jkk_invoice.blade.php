@@ -197,7 +197,7 @@
                 <td class="label">Doc. No.</td>
                 <td class="separator">:</td>
                 <td class="content">
-                    INV/JKK/{{ date('Y/m', strtotime($invoiceDate)) }}/{{ str_pad($project->id, 4, '0', STR_PAD_LEFT) }}
+                    {{ $doc_no ?? 'INV/JKK/' . date('Y/m', strtotime($invoiceDate)) . '/' . str_pad($project->id, 4, '0', STR_PAD_LEFT) }}
                 </td>
             </tr>
             <tr>
@@ -212,33 +212,33 @@
                 <td class="label">NPWP</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $customer->npwp ?? '-' }}</td>
-                <td class="label">PO No.</td>
+                <td class="label">Delivery Note/Date</td>
                 <td class="separator">:</td>
-                <td class="content">{{ $project->po_number ?? '-' }}</td>
+                <td class="content">{{ $delivery_note ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="label">Material</td>
                 <td class="separator">:</td>
                 <td class="content">Readymix Concrete</td>
-                <td class="label">Due Date</td>
+                <td class="label">PO atau SO No./Date</td>
                 <td class="separator">:</td>
-                <td class="content">7 Hari setelah Invoice</td>
+                <td class="content">{{ $po_so_no ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="label">Location</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $project->location ?? '-' }}</td>
-                <td class="label"></td>
-                <td class="separator"></td>
-                <td class="content"></td>
+                <td class="label">Terms of Payment</td>
+                <td class="separator">:</td>
+                <td class="content">{{ $terms_of_payment ?? '-' }}</td>
             </tr>
             <tr>
                 <td class="label">Pekerjaan</td>
                 <td class="separator">:</td>
                 <td class="content">Cor / Pengecoran</td>
-                <td class="label"></td>
-                <td class="separator"></td>
-                <td class="content"></td>
+                <td class="label">Due Date / JT</td>
+                <td class="separator">:</td>
+                <td class="content">{{ $due_date_jt ?? '-' }}</td>
             </tr>
         </table>
 

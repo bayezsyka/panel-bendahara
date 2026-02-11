@@ -50,7 +50,7 @@ export default function Show({ project }) {
                             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                            Buat Surat Jalan
+                            Buat Pengiriman
                         </Link>
                     </div>
                 </div>
@@ -95,7 +95,7 @@ export default function Show({ project }) {
                             </div>
                             <div className="pt-2 border-t border-gray-50">
                                 <p className="text-xs text-gray-400 font-medium uppercase">Total Ritase</p>
-                                <p className="text-2xl font-bold text-gray-900 mt-1">{project.shipments.length} <span className="text-xs text-gray-400 font-medium">Surat Jalan</span></p>
+                                <p className="text-2xl font-bold text-gray-900 mt-1">{project.shipments.length} <span className="text-xs text-gray-400 font-medium">Pengiriman</span></p>
                             </div>
                         </div>
                     </div>
@@ -107,7 +107,7 @@ export default function Show({ project }) {
                         <div className="flex items-center gap-2">
                             <h3 className="font-bold text-gray-900 text-lg">Rekapitulasi Tiket</h3>
                             <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
-                                {project.shipments.length} Surat Jalan
+                                {project.shipments.length} Pengiriman
                             </span>
                         </div>
                         <div className="flex gap-2">
@@ -131,7 +131,7 @@ export default function Show({ project }) {
                                     <tr>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">No</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tanggal</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">DN (Ticket)</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Docket Number</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rit</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mutu</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Slump</th>
@@ -203,12 +203,12 @@ export default function Show({ project }) {
                                 <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                             </div>
                             <h4 className="text-lg font-bold text-gray-900">Belum Ada Pengiriman</h4>
-                            <p className="text-gray-500 mt-1 max-w-sm">Siapkan surat jalan pertama untuk mulai mencatat pengiriman beton pada proyek ini.</p>
+                            <p className="text-gray-500 mt-1 max-w-sm">Siapkan pengiriman pertama untuk mulai mencatat pengiriman beton pada proyek ini.</p>
                             <Link 
                                 href={route('delivery.shipments.create', { project_id: project.id })}
                                 className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
                             >
-                                + Mulai Buat Surat Jalan
+                                + Mulai Buat Pengiriman
                             </Link>
                         </div>
                     )}

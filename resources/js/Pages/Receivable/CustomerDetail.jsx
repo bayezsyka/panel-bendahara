@@ -101,15 +101,19 @@ export default function CustomerDetail({ customer, projects }) {
                                                     {formatCurrency(project.remaining)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <Link 
-                                                    href={route('receivable.project.show', project.id)}
-                                                    className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-                                                >
-                                                    Tinjau Transaksi
-                                                    <ChevronRight className="ml-1 w-4 h-4" />
-                                                </Link>
-                                            </td>
+                                             <td className="px-6 py-4 text-center">
+                                                {project.id ? (
+                                                    <Link 
+                                                        href={route('receivable.project.show', project.id)}
+                                                        className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                                                    >
+                                                        Tinjau Transaksi
+                                                        <ChevronRight className="ml-1 w-4 h-4" />
+                                                    </Link>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 italic">ID Error</span>
+                                                )}
+                                             </td>
                                         </tr>
                                     ))
                                 ) : (

@@ -116,7 +116,7 @@ export default function Dashboard({ stats, top_customers }) {
                             {top_customers.map((c) => (
                                 <Link 
                                     key={c.id} 
-                                    href={route('receivable.customer.show', c.id)}
+                                    href={c.id ? route('receivable.customer.show', c.id) : '#'}
                                     className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors group"
                                 >
                                     <div className="min-w-0 flex-1">

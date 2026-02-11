@@ -37,6 +37,11 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         end_date: new Date().toISOString().split('T')[0],
         invoice_date: new Date().toISOString().split('T')[0],
         mark_as_billed: true,
+        doc_no: '',
+        delivery_note: '',
+        po_so_no: '',
+        terms_of_payment: '',
+        due_date_jt: '',
     });
 
     const formatCurrency = (value) => {
@@ -50,6 +55,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const submitPayment = (e) => {
         e.preventDefault();
+        if (!project?.id) return;
         paymentForm.post(route('receivable.project.payment.store', project.id), {
             onSuccess: () => {
                 setIsPaymentModalOpen(false);
@@ -60,6 +66,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const handleExportInvoice = (e) => {
         e.preventDefault();
+        if (!project?.id) return;
         const url = route('receivable.project.export-invoice', {
             project: project.id,
             ...invoiceForm.data
@@ -80,7 +87,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
             <div className="space-y-6">
                 <Link 
-                    href={route('receivable.customer.show', project.customer_id)}
+                    href={project.customer_id ? route('receivable.customer.show', project.customer_id) : '#'}
                     className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
                 >
                     <ArrowLeft className="mr-1 w-4 h-4" />
@@ -338,6 +345,59 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                 value={invoiceForm.data.invoice_date}
                                 onChange={(e) => invoiceForm.setData('invoice_date', e.target.value)}
                                 required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel htmlFor="doc_no" value="Doc. No." />
+                                <TextInput
+                                    id="doc_no"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.doc_no}
+                                    onChange={(e) => invoiceForm.setData('doc_no', e.target.value)}
+                                    placeholder="INV/JKK/..."
+                                />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="delivery_note" value="Delivery Note/Date" />
+                                <TextInput
+                                    id="delivery_note"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.delivery_note}
+                                    onChange={(e) => invoiceForm.setData('delivery_note', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <InputLabel htmlFor="po_so_no" value="PO atau SO No./Date" />
+                                <TextInput
+                                    id="po_so_no"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.po_so_no}
+                                    onChange={(e) => invoiceForm.setData('po_so_no', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="terms_of_payment" value="Terms of Payment" />
+                                <TextInput
+                                    id="terms_of_payment"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.terms_of_payment}
+                                    onChange={(e) => invoiceForm.setData('terms_of_payment', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="due_date_jt" value="Due Date / JT" />
+                            <TextInput
+                                id="due_date_jt"
+                                className="mt-1 block w-full"
+                                value={invoiceForm.data.due_date_jt}
+                                onChange={(e) => invoiceForm.setData('due_date_jt', e.target.value)}
                             />
                         </div>
 

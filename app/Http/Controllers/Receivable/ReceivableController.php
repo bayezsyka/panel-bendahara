@@ -165,6 +165,11 @@ class ReceivableController extends Controller
             'grandTotal' => $grandTotal,
             'terbilang' => $terbilang,
             'invoiceDate' => $request->invoice_date ?? now(),
+            'doc_no' => $request->doc_no,
+            'delivery_note' => $request->delivery_note,
+            'po_so_no' => $request->po_so_no,
+            'terms_of_payment' => $request->terms_of_payment,
+            'due_date_jt' => $request->due_date_jt,
         ]);
 
         // Mark shipments as billed

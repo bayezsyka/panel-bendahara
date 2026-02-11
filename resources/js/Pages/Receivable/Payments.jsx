@@ -78,15 +78,21 @@ export default function Payments({ payments }) {
                                                     {formatCurrency(payment.amount)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <Link 
-                                                    href={route('receivable.project.show', payment.delivery_project_id)}
-                                                    className="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
-                                                >
-                                                    Lihat Proyek
-                                                    <ChevronRight className="ml-1 w-3 h-3" />
-                                                </Link>
-                                            </td>
+                                             <td className="px-6 py-4 text-center">
+                                                {payment.delivery_project_id ? (
+                                                    <Link 
+                                                        href={route('receivable.project.show', payment.delivery_project_id)}
+                                                        className="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
+                                                    >
+                                                        Lihat Proyek
+                                                        <ChevronRight className="ml-1 w-3 h-3" />
+                                                    </Link>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-3 py-1.5 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-medium border border-slate-100">
+                                                        Tanpa Proyek
+                                                    </span>
+                                                )}
+                                             </td>
                                         </tr>
                                     ))
                                 ) : (

@@ -19,7 +19,7 @@ export default function Index({ shipments }) {
                 <div className="flex justify-between items-center">
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">Rekap Pengiriman</h2>
-                        <p className="text-sm text-gray-500 mt-1">Daftar seluruh surat jalan pengiriman beton</p>
+                        <p className="text-sm text-gray-500 mt-1">Daftar seluruh data pengiriman beton</p>
                     </div>
                 </div>
 
@@ -28,7 +28,7 @@ export default function Index({ shipments }) {
                         <table className="w-full text-left">
                             <thead className="bg-gray-50/50">
                                 <tr>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">No. Tiket</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Docket Number</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tanggal</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer / Proyek</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mutu</th>
@@ -70,7 +70,7 @@ export default function Index({ shipments }) {
                                 ) : (
                                     <tr>
                                         <td colSpan="7" className="px-6 py-12 text-center text-gray-500 italic">
-                                            Belum ada data pengiriman
+                                            Belum ada data pengiriman beton
                                         </td>
                                     </tr>
                                 )}

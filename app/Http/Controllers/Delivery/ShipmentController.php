@@ -83,7 +83,7 @@ class ShipmentController extends Controller
         $validated = $request->validate([
             'delivery_project_id' => 'required|exists:delivery_projects,id',
             'date' => 'required|date',
-            'docket_number' => 'required|string|max:255',
+            'docket_number' => 'nullable|string|max:255',
             'rit_number' => 'required|integer|min:1',
             'concrete_grade_id' => 'required|exists:concrete_grades,id',
             'slump' => 'nullable|string|max:50',
@@ -138,7 +138,7 @@ class ShipmentController extends Controller
         $validated = $request->validate([
             'delivery_project_id' => 'required|exists:delivery_projects,id',
             'date' => 'required|date',
-            'docket_number' => 'required|string|max:255',
+            'docket_number' => 'nullable|string|max:255',
             'rit_number' => 'required|integer|min:1',
             'concrete_grade_id' => 'required|exists:concrete_grades,id',
             'slump' => 'nullable|string|max:50',

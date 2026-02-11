@@ -25,7 +25,7 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
         if (useCustomerName && data.customer_id) {
             const customer = customers.find(c => c.id === parseInt(data.customer_id));
             if (customer) {
-                setData('name', customer.name);
+                setData('sub_contractor', customer.name);
             }
         }
     }, [useCustomerName, data.customer_id]);
@@ -74,31 +74,15 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
 
                         <div>
                             <InputLabel htmlFor="name" value="Nama Proyek" />
-                            <div className="mt-1 flex flex-col gap-2">
-                                <TextInput
-                                    id="name"
-                                    type="text"
-                                    className="w-full"
-                                    value={data.name}
-                                    onChange={e => {
-                                        setData('name', e.target.value);
-                                        setUseCustomerName(false);
-                                    }}
-                                    placeholder="Contoh: Pembangunan Ruko ABC"
-                                    required
-                                    disabled={useCustomerName && data.customer_id !== ''}
-                                />
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input 
-                                        type="checkbox" 
-                                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                        checked={useCustomerName}
-                                        onChange={e => setUseCustomerName(e.target.checked)}
-                                        disabled={!data.customer_id}
-                                    />
-                                    <span className="text-xs text-gray-600 font-medium">Gunakan Nama Customer</span>
-                                </label>
-                            </div>
+                            <TextInput
+                                id="name"
+                                type="text"
+                                className="w-full mt-1"
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                placeholder="Contoh: Pembangunan Ruko ABC"
+                                required
+                            />
                             <InputError message={errors.name} className="mt-1" />
                         </div>
                     </div>
@@ -108,14 +92,30 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <InputLabel htmlFor="sub_contractor" value="Penerima / Sub-Contractor" />
-                                <TextInput
-                                    id="sub_contractor"
-                                    type="text"
-                                    className="w-full mt-1"
-                                    value={data.sub_contractor}
-                                    onChange={e => setData('sub_contractor', e.target.value)}
-                                    placeholder="Nama Sub-Con (Opsional)"
-                                />
+                                <div className="mt-1 flex flex-col gap-2">
+                                    <TextInput
+                                        id="sub_contractor"
+                                        type="text"
+                                        className="w-full"
+                                        value={data.sub_contractor}
+                                        onChange={e => {
+                                            setData('sub_contractor', e.target.value);
+                                            setUseCustomerName(false);
+                                        }}
+                                        placeholder="Nama Sub-Con (Opsional)"
+                                        disabled={useCustomerName && data.customer_id !== ''}
+                                    />
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            className="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                            checked={useCustomerName}
+                                            onChange={e => setUseCustomerName(e.target.checked)}
+                                            disabled={!data.customer_id}
+                                        />
+                                        <span className="text-xs text-gray-600 font-medium">Gunakan Nama Customer</span>
+                                    </label>
+                                </div>
                                 <InputError message={errors.sub_contractor} className="mt-1" />
                             </div>
                             <div>

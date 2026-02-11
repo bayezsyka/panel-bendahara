@@ -119,15 +119,19 @@ export default function Index({ customers }) {
                                                     {formatCurrency(customer.total_receivable)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <Link 
-                                                    href={route('receivable.customer.show', customer.id)}
-                                                    className="inline-flex items-center px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
-                                                >
-                                                    Detail
-                                                    <ChevronRight className="ml-1 w-4 h-4" />
-                                                </Link>
-                                            </td>
+                                             <td className="px-6 py-4 text-center">
+                                                {customer.id ? (
+                                                    <Link 
+                                                        href={route('receivable.customer.show', customer.id)}
+                                                        className="inline-flex items-center px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
+                                                    >
+                                                        Detail
+                                                        <ChevronRight className="ml-1 w-4 h-4" />
+                                                    </Link>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 italic">Error</span>
+                                                )}
+                                             </td>
                                         </tr>
                                     ))
                                 ) : (

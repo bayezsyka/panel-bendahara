@@ -51,7 +51,7 @@ export default function Edit({ shipment, projects, concreteGrades }) {
 
     return (
         <BendaharaLayout>
-            <Head title="Edit Surat Jalan" />
+            <Head title="Edit Pengiriman" />
 
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
@@ -62,7 +62,7 @@ export default function Edit({ shipment, projects, concreteGrades }) {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                         Kembali ke Proyek
                     </Link>
-                    <h2 className="text-2xl font-bold text-gray-900">Edit Surat Jalan</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Edit Pengiriman</h2>
                     <p className="text-sm text-gray-500 mt-1">Sesuaikan data pengiriman</p>
                 </div>
 
@@ -103,7 +103,7 @@ export default function Edit({ shipment, projects, concreteGrades }) {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
-                                <InputLabel htmlFor="docket_number" value="No. Surat Jalan / Tiket" />
+                                <InputLabel htmlFor="docket_number" value="Docket Number / Tiket" />
                                 <TextInput
                                     id="docket_number"
                                     type="text"
