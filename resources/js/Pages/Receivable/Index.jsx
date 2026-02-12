@@ -75,76 +75,78 @@ export default function Index({ customers }) {
                     </div>
                 </div>
 
-                {/* Customer Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <h3 className="text-lg font-bold text-slate-900">Daftar Piutang Customer</h3>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-                            <input 
-                                type="text"
-                                placeholder="Cari customer..."
-                                className="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-500 w-full sm:w-64 transition-all"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50/50">
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Customer</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Proyek</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Total Piutang</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {filteredCustomers.length > 0 ? (
-                                    filteredCustomers.map((customer) => (
-                                        <tr key={customer.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-900">{customer.name}</div>
-                                                {customer.address && <div className="text-xs text-slate-500 line-clamp-1">{customer.address}</div>}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                                    {customer.projects_count} Proyek
+                {/* Customer Grid */}
+                {filteredCustomers.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredCustomers.map((customer) => (
+                            <div key={customer.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 overflow-hidden flex flex-col">
+                                <Link 
+                                    href={route('receivable.customer.show', customer.id)}
+                                    className="p-6 flex-1"
+                                >
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-black text-xl">
+                                            {customer.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div className="flex flex-col items-end">
+                                            <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-black uppercase rounded-lg border border-blue-100 mb-1">
+                                                {customer.projects_count} Proyek
+                                            </span>
+                                            {customer.total_receivable > 0 ? (
+                                                <span className="px-2.5 py-1 bg-red-50 text-red-700 text-[10px] font-black uppercase rounded-lg border border-red-100">
+                                                    Belum Lunas
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className={`font-bold ${customer.total_receivable > 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                                                    {formatCurrency(customer.total_receivable)}
-                                                </div>
-                                            </td>
-                                             <td className="px-6 py-4 text-center">
-                                                {customer.id ? (
-                                                    <Link 
-                                                        href={route('receivable.customer.show', customer.id)}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm"
-                                                    >
-                                                        Detail
-                                                        <ChevronRight className="ml-1 w-4 h-4" />
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-xs text-slate-400 italic">Error</span>
-                                                )}
-                                             </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="4" className="px-6 py-12 text-center text-slate-500">
-                                            Tidak ada data customer ditemukan.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                            ) : (
+                                                <span className="px-2.5 py-1 bg-green-50 text-green-700 text-[10px] font-black uppercase rounded-lg border border-green-100">
+                                                    Lunas
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
+                                        {customer.name}
+                                    </h3>
+                                    
+                                    <div className="mt-4 space-y-2">
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                            <span className="line-clamp-1">{customer.address || 'Alamat tidak tersedia'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                            {customer.contact || '-'}
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-6 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Piutang</p>
+                                        <p className={`text-lg font-black ${customer.total_receivable > 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                                            {formatCurrency(customer.total_receivable)}
+                                        </p>
+                                    </div>
+                                </Link>
+                                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-50 flex justify-end items-center mt-auto">
+                                    <Link 
+                                        href={route('receivable.customer.show', customer.id)} 
+                                        className="text-xs font-black text-indigo-600 hover:text-indigo-800 transition-colors uppercase tracking-widest flex items-center gap-1"
+                                    >
+                                        Kelola Piutang
+                                        <ChevronRight className="w-3.5 h-3.5" />
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
+                ) : (
+                    <div className="bg-white rounded-3xl border-2 border-dashed border-gray-100 p-20 flex flex-col items-center justify-center text-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-2xl flex items-center justify-center mb-6">
+                            <Users className="w-10 h-10 text-gray-200" />
+                        </div>
+                        <h4 className="text-xl font-bold text-gray-900">Tidak Ada Data</h4>
+                        <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto font-medium">Tidak ada customer yang ditemukan dengan kriteria pencarian Anda.</p>
+                    </div>
+                )}
             </div>
         </BendaharaLayout>
     );

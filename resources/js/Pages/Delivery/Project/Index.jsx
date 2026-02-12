@@ -13,12 +13,7 @@ export default function Index({ projects }) {
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">Proyek</h2>
                         <p className="text-sm text-gray-500 font-medium mt-1">Kelola manajemen pengiriman beton per proyek</p>
                     </div>
-                    <Link 
-                        href={route('delivery.projects.create')}
-                        className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm"
-                    >
-                        + Tambah Proyek
-                    </Link>
+
                 </div>
 
                 {projects.length > 0 ? (
@@ -74,12 +69,7 @@ export default function Index({ projects }) {
                         </div>
                         <h4 className="text-xl font-bold text-gray-900">Belum Ada Proyek</h4>
                         <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto font-medium">Buat proyek pengiriman pertama Anda untuk mulai mencatat riwayat pengiriman beton.</p>
-                        <Link 
-                            href={route('delivery.projects.create')}
-                            className="mt-8 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
-                        >
-                            + Tambah Proyek Sekarang
-                        </Link>
+
                     </div>
                 )}
             </div>

@@ -160,9 +160,10 @@
                 {{-- HEADER PROJECT --}}
                 <tr class="project-header">
                     <td colspan="5" style="padding: 6px;">
-                        PROYEK: {{ strtoupper($group['project']->name) }}
-                        @if ($group['project']->mandor)
-                            - Mandor: {{ $group['project']->mandor->name }}
+                        PROYEK: {{ strtoupper($group['project']->name) }} @if ($group['project']->mandors->count() > 0)
+                            - Pelaksana: {{ $group['project']->mandors->pluck('name')->implode(', ') }}
+                        @elseif($group['project']->mandor)
+                            - Pelaksana: {{ $group['project']->mandor->name }}
                         @endif
                     </td>
                 </tr>

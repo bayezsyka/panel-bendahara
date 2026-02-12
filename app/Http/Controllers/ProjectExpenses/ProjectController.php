@@ -59,7 +59,7 @@ class ProjectController extends Controller
 
         // PENTING: Tambahkan 'items' di sini agar detail muncul di view
         $project->load(['expenses' => function ($query) use ($expenseTypeId) {
-            $query->with('items')->latest('transacted_at');
+            $query->with(['items', 'expenseType'])->latest('transacted_at');
             if ($expenseTypeId) {
                 $query->where('expense_type_id', $expenseTypeId);
             }
@@ -68,19 +68,30 @@ class ProjectController extends Controller
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
         $officeId = app(\App\Services\OfficeContextService::class)->getCurrentOfficeId();
-        $expenseTypes = \App\Models\ExpenseType::where('office_id', $officeId)->get(); // Filter by office
+
+        $allExpenseTypes = \App\Models\ExpenseType::where('office_id', $officeId)->orderBy('name')->get();
+
+        // Get only expense types that are actually used in this project's expenses
+        $usedExpenseTypeIds = \App\Models\Expense::where('project_id', $project->id)
+            ->whereNotNull('expense_type_id')
+            ->distinct()
+            ->pluck('expense_type_id');
+
+        $usedExpenseTypes = \App\Models\ExpenseType::whereIn('id', $usedExpenseTypeIds)->orderBy('name')->get();
 
         return Inertia::render('ProjectExpenses/Projects/Show', [
             'project' => $project,
             'mandors' => $mandors,
             'benderas' => $benderas,
-            'expenseTypes' => $expenseTypes, // Tambah ini
+            'expenseTypes' => $usedExpenseTypes,
+            'allExpenseTypes' => $allExpenseTypes,
         ]);
     }
 
     public function exportPdf(Request $request, Project $project)
     {
         $this->authorize('view', $project);
+        $project->load('mandors');
         $expenseTypeId = $request->query('expense_type_id');
         $expenseType = null;
 

@@ -56,13 +56,14 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
                     {/* Customer Selection */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <InputLabel htmlFor="customer_id" value="Pilih Customer" />
+                            <InputLabel htmlFor="customer_id" value="Customer Terpilih" />
                             <select
                                 id="customer_id"
-                                className="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                className={`w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm ${selectedCustomerId ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                                 value={data.customer_id}
                                 onChange={e => setData('customer_id', e.target.value)}
                                 required
+                                disabled={!!selectedCustomerId}
                             >
                                 <option value="">-- Pilih Customer --</option>
                                 {customers.map(customer => (
@@ -70,6 +71,9 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
                                 ))}
                             </select>
                             <InputError message={errors.customer_id} className="mt-1" />
+                            {selectedCustomerId && (
+                                <p className="mt-1 text-[10px] text-gray-500 font-medium italic">* Proyek ini akan otomatis dihubungkan dengan customer di atas.</p>
+                            )}
                         </div>
 
                         <div>

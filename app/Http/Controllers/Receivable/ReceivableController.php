@@ -46,6 +46,8 @@ class ReceivableController extends Controller
                 return [
                     'id' => $customer->id,
                     'name' => $customer->name,
+                    'address' => $customer->address,
+                    'contact' => $customer->contact,
                     'projects_count' => $customer->projects_count,
                     'total_receivable' => $customer->total_receivable,
                 ];

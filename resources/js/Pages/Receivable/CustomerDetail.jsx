@@ -37,11 +37,19 @@ export default function CustomerDetail({ customer, projects }) {
                     Kembali ke Daftar Customer
                 </Link>
 
-                <PageHeader 
-                    title={customer.name}
-                    subtitle={`Daftar proyek dan status penagihan untuk customer ${customer.name}.`}
-                    icon={Briefcase}
-                />
+                <div className="flex justify-between items-center">
+                    <PageHeader 
+                        title={customer.name}
+                        subtitle={`Daftar proyek dan status penagihan untuk customer ${customer.name}.`}
+                        icon={Briefcase}
+                    />
+                    <Link 
+                        href={route('delivery.projects.create', { customer_id: customer.id })}
+                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+                    >
+                        + Tambah Proyek
+                    </Link>
+                </div>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -59,73 +67,71 @@ export default function CustomerDetail({ customer, projects }) {
                     </div>
                 </div>
 
-                {/* Projects Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="p-6 border-b border-slate-100">
-                        <h3 className="text-lg font-bold text-slate-900 flex items-center">
-                            <BarChart3 className="w-5 h-5 mr-2 text-indigo-500" />
-                            Status Proyek
-                        </h3>
+                {/* Projects Grid Section */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-xl font-bold text-gray-900 tracking-tight">Status Piutang per Proyek</h3>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-50/50">
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Proyek / Lokasi</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Tagihan</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Terbayar</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Sisa</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {projects.length > 0 ? (
-                                    projects.map((project) => (
-                                        <tr key={project.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="font-bold text-slate-900">{project.name}</div>
-                                                <div className="text-xs text-slate-500 flex items-center mt-0.5">
-                                                    <MapPin className="w-3 h-3 mr-1" />
-                                                    {project.location || 'Lokasi tidak ditentukan'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-medium text-slate-900">
-                                                {formatCurrency(project.total_bill)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-medium text-emerald-600">
-                                                {formatCurrency(project.total_paid)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right">
-                                                <div className={`font-bold ${project.remaining > 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                                                    {formatCurrency(project.remaining)}
-                                                </div>
-                                            </td>
-                                             <td className="px-6 py-4 text-center">
-                                                {project.id ? (
-                                                    <Link 
-                                                        href={route('receivable.project.show', project.id)}
-                                                        className="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-                                                    >
-                                                        Tinjau Transaksi
-                                                        <ChevronRight className="ml-1 w-4 h-4" />
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-xs text-slate-400 italic">ID Error</span>
-                                                )}
-                                             </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="px-6 py-12 text-center text-slate-500">
-                                            Belum ada proyek untuk customer ini.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                    {projects && projects.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {projects.map((project) => (
+                                <div 
+                                    key={project.id} 
+                                    className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 flex flex-col"
+                                >
+                                    <div className="p-5 flex-1">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <h4 className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors leading-snug line-clamp-1">
+                                                {project.name}
+                                            </h4>
+                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded border ${project.remaining > 0 ? 'bg-red-50 text-red-700 border-red-100' : 'bg-green-50 text-green-700 border-green-100'}`}>
+                                                {project.remaining > 0 ? 'Belum Lunas' : 'Lunas'}
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-2 mb-4">
+                                            <div className="flex items-start gap-2 text-[11px] text-gray-500 font-medium">
+                                                <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
+                                                <span className="line-clamp-1">{project.location || 'Lokasi tidak tersedia'}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                                                <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Total Tagihan</p>
+                                                <p className="text-sm font-bold text-gray-900">{formatCurrency(project.total_bill)}</p>
+                                            </div>
+                                            <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                                                <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mb-0.5">Terbayar</p>
+                                                <p className="text-sm font-bold text-emerald-700">{formatCurrency(project.total_paid)}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 p-3 bg-red-50/30 rounded-xl border border-red-100/30">
+                                            <div className="flex justify-between items-center">
+                                                <p className="text-[9px] font-black text-red-400 uppercase tracking-widest">Sisa Piutang</p>
+                                                <p className="text-base font-black text-red-600">{formatCurrency(project.remaining)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="px-5 py-3 bg-gray-50/50 border-t border-gray-50 flex justify-end">
+                                        <Link 
+                                            href={route('receivable.project.show', project.id)}
+                                            className="inline-flex items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest group-hover:translate-x-1 transition-transform"
+                                        >
+                                            Kelola Keuangan Proyek →
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl border-2 border-dashed border-gray-100 p-12 text-center">
+                            <p className="text-sm text-gray-500 font-medium italic">Belum ada proyek terdaftar untuk customer ini.</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </BendaharaLayout>

@@ -42,6 +42,11 @@ class ProjectController extends Controller
      */
     public function create(Request $request)
     {
+        if (!$request->has('customer_id')) {
+            return redirect()->route('delivery.customers.index')
+                ->with('message', 'Silakan pilih customer terlebih dahulu sebelum membuat proyek.');
+        }
+
         $officeId = $this->officeService->getCurrentOfficeId();
 
         $customers = Customer::where('office_id', $officeId)->get();
@@ -50,7 +55,7 @@ class ProjectController extends Controller
         return Inertia::render('Delivery/Project/Create', [
             'customers' => $customers,
             'concreteGrades' => $concreteGrades,
-            'selectedCustomerId' => $request->customer_id
+            'selectedCustomerId' => (int) $request->customer_id
         ]);
     }
 

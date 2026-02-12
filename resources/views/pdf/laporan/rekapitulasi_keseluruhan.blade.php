@@ -207,8 +207,12 @@
             {{-- INFO PROYEK --}}
             <table class="info-box">
                 <tr>
-                    <td width="20%" class="text-bold">Mandor</td>
-                    <td width="30%">{{ $project->mandor ? $project->mandor->name : '-' }}</td>
+                    <td width="20%" class="text-bold">Pelaksana</td>
+                    <td width="30%">
+                        @if ($project->mandors->count() > 0)
+                            {{ $project->mandors->pluck('name')->implode(', ') }}@else{{ $project->mandor ? $project->mandor->name : '-' }}
+                        @endif
+                    </td>
                     <td width="20%" class="text-bold">Lokasi</td>
                     <td>{{ $project->coordinates ?? '-' }}</td>
                 </tr>

@@ -128,7 +128,7 @@ class OverviewController extends Controller
                 if ($withReceipts) {
                     $query->addSelect('receipt_image');
                 }
-            }, 'mandor:id,name']) // Optimasi relation mandor
+            }, 'mandor:id,name', 'mandors:id,name']) // Optimasi relation mandor dan mandors
             ->cursor(); // Gunakan cursor agar query tidak load semua ke memory sekaligus (LazyCollection)
 
         activity()
@@ -157,7 +157,9 @@ class OverviewController extends Controller
         $expenseType = ExpenseType::findOrFail($expenseTypeId);
 
         // Ambil SEMUA expenses dengan tipe biaya tertentu, dari SEMUA proyek
-        $expenses = Expense::with(['project', 'items'])
+        $expenses = Expense::with(['project' => function ($q) {
+            $q->with(['mandors', 'mandor']);
+        }, 'items'])
             ->where('expense_type_id', $expenseTypeId)
             ->orderBy('transacted_at', 'asc')
             ->get();

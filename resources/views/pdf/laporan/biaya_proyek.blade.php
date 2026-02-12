@@ -8,9 +8,7 @@
         /* =========================
            BASE
         ========================== */
-        @page {
-            margin: 1cm 1cm 2cm 1cm;
-        }
+        /* @page margin defined in footer.blade.php — do not redefine here */
 
         body {
             font-family: "Times New Roman", Times, serif;
@@ -96,11 +94,15 @@
         /* =========================
            MAIN DATA TABLE
         ========================== */
+        /* =========================
+           MAIN DATA TABLE
+        ========================== */
         .data-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             table-layout: fixed;
+            /* Added stability */
         }
 
         .data-table th,
@@ -121,22 +123,40 @@
         }
 
         .data-table .col-no {
-            width: 6%;
+            width: 5%;
         }
 
         .data-table .col-date {
-            width: 16%;
+            width: 15%;
         }
 
-        .data-table .col-ref {
-            width: 10%;
+        .data-table .col-detail {
+            width: 58%;
         }
 
         .data-table .col-amount {
             width: 22%;
         }
 
+        /* Group header */
+        .group-header {
+            page-break-inside: avoid;
+            page-break-after: avoid;
+        }
+
+        .group-header td {
+            background-color: #d1e7dd;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 7px 8px;
+        }
+
         /* Weekly separator */
+        .week-header {
+            page-break-inside: avoid;
+            page-break-after: avoid;
+        }
+
         .week-header td {
             background-color: #f6f6f6;
             font-weight: bold;
@@ -144,14 +164,6 @@
             font-size: 10px;
             color: #444;
             padding: 5px 8px;
-        }
-
-        /* Group header */
-        .group-header td {
-            background-color: #d1e7dd;
-            font-weight: bold;
-            font-size: 12px;
-            padding: 7px 8px;
         }
 
         /* Subtotal row */
@@ -162,6 +174,7 @@
         .subtotal-row .label-subtotal {
             font-style: italic;
             font-weight: bold;
+            background-color: #f8f9fa;
         }
 
         /* Grand total row */
@@ -257,12 +270,16 @@
             page-break-inside: avoid;
         }
 
-        table,
-        tr,
-        td,
-        th {
-            page-break-inside: avoid;
+        /*
+        .data-table tr {
+            page-break-inside: auto;
         }
+
+        .data-table td,
+        .data-table th {
+            page-break-inside: auto;
+        }
+        */
     </style>
 </head>
 
@@ -285,8 +302,12 @@
             <td class="value">{{ $project->status == 'ongoing' ? 'Sedang Berjalan' : 'Selesai' }}</td>
         </tr>
         <tr>
-            <td class="label">Mandor</td>
-            <td class="value">{{ $project->mandor ? $project->mandor->name : '-' }}</td>
+            <td class="label">Pelaksana</td>
+            <td class="value">
+                @if ($project->mandors->count() > 0)
+                    {{ $project->mandors->pluck('name')->implode(', ') }}@else{{ $project->mandor ? $project->mandor->name : '-' }}
+                @endif
+            </td>
             <td class="label">Lokasi</td>
             <td class="value">{{ $project->coordinates ?? '-' }}</td>
         </tr>
@@ -299,41 +320,49 @@
             <tr>
                 <th class="col-no text-center">No</th>
                 <th class="col-date text-center">Tanggal</th>
-                <th class="text-center">Keterangan & Rincian Item</th>
-                <th class="col-ref text-center">Ref</th>
+                <th class="col-detail text-center">Keterangan & Rincian Item</th>
                 <th class="col-amount text-center">Jumlah</th>
             </tr>
         </thead>
-        <tbody>
+        @php $grandTotal = 0; @endphp
+
+        @foreach ($groupedExpenses as $typeName => $expensesInGroup)
             @php
-                $grandTotal = 0;
+                $subTotal = 0;
+                $currentWeek = null;
             @endphp
 
-            @foreach ($groupedExpenses as $typeName => $expensesInGroup)
-                {{-- HEADER GROUP TIPE BIAYA --}}
-                <tr class="group-header">
-                    <td colspan="5">
-                        KATEGORI: {{ strtoupper($typeName) }}
-                    </td>
-                </tr>
-
+            @foreach ($expensesInGroup as $index => $expense)
                 @php
-                    $subTotal = 0;
-                    $currentWeek = null;
+                    $subTotal += $expense->amount;
+                    $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
+                    $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
+                    $weekKey = $yearNum . '-' . $weekNum;
+
+                    $isFirstItem = $index === 0;
+                    $isLastItem = $loop->last;
+                    $newWeek = $currentWeek !== $weekKey;
+
+                    // If it's a header or footer row, we use a tbody that avoids breaks
+                    // to keep the header/footer with this item.
+                    $keepWithNext = $isFirstItem || $newWeek;
+                    $keepWithPrev = $isLastItem;
                 @endphp
 
-                @foreach ($expensesInGroup as $index => $expense)
-                    @php
-                        $subTotal += $expense->amount;
-                        $weekNum = \Carbon\Carbon::parse($expense->transacted_at)->isoWeek();
-                        $yearNum = \Carbon\Carbon::parse($expense->transacted_at)->format('Y');
-                        $weekKey = $yearNum . '-' . $weekNum;
-                    @endphp
+                <tbody style="{{ $keepWithNext || $keepWithPrev ? 'page-break-inside: avoid;' : '' }}">
+                    {{-- HEADER GROUP TIPE BIAYA --}}
+                    @if ($isFirstItem)
+                        <tr class="group-header">
+                            <td colspan="4">
+                                KATEGORI: {{ strtoupper($typeName) }}
+                            </td>
+                        </tr>
+                    @endif
 
                     {{-- Row Separator Minggu --}}
-                    @if ($currentWeek !== $weekKey)
+                    @if ($newWeek)
                         <tr class="week-header">
-                            <td colspan="5">
+                            <td colspan="4">
                                 — Minggu ke-{{ $weekNum }} ({{ $yearNum }})
                             </td>
                         </tr>
@@ -365,27 +394,28 @@
 
                             @if ($expense->description)
                                 <div class="note">
-                                    Catatan: {{ $expense->description }}
+                                    Catatan: {{ trim($expense->description) }}
                                 </div>
                             @endif
                         </td>
-                        <td class="text-center">{{ $expense->receipt_image ? 'Ada' : '-' }}</td>
                         <td class="text-right">{{ number_format($expense->amount, 0, ',', '.') }}</td>
                     </tr>
-                @endforeach
 
-                {{-- SUB TOTAL PER TIPE --}}
-                <tr class="subtotal-row">
-                    <td colspan="4" class="text-right label-subtotal">Subtotal {{ $typeName }}</td>
-                    <td class="text-right text-bold">Rp {{ number_format($subTotal, 0, ',', '.') }}</td>
-                </tr>
-
-                @php $grandTotal += $subTotal; @endphp
+                    {{-- SUB TOTAL PER TIPE --}}
+                    @if ($isLastItem)
+                        <tr class="subtotal-row">
+                            <td colspan="3" class="text-right label-subtotal">Subtotal {{ $typeName }}</td>
+                            <td class="text-right text-bold">Rp {{ number_format($subTotal, 0, ',', '.') }}</td>
+                        </tr>
+                    @endif
+                </tbody>
             @endforeach
-        </tbody>
+
+            @php $grandTotal += $subTotal; @endphp
+        @endforeach
         <tfoot>
             <tr class="grand-total">
-                <td colspan="4" class="text-right">TOTAL KESELURUHAN PROYEK</td>
+                <td colspan="3" class="text-right">TOTAL KESELURUHAN PROYEK</td>
                 <td class="text-right">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
