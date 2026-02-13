@@ -31,7 +31,7 @@ export default function PageHeader({
             {backLink && (
                 <Link 
                     href={backLink} 
-                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-indigo-600 transition-colors mb-3"
+                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-3"
                 >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -46,11 +46,11 @@ export default function PageHeader({
                     {/* Title with optional icon and badge */}
                     <div className="flex items-center gap-3 flex-wrap">
                         {Icon && (
-                            <div className="flex-shrink-0 p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                            <div className="flex-shrink-0 p-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
                                 <Icon className="w-5 h-5" />
                             </div>
                         )}
-                        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                             {title}
                         </h1>
                         {badge && (
@@ -62,12 +62,12 @@ export default function PageHeader({
 
                     {/* Optional Subtitle */}
                     {subtitle && (
-                        <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
+                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
                     )}
 
                     {/* Optional Meta Info */}
                     {meta && (
-                        <div className="mt-1 text-sm text-gray-500">
+                        <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             {meta}
                         </div>
                     )}

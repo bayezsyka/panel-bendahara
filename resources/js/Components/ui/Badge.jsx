@@ -12,14 +12,14 @@ import React from 'react';
  */
 
 const VARIANTS = {
-    blue:    'bg-blue-50 text-blue-700 border-blue-100',
-    green:   'bg-green-50 text-green-700 border-green-100',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-    red:     'bg-red-50 text-red-700 border-red-100',
-    yellow:  'bg-amber-50 text-amber-700 border-amber-100',
-    purple:  'bg-purple-50 text-purple-700 border-purple-100',
-    indigo:  'bg-indigo-50 text-indigo-700 border-indigo-100',
-    gray:    'bg-gray-50 text-gray-600 border-gray-100',
+    blue:    'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-500/20',
+    green:   'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-100 dark:border-green-500/20',
+    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-100 dark:border-emerald-500/20',
+    red:     'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-100 dark:border-red-500/20',
+    yellow:  'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-100 dark:border-amber-500/20',
+    purple:  'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-500/20',
+    indigo:  'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-100 dark:border-indigo-500/20',
+    gray:    'bg-gray-50 dark:bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-500/20',
 };
 
 const DOT_COLORS = {

@@ -32,11 +32,11 @@ export default function Select({
             required={required}
             disabled={disabled}
             className={`
-                block w-full rounded-lg border-gray-300 shadow-sm
-                text-sm text-gray-700
+                block w-full rounded-lg border-gray-300 dark:border-gray-700/40 shadow-sm
+                text-sm text-gray-700 dark:text-gray-200
+                bg-white dark:bg-[#2a2a3d]
                 focus:border-indigo-500 focus:ring-indigo-500
-                disabled:bg-gray-100 disabled:cursor-not-allowed
-                transition-colors duration-150
+                disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed
                 ${className}
             `}
             {...props}

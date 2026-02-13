@@ -81,9 +81,9 @@ export default function Payments({ payments }) {
                                                 </div>
                                             </td>
                                              <td className="px-6 py-4 text-center">
-                                                {payment.delivery_project_id ? (
+                                                {payment.delivery_project ? (
                                                     <Link 
-                                                        href={route('receivable.project.show', payment.delivery_project_id)}
+                                                        href={route('receivable.project.show', payment.delivery_project.slug)}
                                                         className="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors"
                                                     >
                                                         Lihat Proyek

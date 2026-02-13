@@ -21,7 +21,7 @@ export default function Show({ project }) {
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
                         <Link 
-                            href={route('delivery.customers.show', project.customer_id)}
+                            href={route('delivery.customers.show', project.customer.slug)}
                             className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -34,13 +34,13 @@ export default function Show({ project }) {
                             </span>
                         </div>
                         <p className="text-sm text-gray-500 font-medium mt-1">
-                            Customer: <Link href={route('delivery.customers.show', project.customer_id)} className="text-indigo-600 hover:underline">{project.customer.name}</Link>
+                            Customer: <Link href={route('delivery.customers.show', project.customer.slug)} className="text-indigo-600 hover:underline">{project.customer.name}</Link>
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Link 
-                            href={route('delivery.projects.edit', project.id)}
+                            href={route('delivery.projects.edit', project.slug)}
                             className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm transition-colors"
                         >
                             Edit Proyek
@@ -113,7 +113,7 @@ export default function Show({ project }) {
                         <div className="flex gap-2">
                             {project.shipments.length > 0 && (
                                 <a 
-                                    href={route('delivery.projects.export-recap-pdf', project.id)}
+                                    href={route('delivery.projects.export-recap-pdf', project.slug)}
                                     target="_blank"
                                     className="text-xs bg-white border border-gray-200 px-3 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-2"
                                 >
@@ -138,7 +138,8 @@ export default function Show({ project }) {
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Volume</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">No Polisi</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Supir</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nilai (Rp)</th>
+                                        {project.has_ppn && <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nilai (DPP)</th>}
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nilai {project.has_ppn ? '(+PPN)' : ''}</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -160,7 +161,12 @@ export default function Show({ project }) {
                                             <td className="px-4 py-3 text-sm text-gray-900 font-black text-right">{shipment.volume} m³</td>
                                             <td className="px-4 py-3 text-xs text-gray-600 font-bold uppercase">{shipment.vehicle_number || '-'}</td>
                                             <td className="px-4 py-3 text-xs text-gray-500">{shipment.driver_name || '-'}</td>
-                                            <td className="px-4 py-3 text-sm text-gray-900 font-bold text-right tabular-nums">{formatCurrency(shipment.total_price)}</td>
+                                            {project.has_ppn && (
+                                                <td className="px-4 py-3 text-sm text-gray-500 font-medium text-right tabular-nums">
+                                                    {formatCurrency(shipment.total_price)}
+                                                </td>
+                                            )}
+                                            <td className="px-4 py-3 text-sm text-gray-900 font-bold text-right tabular-nums">{formatCurrency(shipment.total_price_with_tax)}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Link 
@@ -189,8 +195,13 @@ export default function Show({ project }) {
                                             {project.shipments.reduce((sum, s) => sum + parseFloat(s.volume), 0).toFixed(2)} m³
                                         </td>
                                         <td colSpan="2"></td>
+                                        {project.has_ppn && (
+                                            <td className="px-4 py-4 text-sm text-gray-500 text-right tabular-nums">
+                                                {formatCurrency(project.shipments.reduce((sum, s) => sum + parseFloat(s.total_price), 0))}
+                                            </td>
+                                        )}
                                         <td className="px-4 py-4 text-base text-indigo-700 text-right tabular-nums">
-                                            {formatCurrency(project.shipments.reduce((sum, s) => sum + parseFloat(s.total_price), 0))}
+                                            {formatCurrency(project.shipments.reduce((sum, s) => sum + parseFloat(s.total_price_with_tax), 0))}
                                         </td>
                                         <td></td>
                                     </tr>

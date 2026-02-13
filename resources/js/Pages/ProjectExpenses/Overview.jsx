@@ -232,7 +232,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                     dataKey="month" 
                     tickFormatter={monthLabel} 
                     tick={{ fontSize: 12 }}
-                    axisLine={{ stroke: '#e5e7eb' }}
+                    axisLine={{ stroke: 'currentColor', opacity: 0.15 }}
                     tickLine={false}
                   />
                   <YAxis 
@@ -244,7 +244,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                   <Tooltip
                     formatter={(value) => [rupiah(value), 'Pengeluaran']}
                     labelFormatter={(label) => monthLabel(label)}
-                    contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }}
+                    contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                   />
                   <Bar dataKey="expense" name="Pengeluaran" fill="#6366f1" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -279,7 +279,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                     </Pie>
                     <Tooltip 
                       formatter={(value) => rupiah(value)}
-                      contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }}
+                      contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -365,7 +365,7 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                       layout="vertical"
                       margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={true} vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} horizontal={true} vertical={false} />
                       <XAxis 
                         type="number" 
                         tickFormatter={(v) => new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(v)}
@@ -421,12 +421,12 @@ export default function Dashboard({ title, kpis, expenseSeries, projectExpenses,
                           </linearGradient>
                         ))}
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" strokeOpacity={0.06} vertical={false} />
                       <XAxis 
                         dataKey="month" 
                         tickFormatter={monthLabel}
                         tick={{ fontSize: 11 }}
-                        axisLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: 'currentColor', opacity: 0.15 }}
                         tickLine={false}
                       />
                       <YAxis 

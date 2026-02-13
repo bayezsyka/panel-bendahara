@@ -45,12 +45,7 @@ export default function CustomerDetail({ customer, projects }) {
                         subtitle={`Daftar proyek dan status penagihan untuk customer ${customer.name}.`}
                         icon={Briefcase}
                     />
-                    <Link 
-                        href={route('delivery.projects.create', { customer_id: customer.id })}
-                        className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95"
-                    >
-                        + Tambah Proyek
-                    </Link>
+
                 </div>
 
                 {/* Summary Cards */}
@@ -103,6 +98,11 @@ export default function CustomerDetail({ customer, projects }) {
                                             <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-100">
                                                 <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Total Tagihan</p>
                                                 <p className="text-sm font-bold text-gray-900">{formatCurrency(project.total_bill)}</p>
+                                                {project.has_ppn && (
+                                                    <p className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                                        (DPP: {formatCurrency(project.total_bill_dpp)})
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="p-2.5 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
                                                 <p className="text-[9px] font-bold text-emerald-400 uppercase tracking-widest mb-0.5">Terbayar</p>
@@ -120,7 +120,7 @@ export default function CustomerDetail({ customer, projects }) {
 
                                     <div className="px-5 py-3 bg-gray-50/50 border-t border-gray-50 flex justify-end">
                                         <Link 
-                                            href={route('receivable.project.show', project.id)}
+                                            href={route('receivable.project.show', project.slug)}
                                             className="inline-flex items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest group-hover:translate-x-1 transition-transform"
                                         >
                                             Kelola Keuangan Proyek →

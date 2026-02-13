@@ -97,7 +97,7 @@ class ShipmentController extends Controller
 
         $shipment = DeliveryShipment::create($validated);
 
-        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id)
+        return redirect()->route('delivery.projects.show', $shipment->project)
             ->with('message', 'Surat Jalan Berhasil Dicatat');
     }
 
@@ -107,7 +107,7 @@ class ShipmentController extends Controller
     public function show(DeliveryShipment $shipment)
     {
         // Redirect to the project detail page where shipment is displayed in context
-        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id);
+        return redirect()->route('delivery.projects.show', $shipment->project);
     }
 
     /**
@@ -124,7 +124,7 @@ class ShipmentController extends Controller
         $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
 
         return Inertia::render('Delivery/Shipment/Edit', [
-            'shipment' => $shipment,
+            'shipment' => $shipment->load('project'),
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
         ]);
@@ -152,7 +152,7 @@ class ShipmentController extends Controller
 
         $shipment->update($validated);
 
-        return redirect()->route('delivery.projects.show', $shipment->delivery_project_id)
+        return redirect()->route('delivery.projects.show', $shipment->project)
             ->with('message', 'Surat Jalan Berhasil Diperbarui');
     }
 
@@ -161,10 +161,10 @@ class ShipmentController extends Controller
      */
     public function destroy(DeliveryShipment $shipment)
     {
-        $projectId = $shipment->delivery_project_id;
+        $project = $shipment->project;
         $shipment->delete();
 
-        return redirect()->route('delivery.projects.show', $projectId)
+        return redirect()->route('delivery.projects.show', $project)
             ->with('message', 'Surat Jalan Berhasil Dihapus');
     }
 }

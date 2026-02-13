@@ -48,7 +48,7 @@ export default function Index({ shipments }) {
                                             <td className="px-6 py-4">
                                                 <div className="text-sm font-bold text-gray-900">{shipment.project.customer.name}</div>
                                                 <Link 
-                                                    href={route('delivery.projects.show', shipment.delivery_project_id)}
+                                                    href={route('delivery.projects.show', shipment.project.slug)}
                                                     className="text-xs text-indigo-600 hover:underline font-medium"
                                                 >
                                                     {shipment.project.name}

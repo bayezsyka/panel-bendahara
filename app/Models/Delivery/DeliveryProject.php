@@ -11,6 +11,34 @@ class DeliveryProject extends Model
 {
     protected $guarded = ['id'];
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($project) {
+            if ($project->isDirty('name') || empty($project->slug)) {
+                $slug = \Illuminate\Support\Str::slug($project->name);
+                $originalSlug = $slug;
+                $count = 1;
+
+                while (static::where('slug', $slug)->where('id', '!=', $project->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count++;
+                }
+
+                $project->slug = $slug;
+            }
+        });
+    }
+
+    protected $casts = [
+        'has_ppn' => 'boolean',
+    ];
+
     /**
      * Get the customer that owns the project.
      */

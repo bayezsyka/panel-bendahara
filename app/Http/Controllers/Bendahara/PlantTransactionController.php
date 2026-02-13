@@ -21,7 +21,7 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        // Kas Besar
+        // Kas Besar Summary
         $totalInKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
         $totalOutKasBesar = (int) PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
         $balanceKasBesar = $totalInKasBesar - $totalOutKasBesar;
@@ -30,10 +30,10 @@ class PlantTransactionController extends Controller
             ->where('cash_type', 'kas_besar')
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
-        // Kas Kecil
+        // Kas Kecil Summary
         $totalInKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
         $totalOutKasKecil = (int) PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
         $balanceKasKecil = $totalInKasKecil - $totalOutKasKecil;
@@ -42,7 +42,7 @@ class PlantTransactionController extends Controller
             ->where('cash_type', 'kas_kecil')
             ->orderByDesc('transaction_date')
             ->orderByDesc('id')
-            ->limit(10)
+            ->limit(5)
             ->get();
 
         return Inertia::render('Cash/Dashboard', [
@@ -57,84 +57,6 @@ class PlantTransactionController extends Controller
         ]);
     }
 
-    public function exportPdf(Request $request)
-    {
-        $this->ensurePlantContext();
-        $startDate = $request->query('start_date');
-        $endDate = $request->query('end_date');
-        $type = $request->query('type'); // in, out
-        $cashSourceId = $request->query('cash_source_id');
-        $cashExpenseTypeId = $request->query('cash_expense_type_id');
-        $cashType = $request->query('cash_type'); // kas_besar, kas_kecil
-
-        $query = PlantTransaction::with(['cashSource', 'cashExpenseType']);
-
-        $initialBalance = 0;
-        $periodText = 'Semua Periode';
-        $reportTitle = 'Laporan Kas Plant';
-
-        // Apply cash_type filter
-        if ($cashType) {
-            $query->where('cash_type', $cashType);
-            $reportTitle = $cashType === 'kas_besar' ? 'Laporan Kas Besar' : 'Laporan Kas Kecil';
-        } else {
-            $reportTitle = 'Laporan Kas Plant (Semua)';
-        }
-
-        if ($startDate) {
-            $periodText = "Periode: " . Carbon::parse($startDate)->translatedFormat('d F Y');
-
-            // Calculate balance before start date with same filters
-            $prevQuery = PlantTransaction::where('transaction_date', '<', $startDate);
-
-            if ($cashType) $prevQuery->where('cash_type', $cashType);
-            if ($type) $prevQuery->where('type', $type);
-            if ($cashSourceId) $prevQuery->where('cash_source_id', $cashSourceId);
-            if ($cashExpenseTypeId) $prevQuery->where('cash_expense_type_id', $cashExpenseTypeId);
-
-            $prevIn = (clone $prevQuery)->where('type', 'in')->sum('amount');
-            $prevOut = (clone $prevQuery)->where('type', 'out')->sum('amount');
-            $initialBalance = $prevIn - $prevOut;
-
-            $query->where('transaction_date', '>=', $startDate);
-        }
-
-        if ($endDate) {
-            $query->where('transaction_date', '<=', $endDate);
-            if ($startDate) {
-                $periodText .= " s/d " . Carbon::parse($endDate)->translatedFormat('d F Y');
-            } else {
-                $periodText = "Sampai dengan " . Carbon::parse($endDate)->translatedFormat('d F Y');
-            }
-        }
-
-        // Apply filters
-        if ($type) {
-            $query->where('type', $type);
-            $periodText .= ($type == 'in' ? ' (Hanya Kas Masuk)' : ' (Hanya Kas Keluar)');
-        }
-        if ($cashSourceId) {
-            $query->where('cash_source_id', $cashSourceId);
-            $cs = CashSource::find($cashSourceId);
-            if ($cs) $periodText .= ' - Sumber: ' . $cs->name;
-        }
-        if ($cashExpenseTypeId) {
-            $query->where('cash_expense_type_id', $cashExpenseTypeId);
-            $cet = CashExpenseType::find($cashExpenseTypeId);
-            if ($cet) $periodText .= ' - Tipe: ' . $cet->name;
-        }
-
-        $transactions = $query->orderBy('transaction_date', 'asc')->orderBy('id', 'asc')->get();
-
-        $pdf = Pdf::loadView('pdf.plant.laporan_keuangan', [
-            'transactions' => $transactions,
-            'initialBalance' => $initialBalance,
-            'periodText' => $periodText,
-            'reportTitle' => $reportTitle
-        ]);
-
-        return $pdf->stream('Laporan-Plant.pdf');
-    }
 
     /**
      * Halaman Kas Besar - menampilkan semua transaksi dengan cash_type = kas_besar
@@ -143,47 +65,54 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+        $date = $request->query('date', Carbon::today()->toDateString());
+        $carbonDate = Carbon::parse($date);
+
+        $prevDate = $carbonDate->copy()->subDay()->toDateString();
+        $nextDate = $carbonDate->copy()->addDay()->toDateString();
+
+        // 1. Opening Balance (Sisa Saldo Kemarin)
+        $inPrev = PlantTransaction::where('cash_type', 'kas_besar')
+            ->where('transaction_date', '<', $date)
+            ->where('type', 'in')
+            ->sum('amount');
+        $outPrev = PlantTransaction::where('cash_type', 'kas_besar')
+            ->where('transaction_date', '<', $date)
+            ->where('type', 'out')
+            ->sum('amount');
+        $saldoAwal = $inPrev - $outPrev;
+
+        // 2. Daily Transactions
+        $dailyTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
             ->where('cash_type', 'kas_besar')
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id');
+            ->whereDate('transaction_date', $date)
+            ->orderBy('id', 'asc') // Urutkan sesuai input/ID
+            ->get();
 
-        // Filter berdasarkan tipe (in/out) jika ada
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        $incomes = $dailyTransactions->where('type', 'in')->values();
+        $expenses = $dailyTransactions->where('type', 'out')->values();
 
-        // Filter berdasarkan cash_source_id jika ada
-        if ($request->filled('cash_source_id')) {
-            $query->where('cash_source_id', $request->cash_source_id);
-        }
-
-        // Filter berdasarkan cash_expense_type_id jika ada
-        if ($request->filled('cash_expense_type_id')) {
-            $query->where('cash_expense_type_id', $request->cash_expense_type_id);
-        }
-
-        $transactions = $query->get();
+        // Master Data for Selects
         $cashSources = CashSource::orderBy('name')->get();
         $cashExpenseTypes = CashExpenseType::orderBy('name')->get();
 
-        // Hitung total masuk dan keluar
+        // Global Totals for Header Card
         $totalIn = PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'in')->sum('amount');
         $totalOut = PlantTransaction::where('cash_type', 'kas_besar')->where('type', 'out')->sum('amount');
         $balance = $totalIn - $totalOut;
 
         return Inertia::render('Cash/KasBesar', [
-            'transactions' => $transactions,
+            'selectedDate' => $date,
+            'prevDate' => $prevDate,
+            'nextDate' => $nextDate,
+            'saldoAwal' => $saldoAwal,
+            'incomes' => $incomes,
+            'expenses' => $expenses,
             'cashSources' => $cashSources,
             'cashExpenseTypes' => $cashExpenseTypes,
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
-            'filters' => [
-                'type' => $request->type,
-                'cash_source_id' => $request->cash_source_id,
-                'cash_expense_type_id' => $request->cash_expense_type_id,
-            ]
         ]);
     }
 
@@ -194,41 +123,54 @@ class PlantTransactionController extends Controller
     {
         $this->ensurePlantContext();
 
-        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+        $date = $request->query('date', Carbon::today()->toDateString());
+        $carbonDate = Carbon::parse($date);
+
+        $prevDate = $carbonDate->copy()->subDay()->toDateString();
+        $nextDate = $carbonDate->copy()->addDay()->toDateString();
+
+        // 1. Opening Balance (Sisa Saldo Kemarin)
+        $inPrev = PlantTransaction::where('cash_type', 'kas_kecil')
+            ->where('transaction_date', '<', $date)
+            ->where('type', 'in')
+            ->sum('amount');
+        $outPrev = PlantTransaction::where('cash_type', 'kas_kecil')
+            ->where('transaction_date', '<', $date)
+            ->where('type', 'out')
+            ->sum('amount');
+        $saldoAwal = $inPrev - $outPrev;
+
+        // 2. Daily Transactions
+        $dailyTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
             ->where('cash_type', 'kas_kecil')
-            ->orderByDesc('transaction_date')
-            ->orderByDesc('id');
+            ->whereDate('transaction_date', $date)
+            ->orderBy('id', 'asc')
+            ->get();
 
-        // Filter berdasarkan tipe (in/out) jika ada
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
+        $incomes = $dailyTransactions->where('type', 'in')->values();
+        $expenses = $dailyTransactions->where('type', 'out')->values();
 
-        // Filter berdasarkan cash_expense_type_id jika ada
-        if ($request->filled('cash_expense_type_id')) {
-            $query->where('cash_expense_type_id', $request->cash_expense_type_id);
-        }
-
-        $transactions = $query->get();
+        // Master Data for Selects
         $cashSources = CashSource::orderBy('name')->get();
         $cashExpenseTypes = CashExpenseType::orderBy('name')->get();
 
-        // Hitung total masuk dan keluar
+        // Global Totals for Header Card
         $totalIn = PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'in')->sum('amount');
         $totalOut = PlantTransaction::where('cash_type', 'kas_kecil')->where('type', 'out')->sum('amount');
         $balance = $totalIn - $totalOut;
 
         return Inertia::render('Cash/KasKecil', [
-            'transactions' => $transactions,
+            'selectedDate' => $date,
+            'prevDate' => $prevDate,
+            'nextDate' => $nextDate,
+            'saldoAwal' => $saldoAwal,
+            'incomes' => $incomes,
+            'expenses' => $expenses,
             'cashSources' => $cashSources,
             'cashExpenseTypes' => $cashExpenseTypes,
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
-            'filters' => [
-                'type' => $request->type,
-                'cash_expense_type_id' => $request->cash_expense_type_id,
-            ]
         ]);
     }
 
@@ -255,6 +197,11 @@ class PlantTransactionController extends Controller
             'cash_source_id' => 'required_if:type,in|nullable|exists:cash_sources,id',
             'cash_expense_type_id' => 'required_if:type,out|nullable|exists:cash_expense_types,id',
         ]);
+
+        // Prevent manual income for Kas Kecil
+        if ($request->cash_type === 'kas_kecil' && $request->type === 'in') {
+            return redirect()->back()->withErrors(['type' => 'Pemasukan Kas Kecil hanya diperbolehkan melalui transfer dari Kas Besar.']);
+        }
 
         PlantTransaction::create([
             'transaction_date' => $request->transaction_date,
@@ -344,5 +291,70 @@ class PlantTransactionController extends Controller
 
         $plantTransaction->delete();
         return redirect()->back()->with('message', 'Transaksi berhasil dihapus');
+    }
+    public function exportPdf(Request $request)
+    {
+        $this->ensurePlantContext();
+
+        $cashType = $request->input('cash_type', 'kas_besar');
+        $startDate = $request->input('start_date', Carbon::today()->toDateString());
+        $endDate = $request->input('end_date', Carbon::today()->toDateString());
+
+        // 1. Opening Balance (Before Start Date)
+        $inPrev = PlantTransaction::where('cash_type', $cashType)
+            ->where('transaction_date', '<', $startDate)
+            ->where('type', 'in')
+            ->sum('amount');
+        $outPrev = PlantTransaction::where('cash_type', $cashType)
+            ->where('transaction_date', '<', $startDate)
+            ->where('type', 'out')
+            ->sum('amount');
+        $initialBalance = $inPrev - $outPrev;
+
+        // 2. Transactions in Range
+        $transactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', $cashType)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->orderBy('transaction_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $incomes = $transactions->where('type', 'in');
+        $expenses = $transactions->where('type', 'out');
+
+        $totalInRaw = $incomes->sum('amount');
+        $totalOutRaw = $expenses->sum('amount');
+
+        // Calculate Total Income for Display (Initial Balance + Incomes)
+        $totalIncomeDisplay = $initialBalance + $totalInRaw;
+
+        // Final Balance
+        $finalBalance = $totalIncomeDisplay - $totalOutRaw;
+
+        $title = $cashType === 'kas_besar' ? 'Laporan Kas Besar' : 'Laporan Kas Kecil';
+
+        $initialDate = Carbon::parse($startDate);
+        $finalDate = Carbon::parse($endDate);
+
+        if ($initialDate->equalTo($finalDate)) {
+            $periodText = 'Tanggal: ' . $initialDate->translatedFormat('d F Y');
+        } else {
+            $periodText = 'Periode: ' . $initialDate->translatedFormat('d F Y') . ' s/d ' . $finalDate->translatedFormat('d F Y');
+        }
+
+        $pdf = Pdf::loadView('pdf.plant.daily_report', [
+            'title' => $title,
+            'periodText' => $periodText,
+            'initialBalance' => $initialBalance,
+            'incomes' => $incomes,
+            'expenses' => $expenses,
+            'totalInRaw' => $totalInRaw,
+            'totalIncomeDisplay' => $totalIncomeDisplay,
+            'totalOutRaw' => $totalOutRaw,
+            'finalBalance' => $finalBalance,
+            'cashType' => $cashType,
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('laporan_' . $cashType . '_' . $startDate . '.pdf');
     }
 }

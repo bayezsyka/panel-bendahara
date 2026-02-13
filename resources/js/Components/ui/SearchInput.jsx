@@ -38,7 +38,7 @@ export default function SearchInput({
 
             <input
                 type="text"
-                className="block w-full pl-10 pr-9 py-2.5 border border-gray-200 rounded-lg text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 shadow-sm"
+                className="block w-full pl-10 pr-9 py-2.5 border border-gray-200 dark:border-gray-700/40 rounded-lg text-sm bg-white dark:bg-[#2a2a3d] text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 shadow-sm"
                 placeholder={placeholder}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}

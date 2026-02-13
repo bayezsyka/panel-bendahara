@@ -93,7 +93,7 @@ export default function Dashboard({ stats, top_customers }) {
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" strokeOpacity={0.06} />
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
                                     <YAxis hide />
                                     <Tooltip 
@@ -118,7 +118,7 @@ export default function Dashboard({ stats, top_customers }) {
                             {top_customers.map((c) => (
                                 <Link 
                                     key={c.id} 
-                                    href={c.id ? route('receivable.customer.show', c.id) : '#'}
+                                    href={c.slug ? route('receivable.customer.show', c.slug) : '#'}
                                     className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors group"
                                 >
                                     <div className="min-w-0 flex-1">

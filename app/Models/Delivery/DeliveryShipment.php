@@ -29,7 +29,15 @@ class DeliveryShipment extends Model
     {
         static::saving(function (DeliveryShipment $shipment) {
             $shipment->total_price = $shipment->volume * $shipment->price_per_m3;
-            $shipment->total_price_with_tax = $shipment->total_price * 1.11; // PPN 11%
+
+            // Ensure project is loaded
+            if (!$shipment->relationLoaded('project')) {
+                $shipment->load('project');
+            }
+
+            $shipment->total_price_with_tax = $shipment->project->has_ppn
+                ? ($shipment->total_price * 1.11)
+                : $shipment->total_price;
         });
     }
 

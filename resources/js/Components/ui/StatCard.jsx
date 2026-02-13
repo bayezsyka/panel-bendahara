@@ -22,7 +22,7 @@ export default function StatCard({
     className = '',
 }) {
     return (
-        <div className={`bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4 ${className}`}>
+        <div className={`bg-white dark:bg-[#222238] p-6 rounded-xl border border-gray-200 dark:border-gray-700/40 shadow-sm flex items-center gap-4 ${className}`}>
             {icon && (
                 <div className={`flex-shrink-0 p-3 rounded-xl ${iconBg}`}>
                     <div className={`w-6 h-6 ${iconColor}`}>
@@ -31,8 +31,8 @@ export default function StatCard({
                 </div>
             )}
             <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-500 truncate">{title}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-0.5">{value}</p>
                 {trend && (
                     <p className={`text-xs font-medium mt-1 ${trend.positive ? 'text-emerald-600' : 'text-red-600'}`}>
                         {trend.positive ? '↑' : '↓'} {trend.value}

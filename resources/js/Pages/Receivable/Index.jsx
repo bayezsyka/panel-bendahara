@@ -79,7 +79,7 @@ export default function Index({ customers }) {
                         {filteredCustomers.map((customer) => (
                             <Card key={customer.id} noPadding hover className="group flex flex-col overflow-hidden">
                                 <Link 
-                                    href={route('receivable.customer.show', customer.id)}
+                                    href={route('receivable.customer.show', customer.slug)}
                                     className="p-6 flex-1"
                                 >
                                     <div className="flex justify-between items-start mb-4">
@@ -130,7 +130,7 @@ export default function Index({ customers }) {
 
                                 <div className="px-6 py-3.5 bg-gray-50/50 border-t border-gray-100 flex justify-end items-center mt-auto">
                                     <Link 
-                                        href={route('receivable.customer.show', customer.id)} 
+                                        href={route('receivable.customer.show', customer.slug)} 
                                         className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase tracking-widest flex items-center gap-1"
                                     >
                                         Kelola Piutang

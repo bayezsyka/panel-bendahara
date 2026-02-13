@@ -68,7 +68,7 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
                     <Link 
-                        href={data.delivery_project_id ? route('delivery.projects.show', data.delivery_project_id) : route('delivery.projects.index')}
+                        href={data.delivery_project_id ? route('delivery.projects.show', projects.find(p => p.id == data.delivery_project_id)?.slug || '#') : route('delivery.shipments.index')}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -203,9 +203,9 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
                             </div>
                         </div>
 
-                        <div className="bg-indigo-50 p-4 rounded-lg flex justify-between items-center">
-                            <span className="text-sm font-bold text-indigo-700 uppercase">Total Harga Ritase Ini</span>
-                            <span className="text-xl font-black text-indigo-900">{formatCurrency(data.total_price)}</span>
+                        <div className="bg-indigo-50 dark:bg-indigo-500/10 p-4 rounded-lg flex justify-between items-center border border-transparent dark:border-indigo-500/20">
+                            <span className="text-sm font-bold text-indigo-700 dark:text-indigo-400 uppercase">Total Harga Ritase Ini</span>
+                            <span className="text-xl font-black text-indigo-900 dark:text-white">{formatCurrency(data.total_price)}</span>
                         </div>
                     </div>
 
@@ -253,7 +253,7 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
 
                     <div className="flex justify-end gap-3 pt-6">
                         <Link 
-                            href={data.delivery_project_id ? route('delivery.projects.show', data.delivery_project_id) : route('delivery.projects.index')}
+                            href={data.delivery_project_id ? route('delivery.projects.show', projects.find(p => p.id == data.delivery_project_id)?.slug || '#') : route('delivery.shipments.index')}
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
                             Batal

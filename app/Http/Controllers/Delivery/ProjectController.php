@@ -21,21 +21,7 @@ class ProjectController extends Controller
         $this->officeService = $officeService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $officeId = $this->officeService->getCurrentOfficeId();
-        $projects = DeliveryProject::where('office_id', $officeId)
-            ->with(['customer', 'defaultConcreteGrade'])
-            ->latest()
-            ->get();
 
-        return Inertia::render('Delivery/Project/Index', [
-            'projects' => $projects
-        ]);
-    }
 
     /**
      * Show the form for creating a new resource.
@@ -75,13 +61,14 @@ class ProjectController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'work_type' => 'nullable|string|max:255',
             'default_concrete_grade_id' => 'nullable|exists:concrete_grades,id',
+            'has_ppn' => 'boolean',
         ]);
 
         $validated['office_id'] = $officeId;
 
         $project = DeliveryProject::create($validated);
 
-        return redirect()->route('delivery.projects.show', $project->id)
+        return redirect()->route('delivery.projects.show', $project)
             ->with('message', 'Proyek Pengiriman Berhasil Dibuat');
     }
 
@@ -126,11 +113,20 @@ class ProjectController extends Controller
             'contact_person' => 'nullable|string|max:255',
             'work_type' => 'nullable|string|max:255',
             'default_concrete_grade_id' => 'nullable|exists:concrete_grades,id',
+            'has_ppn' => 'boolean',
         ]);
 
+        $oldHasPpn = $project->has_ppn;
         $project->update($validated);
 
-        return redirect()->route('delivery.projects.show', $project->id)
+        // Jika setting PPN berubah, update semua shipment agar total_price_with_tax ter-update
+        if ($oldHasPpn !== $project->has_ppn) {
+            foreach ($project->shipments as $shipment) {
+                $shipment->save();
+            }
+        }
+
+        return redirect()->route('delivery.projects.show', $project)
             ->with('message', 'Proyek Pengiriman Berhasil Diperbarui');
     }
 
@@ -139,8 +135,10 @@ class ProjectController extends Controller
      */
     public function destroy(DeliveryProject $project)
     {
+        $customer = $project->customer;
         $project->delete();
-        return redirect()->route('delivery.projects.index')
+
+        return redirect()->route('delivery.customers.show', $customer)
             ->with('message', 'Proyek Pengiriman Berhasil Dihapus');
     }
 

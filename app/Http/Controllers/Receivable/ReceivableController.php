@@ -28,6 +28,7 @@ class ReceivableController extends Controller
             ->map(function ($customer) {
                 return [
                     'id' => $customer->id,
+                    'slug' => $customer->slug,
                     'name' => $customer->name,
                     'projects_count' => $customer->projects_count,
                     'total_receivable' => (float) $customer->total_receivable,
@@ -53,6 +54,7 @@ class ReceivableController extends Controller
             ->map(function ($customer) {
                 return [
                     'id' => $customer->id,
+                    'slug' => $customer->slug,
                     'name' => $customer->name,
                     'address' => $customer->address,
                     'contact' => $customer->contact,
@@ -76,9 +78,12 @@ class ReceivableController extends Controller
 
                 return [
                     'id' => $project->id,
+                    'slug' => $project->slug,
                     'name' => $project->name,
                     'location' => $project->location,
                     'total_bill' => $totalBill,
+                    'total_bill_dpp' => $project->shipments->sum('total_price'),
+                    'has_ppn' => $project->has_ppn,
                     'total_paid' => $totalPaid,
                     'remaining' => $totalBill - $totalPaid,
                 ];
@@ -158,7 +163,8 @@ class ReceivableController extends Controller
         // 3. Kalkulasi
         $subtotal = $shipments->sum('total_price');
 
-        $ppn = $subtotal * 0.11; // PPN 11%
+        // Check project settings for PPN
+        $ppn = $project->has_ppn ? ($subtotal * 0.11) : 0; // PPN 11%
         $grandTotal = ($subtotal + $ppn) - $totalDP;
 
         // Helper Terbilang (ubah angka jadi teks)

@@ -71,9 +71,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
         Route::resource('sources', CashSourceController::class)->names('sources');
         Route::resource('expense-types', CashExpenseTypeController::class)->names('expense-types');
 
-        Route::get('/export-pdf', function () {
-            return redirect()->route('kas.dashboard');
-        })->name('export-pdf');
+        Route::get('/export-pdf', [PlantTransactionController::class, 'exportPdf'])->name('export-pdf');
 
         // Transaction CRUD placeholders
         // Transaction CRUD
@@ -133,8 +131,14 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
     ->group(function () {
         Route::resource('concrete-grades', ConcreteGradeController::class);
         Route::resource('customers', CustomerController::class);
+
+        // Explicitly define create route BEFORE resource to avoid any ambiguity, although resource should handle it.
+        // Also ensuring export-recap-pdf is handled.
+        Route::get('projects/create', [DeliveryProjectController::class, 'create'])->name('projects.create');
         Route::get('projects/{project}/export-recap-pdf', [DeliveryProjectController::class, 'exportRecapPdf'])->name('projects.export-recap-pdf');
-        Route::resource('projects', DeliveryProjectController::class);
+
+        Route::resource('projects', DeliveryProjectController::class)->except(['index', 'create']);
+
         Route::resource('shipments', ShipmentController::class);
     });
 

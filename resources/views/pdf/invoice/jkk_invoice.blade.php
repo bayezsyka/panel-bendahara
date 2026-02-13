@@ -285,11 +285,14 @@
                     <td class="text-right" style="border:1px solid #000;">{{ number_format($subtotal, 0, ',', '.') }}
                     </td>
                 </tr>
-                <tr class="total-row">
-                    <td colspan="4" style="border:none;"></td>
-                    <td class="text-right">VAT 11%</td>
-                    <td class="text-right" style="border:1px solid #000;">{{ number_format($ppn, 0, ',', '.') }}</td>
-                </tr>
+                @if ($project->has_ppn)
+                    <tr class="total-row">
+                        <td colspan="4" style="border:none;"></td>
+                        <td class="text-right">VAT 11%</td>
+                        <td class="text-right" style="border:1px solid #000;">{{ number_format($ppn, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                @endif
                 <tr class="total-row">
                     <td colspan="4" style="border:none;"></td>
                     <td class="text-right">D.P. / Pembayaran</td>

@@ -41,30 +41,30 @@ export default function DataTable({
     };
 
     return (
-        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${className}`}>
+        <div className={`bg-white dark:bg-[#222238] rounded-xl border border-gray-200 dark:border-gray-700/40 shadow-sm overflow-hidden ${className}`}>
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700/40">
+                    <thead className="bg-gray-50 dark:bg-[#1a1a2e]">
                         <tr>
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
                                     scope="col"
-                                    className={`${headerPadding} ${alignClass(col.align)} text-xs font-semibold text-gray-500 uppercase tracking-wider`}
+                                    className={`${headerPadding} ${alignClass(col.align)} text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider`}
                                 >
                                     {col.label}
                                 </th>
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-100">
+                    <tbody className="bg-white dark:bg-[#222238] divide-y divide-gray-100 dark:divide-gray-700/30">
                         {data.length > 0 ? (
                             data.map((row, rowIndex) => (
                                 <tr
                                     key={row[keyField] ?? rowIndex}
                                     className={`
                                         transition-colors duration-150
-                                        ${onRowClick ? 'cursor-pointer hover:bg-indigo-50/40' : 'hover:bg-gray-50/50'}
+                                        ${onRowClick ? 'cursor-pointer hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5' : 'hover:bg-gray-50/50 dark:hover:bg-gray-700/20'}
                                     `}
                                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                                 >
@@ -75,7 +75,7 @@ export default function DataTable({
                                         >
                                             {col.render
                                                 ? col.render(row, rowIndex)
-                                                : <span className="text-gray-700">{row[col.key] ?? '-'}</span>
+                                                : <span className="text-gray-700 dark:text-gray-300">{row[col.key] ?? '-'}</span>
                                             }
                                         </td>
                                     ))}
@@ -89,11 +89,11 @@ export default function DataTable({
                                 >
                                     <div className="flex flex-col items-center">
                                         {emptyIcon || (
-                                            <svg className="w-10 h-10 text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="w-10 h-10 text-gray-200 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                                             </svg>
                                         )}
-                                        <p className="text-gray-400 font-medium text-sm">{emptyMessage}</p>
+                                        <p className="text-gray-400 dark:text-gray-500 font-medium text-sm">{emptyMessage}</p>
                                     </div>
                                 </td>
                             </tr>
@@ -104,7 +104,7 @@ export default function DataTable({
 
             {/* Pagination */}
             {pagination && pagination.length > 0 && (
-                <div className="px-6 py-3 border-t border-gray-100 flex justify-end gap-1">
+                <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-700/40 flex justify-end gap-1">
                     {pagination.map((link, index) => (
                         <div key={index}>
                             {link.url ? (
@@ -113,13 +113,13 @@ export default function DataTable({
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                         link.active
                                             ? 'bg-indigo-600 text-white shadow-sm'
-                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                            : 'bg-white dark:bg-[#2a2a3d] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/30'
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             ) : (
                                 <span
-                                    className="px-3 py-1.5 rounded-lg text-sm text-gray-300 bg-gray-50 border border-gray-100 cursor-not-allowed"
+                                    className="px-3 py-1.5 rounded-lg text-sm text-gray-300 dark:text-gray-600 bg-gray-50 dark:bg-[#1a1a2e] border border-gray-100 dark:border-gray-700/40 cursor-not-allowed"
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
                             )}

@@ -57,8 +57,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const submitPayment = (e) => {
         e.preventDefault();
-        if (!project?.id) return;
-        paymentForm.post(route('receivable.project.payment.store', project.id), {
+        if (!project?.slug) return;
+        paymentForm.post(route('receivable.project.payment.store', project.slug), {
             onSuccess: () => {
                 setIsPaymentModalOpen(false);
                 paymentForm.reset();
@@ -68,9 +68,9 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const handleExportInvoice = (e) => {
         e.preventDefault();
-        if (!project?.id) return;
+        if (!project?.slug) return;
         const url = route('receivable.project.export-invoice', {
-            project: project.id,
+            project: project.slug,
             ...invoiceForm.data
         });
         window.open(url, '_blank');
@@ -89,7 +89,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
             <div className="space-y-6">
                 <Link 
-                    href={project.customer_id ? route('receivable.customer.show', project.customer_id) : '#'}
+                    href={project.customer_id ? route('receivable.customer.show', project.customer.slug) : '#'}
                     className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
                 >
                     <ArrowLeft className="mr-1 w-4 h-4" />
@@ -127,7 +127,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${
-                                activeTab === tab.id ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'
+                                activeTab === tab.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                         >
                             <tab.icon className="w-4 h-4" />
@@ -151,7 +151,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <th className="px-6 py-4">Mutu</th>
                                         <th className="px-6 py-4 text-center">Volume</th>
                                         <th className="px-6 py-4 text-right">Harga Satuan</th>
-                                        <th className="px-6 py-4 text-right">Total</th>
+                                        {project.has_ppn && <th className="px-6 py-4 text-right">Total (DPP)</th>}
+                                        <th className="px-6 py-4 text-right">Total {project.has_ppn ? '(+PPN)' : ''}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
@@ -159,13 +160,18 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-500 italic">Semua pengiriman sudah ditagih.</td></tr>
                                     ) : (
                                         unbilled_shipments.map(item => (
-                                            <tr key={item.id} className="text-sm">
+                                            <tr key={item.id} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('id-ID')}</td>
-                                                <td className="px-6 py-4 font-mono font-bold text-indigo-600">{item.docket_number}</td>
+                                                <td className="px-6 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">{item.docket_number}</td>
                                                 <td className="px-6 py-4">{item.concrete_grade?.code || '-'}</td>
                                                 <td className="px-6 py-4 text-center">{item.volume} M3</td>
                                                 <td className="px-6 py-4 text-right">{formatCurrency(item.price_per_m3)}</td>
-                                                <td className="px-6 py-4 text-right font-bold">{formatCurrency(item.total_price)}</td>
+                                                {project.has_ppn && (
+                                                    <td className="px-6 py-4 text-right text-slate-500">
+                                                        {formatCurrency(item.total_price)}
+                                                    </td>
+                                                )}
+                                                <td className="px-6 py-4 text-right font-bold">{formatCurrency(item.total_price_with_tax)}</td>
                                             </tr>
                                         ))
                                     )}
@@ -183,7 +189,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <th className="px-6 py-4">No. Docket (DN)</th>
                                         <th className="px-6 py-4">Mutu</th>
                                         <th className="px-6 py-4 text-center">Volume</th>
-                                        <th className="px-6 py-4 text-right">Total</th>
+                                        {project.has_ppn && <th className="px-6 py-4 text-right">Total (DPP)</th>}
+                                        <th className="px-6 py-4 text-right">Total {project.has_ppn ? '(+PPN)' : ''}</th>
                                         <th className="px-6 py-4 text-center">Status</th>
                                     </tr>
                                 </thead>
@@ -192,12 +199,17 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <tr><td colSpan="6" className="px-6 py-12 text-center text-slate-500 italic">Belum ada riwayat tagihan.</td></tr>
                                     ) : (
                                         billed_shipments.map(item => (
-                                            <tr key={item.id} className="text-sm">
+                                            <tr key={item.id} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('id-ID')}</td>
-                                                <td className="px-6 py-4 font-mono font-bold text-slate-600">{item.docket_number}</td>
+                                                <td className="px-6 py-4 font-mono font-bold text-slate-600 dark:text-slate-400">{item.docket_number}</td>
                                                 <td className="px-6 py-4">{item.concrete_grade?.code || '-'}</td>
                                                 <td className="px-6 py-4 text-center">{item.volume} M3</td>
-                                                <td className="px-6 py-4 text-right">{formatCurrency(item.total_price)}</td>
+                                                {project.has_ppn && (
+                                                    <td className="px-6 py-4 text-right text-slate-500">
+                                                        {formatCurrency(item.total_price)}
+                                                    </td>
+                                                )}
+                                                <td className="px-6 py-4 text-right">{formatCurrency(item.total_price_with_tax)}</td>
                                                 <td className="px-6 py-4 text-center text-emerald-600 font-bold">
                                                     <span className="inline-flex items-center"><CheckCircle2 className="w-4 h-4 mr-1" /> Billed</span>
                                                 </td>
@@ -225,7 +237,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi pembayaran.</td></tr>
                                     ) : (
                                         payments.map(item => (
-                                            <tr key={item.id} className="text-sm">
+                                            <tr key={item.id} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('id-ID')}</td>
                                                 <td className="px-6 py-4 font-bold">{item.description}</td>
                                                 <td className="px-6 py-4 text-right text-emerald-600 font-bold">{formatCurrency(item.amount)}</td>
@@ -241,7 +253,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
             </div>
 
             {/* Payment Modal */}
-            <Modal show={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} maxWidth="md">
+            <Modal show={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} maxWidth="lg">
                 <form onSubmit={submitPayment} className="p-6">
                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                         <CreditCard className="w-6 h-6 mr-2 text-emerald-600" />
@@ -306,15 +318,16 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
             </Modal>
 
             {/* Invoice Export Modal */}
-            <Modal show={isInvoiceModalOpen} onClose={() => setIsInvoiceModalOpen(false)} maxWidth="md">
+            <Modal show={isInvoiceModalOpen} onClose={() => setIsInvoiceModalOpen(false)} maxWidth="4xl">
                 <form onSubmit={handleExportInvoice} className="p-6">
                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                         <FileDown className="w-6 h-6 mr-2 text-indigo-600" />
                         Generate Invoice PDF
                     </h2>
 
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {/* Row 1: Dates */}
                             <div>
                                 <InputLabel htmlFor="start_date" value="Dari Tanggal (DN)" />
                                 <TextInput
@@ -336,21 +349,19 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                     onChange={(e) => invoiceForm.setData('end_date', e.target.value)}
                                 />
                             </div>
-                        </div>
+                            <div>
+                                <InputLabel htmlFor="invoice_date" value="Tanggal Invoice" />
+                                <TextInput
+                                    id="invoice_date"
+                                    type="date"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.invoice_date}
+                                    onChange={(e) => invoiceForm.setData('invoice_date', e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                        <div>
-                            <InputLabel htmlFor="invoice_date" value="Tanggal Invoice (Di Cetakan)" />
-                            <TextInput
-                                id="invoice_date"
-                                type="date"
-                                className="mt-1 block w-full"
-                                value={invoiceForm.data.invoice_date}
-                                onChange={(e) => invoiceForm.setData('invoice_date', e.target.value)}
-                                required
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
+                            {/* Row 2: Document Details */}
                             <div>
                                 <InputLabel htmlFor="doc_no" value="Doc. No." />
                                 <TextInput
@@ -370,9 +381,6 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                     onChange={(e) => invoiceForm.setData('delivery_note', e.target.value)}
                                 />
                             </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <InputLabel htmlFor="po_so_no" value="PO atau SO No./Date" />
                                 <TextInput
@@ -382,6 +390,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                     onChange={(e) => invoiceForm.setData('po_so_no', e.target.value)}
                                 />
                             </div>
+
+                            {/* Row 3: Payment Terms */}
                             <div>
                                 <InputLabel htmlFor="terms_of_payment" value="Terms of Payment" />
                                 <TextInput
@@ -391,29 +401,31 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                     onChange={(e) => invoiceForm.setData('terms_of_payment', e.target.value)}
                                 />
                             </div>
-                        </div>
-
-                        <div>
-                            <InputLabel htmlFor="due_date_jt" value="Due Date / JT" />
-                            <TextInput
-                                id="due_date_jt"
-                                className="mt-1 block w-full"
-                                value={invoiceForm.data.due_date_jt}
-                                onChange={(e) => invoiceForm.setData('due_date_jt', e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex items-center mt-4">
-                            <input 
-                                type="checkbox" 
-                                id="mark_as_billed" 
-                                className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                checked={invoiceForm.data.mark_as_billed}
-                                onChange={(e) => invoiceForm.setData('mark_as_billed', e.target.checked)}
-                            />
-                            <label htmlFor="mark_as_billed" className="ml-2 text-sm text-slate-700 font-medium">
-                                Tandai pengiriman sebagai "Sudah Ditagih"
-                            </label>
+                            <div>
+                                <InputLabel htmlFor="due_date_jt" value="Due Date / JT" />
+                                <TextInput
+                                    id="due_date_jt"
+                                    className="mt-1 block w-full"
+                                    value={invoiceForm.data.due_date_jt}
+                                    onChange={(e) => invoiceForm.setData('due_date_jt', e.target.value)}
+                                />
+                            </div>
+                            
+                            {/* Checkbox aligns with the grid */}
+                            <div className="flex items-end pb-2">
+                                <div className="flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        id="mark_as_billed" 
+                                        className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                        checked={invoiceForm.data.mark_as_billed}
+                                        onChange={(e) => invoiceForm.setData('mark_as_billed', e.target.checked)}
+                                    />
+                                    <label htmlFor="mark_as_billed" className="ml-2 text-sm text-slate-700 font-medium select-none cursor-pointer">
+                                        Tandai "Sudah Ditagih"
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -24,6 +24,12 @@ export default function Modal({
         lg: 'sm:max-w-lg',
         xl: 'sm:max-w-xl',
         '2xl': 'sm:max-w-2xl',
+        '3xl': 'sm:max-w-3xl',
+        '4xl': 'sm:max-w-4xl',
+        '5xl': 'sm:max-w-5xl',
+        '6xl': 'sm:max-w-6xl',
+        '7xl': 'sm:max-w-7xl',
+        'full': 'sm:max-w-full',
     }[maxWidth];
 
     return (
@@ -42,7 +48,7 @@ export default function Modal({
                     leaveFrom="opacity-100"
                     leaveTo="opacity-0"
                 >
-                    <div className="absolute inset-0 bg-gray-500/75" />
+                    <div className="fixed inset-0 bg-gray-500/75" />
                 </TransitionChild>
 
                 <TransitionChild
@@ -54,7 +60,7 @@ export default function Modal({
                     leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
                     <DialogPanel
-                        className={`my-8 transform overflow-y-auto rounded-lg bg-white shadow-xl transition-all sm:mx-auto sm:w-full max-h-[90vh] ${maxWidthClass}`}
+                        className={`my-8 transform overflow-y-auto rounded-lg bg-white dark:bg-[#222238] shadow-xl transition-all sm:mx-auto sm:w-full max-h-[90vh] ${maxWidthClass}`}
                     >
                         {children}
                     </DialogPanel>

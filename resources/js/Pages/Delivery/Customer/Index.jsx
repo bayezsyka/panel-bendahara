@@ -47,7 +47,7 @@ export default function Index({ customers }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (editingCustomer) {
-            put(route('delivery.customers.update', editingCustomer.id), {
+            put(route('delivery.customers.update', editingCustomer.slug), {
                 onSuccess: () => closeModal(),
             });
         } else {
@@ -64,7 +64,7 @@ export default function Index({ customers }) {
 
     const handleDelete = () => {
         if (customerToDelete) {
-            destroy(route('delivery.customers.destroy', customerToDelete.id), {
+            destroy(route('delivery.customers.destroy', customerToDelete.slug), {
                 onSuccess: () => {
                     setIsDeleteModalOpen(false);
                     setCustomerToDelete(null);
@@ -96,7 +96,7 @@ export default function Index({ customers }) {
                         {customers.map((customer) => (
                             <div key={customer.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 overflow-hidden flex flex-col">
                                 <Link 
-                                    href={route('delivery.customers.show', customer.id)}
+                                    href={route('delivery.customers.show', customer.slug)}
                                     className="p-6 flex-1"
                                 >
                                     <div className="flex justify-between items-start mb-4">

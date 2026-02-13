@@ -835,157 +835,160 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
             </div>
 
             {/* Modal Edit Proyek */}
-            <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
+            <Modal show={showEditModal} onClose={() => setShowEditModal(false)} maxWidth="3xl">
                 <form onSubmit={submitEditProject} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">
+                    <h2 className="text-lg font-medium text-gray-900 mb-6">
                         Edit Data Proyek
                     </h2>
 
-                    <div className="mb-4">
-                        <InputLabel value="Nama Proyek" />
-                        <TextInput
-                            value={editForm.data.name}
-                            onChange={(e) =>
-                                editForm.setData("name", e.target.value)
-                            }
-                            className="mt-1 block w-full"
-                            required
-                        />
-                        <InputError
-                            message={editForm.errors.name}
-                            className="mt-2"
-                        />
-                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Column */}
+                        <div className="space-y-4">
+                            <div>
+                                <InputLabel value="Nama Proyek" />
+                                <TextInput
+                                    value={editForm.data.name}
+                                    onChange={(e) =>
+                                        editForm.setData("name", e.target.value)
+                                    }
+                                    className="mt-1 block w-full"
+                                    required
+                                />
+                                <InputError
+                                    message={editForm.errors.name}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <InputLabel value="Bendera (PT/CV)" />
-                            <select
-                                value={editForm.data.bendera_id}
-                                onChange={(e) =>
-                                    editForm.setData(
-                                        "bendera_id",
-                                        e.target.value,
-                                    )
-                                }
-                                className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                            >
-                                <option value="">-- Pilih Bendera --</option>
-                                {benderas.map((bendera) => (
-                                    <option key={bendera.id} value={bendera.id}>
-                                        {bendera.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError
-                                message={editForm.errors.bendera_id}
-                                className="mt-2"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-4">
-                        <InputLabel value="Pelaksana (Bisa Pilih Lebih dari 1)" />
-                        <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-32 overflow-y-auto bg-gray-50">
-                            {mandors.map((mandor) => (
-                                <label
-                                    key={mandor.id}
-                                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
+                            <div>
+                                <InputLabel value="Bendera (PT/CV)" />
+                                <select
+                                    value={editForm.data.bendera_id}
+                                    onChange={(e) =>
+                                        editForm.setData(
+                                            "bendera_id",
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 >
-                                    <input
-                                        type="checkbox"
-                                        checked={editForm.data.mandor_ids.includes(
-                                            mandor.id,
-                                        )}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                editForm.setData("mandor_ids", [
-                                                    ...editForm.data.mandor_ids,
-                                                    mandor.id,
-                                                ]);
-                                            } else {
-                                                editForm.setData(
-                                                    "mandor_ids",
-                                                    editForm.data.mandor_ids.filter(
-                                                        (id) =>
-                                                            id !== mandor.id,
-                                                    ),
-                                                );
-                                            }
-                                        }}
-                                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span className="text-sm text-gray-700">
-                                        {mandor.name}
-                                    </span>
-                                </label>
-                            ))}
+                                    <option value="">-- Pilih Bendera --</option>
+                                    {benderas.map((bendera) => (
+                                        <option key={bendera.id} value={bendera.id}>
+                                            {bendera.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError
+                                    message={editForm.errors.bendera_id}
+                                    className="mt-2"
+                                />
+                            </div>
+
+                             <div>
+                                <InputLabel value="Status" />
+                                <select
+                                    value={editForm.data.status}
+                                    onChange={(e) =>
+                                        editForm.setData("status", e.target.value)
+                                    }
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                >
+                                    <option value="ongoing">Sedang Berjalan</option>
+                                    <option value="completed">Selesai</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <InputLabel value="Lokasi Proyek" />
+                                <TextInput
+                                    value={editForm.data.location}
+                                    onChange={(e) =>
+                                        editForm.setData("location", e.target.value)
+                                    }
+                                    className="mt-1 block w-full"
+                                    placeholder="Jl. Sudirman No. 45"
+                                />
+                                <InputError
+                                    message={editForm.errors.location}
+                                    className="mt-2"
+                                />
+                            </div>
                         </div>
-                        <p className="mt-1 text-xs text-gray-500">
-                            Pilih satu atau lebih pelaksana untuk proyek ini
-                        </p>
-                        <InputError
-                            message={editForm.errors.mandor_ids}
-                            className="mt-2"
-                        />
-                    </div>
 
-                    <div className="mb-4">
-                        <InputLabel value="Lokasi Proyek (Teks)" />
-                        <TextInput
-                            value={editForm.data.location}
-                            onChange={(e) =>
-                                editForm.setData("location", e.target.value)
-                            }
-                            className="mt-1 block w-full"
-                            placeholder="Contoh: Jl. Sudirman No. 45, Jakarta"
-                        />
-                        <InputError
-                            message={editForm.errors.location}
-                            className="mt-2"
-                        />
-                    </div>
+                        {/* Right Column */}
+                        <div className="space-y-4">
+                            <div>
+                                <InputLabel value="Pelaksana (Multi-select)" />
+                                <div className="mt-1 border border-gray-300 rounded-md p-2 max-h-40 overflow-y-auto bg-gray-50">
+                                    {mandors.map((mandor) => (
+                                        <label
+                                            key={mandor.id}
+                                            className="flex items-center gap-2 p-1.5 hover:bg-gray-100 rounded cursor-pointer"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={editForm.data.mandor_ids.includes(
+                                                    mandor.id,
+                                                )}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        editForm.setData("mandor_ids", [
+                                                            ...editForm.data.mandor_ids,
+                                                            mandor.id,
+                                                        ]);
+                                                    } else {
+                                                        editForm.setData(
+                                                            "mandor_ids",
+                                                            editForm.data.mandor_ids.filter(
+                                                                (id) =>
+                                                                    id !== mandor.id,
+                                                            ),
+                                                        );
+                                                    }
+                                                }}
+                                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-sm text-gray-700">
+                                                {mandor.name}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <InputError
+                                    message={editForm.errors.mandor_ids}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                    <div className="mb-4">
-                        <InputLabel value="Deskripsi" />
-                        <textarea
-                            value={editForm.data.description}
-                            onChange={(e) =>
-                                editForm.setData("description", e.target.value)
-                            }
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                            rows="3"
-                        />
-                    </div>
+                            <div>
+                                <InputLabel value="Koordinat Maps" />
+                                <TextInput
+                                    value={editForm.data.coordinates}
+                                    onChange={(e) =>
+                                        editForm.setData("coordinates", e.target.value)
+                                    }
+                                    className="mt-1 block w-full"
+                                    placeholder={"6°52'09.6\"S 109°02'34.5\"E"}
+                                />
+                                <InputError
+                                    message={editForm.errors.coordinates}
+                                    className="mt-2"
+                                />
+                            </div>
 
-                    <div className="mb-4">
-                        <InputLabel value="Koordinat Lokasi (Maps)" />
-                        <TextInput
-                            value={editForm.data.coordinates}
-                            onChange={(e) =>
-                                editForm.setData("coordinates", e.target.value)
-                            }
-                            className="mt-1 block w-full"
-                            placeholder={"6°52'09.6\"S 109°02'34.5\"E"}
-                        />
-                        <InputError
-                            message={editForm.errors.coordinates}
-                            className="mt-2"
-                        />
-                    </div>
-
-                    <div className="mb-6">
-                        <InputLabel value="Status" />
-                        <select
-                            value={editForm.data.status}
-                            onChange={(e) =>
-                                editForm.setData("status", e.target.value)
-                            }
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                        >
-                            <option value="ongoing">Sedang Berjalan</option>
-                            <option value="completed">Selesai</option>
-                        </select>
+                            <div>
+                                <InputLabel value="Deskripsi" />
+                                <textarea
+                                    value={editForm.data.description}
+                                    onChange={(e) =>
+                                        editForm.setData("description", e.target.value)
+                                    }
+                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    rows="3"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3">
@@ -1007,18 +1010,19 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
             <Modal
                 show={showExpenseModal}
                 onClose={() => setShowExpenseModal(false)}
+                maxWidth="4xl"
             >
                 <form
                     onSubmit={submitExpense}
                     className="p-6 max-h-[90vh] overflow-y-auto"
                 >
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">
+                    <h2 className="text-lg font-medium text-gray-900 mb-6">
                         {editingExpenseId
                             ? "Edit Pengeluaran"
                             : "Catat Pengeluaran Baru"}
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                         <div>
                             <InputLabel value="Judul Nota / Toko" />
                             <TextInput
@@ -1060,7 +1064,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                             />
                         </div>
 
-                        <div className="md:col-span-2">
+                        <div>
                             <InputLabel value="Tanggal Transaksi" />
                             <TextInput
                                 type="date"

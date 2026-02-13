@@ -12,6 +12,24 @@
     <!-- <link rel="preconnect" href="https://fonts.bunny.net"> -->
     <!-- <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" /> -->
 
+    <!-- Dark Mode Flash Prevention -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme');
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark', 'no-transition');
+            } else {
+                document.documentElement.classList.add('no-transition');
+            }
+            // Remove no-transition after first paint
+            window.addEventListener('DOMContentLoaded', function() {
+                requestAnimationFrame(function() {
+                    document.documentElement.classList.remove('no-transition');
+                });
+            });
+        })();
+    </script>
+
     <!-- Scripts -->
     @routes
     @viteReactRefresh

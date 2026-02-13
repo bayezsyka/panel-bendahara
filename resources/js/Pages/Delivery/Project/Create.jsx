@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Switch } from '@headlessui/react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import InputLabel from '@/Components/InputLabel';
@@ -17,6 +18,7 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
         contact_person: '',
         work_type: 'Cor',
         default_concrete_grade_id: '',
+        has_ppn: false,
     });
 
     const [useCustomerName, setUseCustomerName] = useState(false);
@@ -42,7 +44,7 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
                     <Link 
-                        href={data.customer_id ? route('delivery.customers.show', data.customer_id) : route('delivery.projects.index')}
+                        href={data.customer_id ? route('delivery.customers.show', customers.find(c => c.id == data.customer_id)?.slug || '#') : route('delivery.customers.index')}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -88,6 +90,28 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
                                 required
                             />
                             <InputError message={errors.name} className="mt-1" />
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <InputLabel value="Opsi Pajak (PPN)" className="mb-0 font-medium text-gray-900" />
+                                <p className="text-xs text-gray-500 mt-1">Aktifkan jika proyek ini dikenakan PPN.</p>
+                            </div>
+                            <Switch
+                                checked={data.has_ppn}
+                                onChange={(checked) => setData('has_ppn', checked)}
+                                className={`${
+                                    data.has_ppn ? 'bg-indigo-600' : 'bg-gray-200'
+                                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2`}
+                            >
+                                <span
+                                    className={`${
+                                        data.has_ppn ? 'translate-x-6' : 'translate-x-1'
+                                    } inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out`}
+                                />
+                            </Switch>
                         </div>
                     </div>
 
@@ -184,7 +208,7 @@ export default function Create({ customers, concreteGrades, selectedCustomerId }
 
                     <div className="flex justify-end gap-3 pt-6">
                         <Link 
-                            href={route('delivery.projects.index')}
+                            href={route('delivery.customers.index')}
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
                             Batal

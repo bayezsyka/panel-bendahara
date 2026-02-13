@@ -9,6 +9,30 @@ class Customer extends Model
 {
     protected $guarded = ['id'];
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($customer) {
+            if ($customer->isDirty('name') || empty($customer->slug)) {
+                $slug = \Illuminate\Support\Str::slug($customer->name);
+                $originalSlug = $slug;
+                $count = 1;
+
+                while (static::where('slug', $slug)->where('id', '!=', $customer->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count++;
+                }
+
+                $customer->slug = $slug;
+            }
+        });
+    }
+
     /**
      * Get the delivery projects for the customer.
      */
