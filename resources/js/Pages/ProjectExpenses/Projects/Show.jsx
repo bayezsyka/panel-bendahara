@@ -916,7 +916,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                     />
                                     <span className="text-sm text-gray-700">
-                                        {mandor.name} ({mandor.whatsapp_number})
+                                        {mandor.name}
                                     </span>
                                 </label>
                             ))}

@@ -40,13 +40,7 @@ class HandleInertiaRequests extends Middleware
                 'can_switch_office' => $request->user() ? $request->user()->isSuperAdmin() : false,
                 'can_manage_projects' => $request->user() ? !($request->user()->isSuperAdmin() && $request->user()->office_id === 2) : false,
             ],
-            'pending_expense_requests_count' => function () {
-                // Hanya hitung jika user sudah login (opsional: cek role)
-                if (\Illuminate\Support\Facades\Auth::check()) {
-                    return \App\Models\ExpenseRequest::where('status', 'pending')->count();
-                }
-                return 0;
-            },
+
             'flash' => [
                 'success' => fn() => session('success'),
                 'error' => fn() => session('error'),

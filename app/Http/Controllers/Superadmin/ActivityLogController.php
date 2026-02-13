@@ -165,8 +165,6 @@ class ActivityLogController extends Controller
                     ? route('projectexpense.projects.show', $log->subject->project_id)
                     : null;
 
-            case 'App\Models\ExpenseRequest':
-                return route('projectexpense.expense-requests.index');
 
             default:
                 return null;

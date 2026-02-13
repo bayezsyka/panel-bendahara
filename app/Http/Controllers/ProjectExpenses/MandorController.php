@@ -59,16 +59,8 @@ class MandorController extends Controller
 
     public function store(Request $request)
     {
-        // Format nomor HP sebelum validasi agar pengecekan unique akurat
-        $request->merge([
-            'whatsapp_number' => $this->formatPhoneNumber($request->whatsapp_number)
-        ]);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'whatsapp_number' => 'required|string|unique:mandors,whatsapp_number|min:10|max:15',
-        ], [
-            'whatsapp_number.unique' => 'Nomor WhatsApp sudah terdaftar.',
         ]);
 
         Mandor::create($validated);
@@ -78,14 +70,8 @@ class MandorController extends Controller
 
     public function update(Request $request, Mandor $mandor)
     {
-        // Format nomor HP sebelum validasi agar pengecekan unique akurat
-        $request->merge([
-            'whatsapp_number' => $this->formatPhoneNumber($request->whatsapp_number)
-        ]);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'whatsapp_number' => 'required|string|min:10|max:15|unique:mandors,whatsapp_number,' . $mandor->id,
         ]);
 
         $mandor->update($validated);
@@ -99,15 +85,6 @@ class MandorController extends Controller
         return redirect()->back()->with('message', 'Data Mandor Berhasil Dihapus');
     }
 
-    // Helper format nomor
-    private function formatPhoneNumber($number)
-    {
-        $number = preg_replace('/[^0-9]/', '', $number);
-        if (substr($number, 0, 2) === '08') {
-            return '62' . substr($number, 1);
-        }
-        return $number;
-    }
 
     public function exportDailyExpenses(Request $request, Mandor $mandor)
     {

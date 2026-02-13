@@ -8,6 +8,7 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { DataTable } from '@/Components/ui';
 import Swal from 'sweetalert2';
 
 export default function Index({ benderas }) {
@@ -54,7 +55,7 @@ export default function Index({ benderas }) {
     const handleDelete = (id) => {
         Swal.fire({
             title: 'Hapus Bendera?',
-            text: 'Data bendera ini akan dihapus permanen. Pastikan tidak ada proyek yang menggunakan bendera ini (validasi sistem mungkin akan menolak jika ada).',
+            text: 'Data bendera ini akan dihapus permanen.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc2626',
@@ -68,85 +69,88 @@ export default function Index({ benderas }) {
         });
     };
 
+    const columns = [
+        {
+            key: 'name',
+            label: 'Nama Bendera (PT/CV)',
+            render: (row) => (
+                <span className="font-medium text-gray-900">{row.name}</span>
+            ),
+        },
+        {
+            key: 'actions',
+            label: 'Aksi',
+            align: 'right',
+            render: (row) => (
+                <div className="flex justify-end gap-1">
+                    <button 
+                        onClick={() => openEditModal(row)}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Edit"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </button>
+                    <button 
+                        onClick={() => handleDelete(row.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Hapus"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            ),
+        },
+    ];
+
     return (
         <BendaharaLayout>
             <Head title="Kelola Bendera" />
 
-            <PageHeader
-                title="Data Bendera"
-                backLink={route('projectexpense.overview')}
-                backLabel="Dashboard"
-                actions={
-                    <PrimaryButton onClick={openAddModal}>
-                        + Tambah Bendera
-                    </PrimaryButton>
-                }
-            />
+            <div className="space-y-6">
+                <PageHeader
+                    title="Data Bendera"
+                    backLink={route('projectexpense.overview')}
+                    backLabel="Dashboard"
+                    actions={
+                        <PrimaryButton onClick={openAddModal}>
+                            + Tambah Bendera
+                        </PrimaryButton>
+                    }
+                />
 
-            <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-200">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Bendera (PT/CV)</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {benderas.length > 0 ? (
-                                benderas.map((bendera) => (
-                                    <tr key={bendera.id} className="hover:bg-gray-50">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {bendera.name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button 
-                                                onClick={() => openEditModal(bendera)}
-                                                className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDelete(bendera.id)}
-                                                className="text-red-600 hover:text-red-900"
-                                            >
-                                                Hapus
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="2" className="px-6 py-12 text-center text-gray-500">
-                                        Belum ada data bendera.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable
+                    columns={columns}
+                    data={benderas}
+                    emptyMessage="Belum ada data bendera."
+                />
             </div>
 
             {/* Modal Create/Edit */}
             <Modal show={showModal} onClose={() => setShowModal(false)}>
                 <form onSubmit={handleSubmit} className="p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">
                         {isEditing ? 'Edit Data Bendera' : 'Tambah Bendera Baru'}
                     </h2>
 
-                    <div className="mb-6">
-                        <InputLabel value="Nama Bendera / Perusahaan" />
-                        <TextInput
-                            value={data.name}
-                            onChange={e => setData('name', e.target.value)}
-                            className="mt-1 block w-full"
-                            placeholder="Contoh: PT. Jasa Konstruksi Karya atau JKK Langsung"
-                            required
-                        />
-                        <InputError message={errors.name} className="mt-2" />
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel value="Nama Bendera / Perusahaan" />
+                            <TextInput
+                                value={data.name}
+                                onChange={e => setData('name', e.target.value)}
+                                className="mt-1 block w-full"
+                                placeholder="Contoh: PT. Jasa Konstruksi Karya"
+                                required
+                            />
+                            <InputError message={errors.name} className="mt-2" />
+                        </div>
                     </div>
 
-                    <div className="flex justify-end gap-3">
+                    <div className="flex justify-end gap-3 mt-6">
                         <SecondaryButton onClick={() => setShowModal(false)}>Batal</SecondaryButton>
                         <PrimaryButton disabled={processing}>
                             {processing ? 'Menyimpan...' : (isEditing ? 'Simpan Perubahan' : 'Simpan')}

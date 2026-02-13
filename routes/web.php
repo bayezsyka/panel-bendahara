@@ -8,7 +8,6 @@ use Inertia\Inertia;
 use App\Http\Controllers\ProjectExpenses\OverviewController;
 use App\Http\Controllers\ProjectExpenses\ProjectController;
 use App\Http\Controllers\ProjectExpenses\ExpenseController;
-use App\Http\Controllers\ProjectExpenses\ExpenseRequestController;
 use App\Http\Controllers\ProjectExpenses\MandorController;
 use App\Http\Controllers\ProjectExpenses\BenderaController;
 use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
@@ -47,9 +46,6 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'check.plant
         Route::get('/expenses/{expense}/print', [ExpenseController::class, 'print'])->name('expenses.print');
         Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy', 'update']);
 
-        Route::get('/expense-requests', [ExpenseRequestController::class, 'index'])->name('expense-requests.index');
-        Route::put('/expense-requests/{expenseRequest}/approve', [ExpenseRequestController::class, 'approve'])->name('expense-requests.approve');
-        Route::put('/expense-requests/{expenseRequest}/reject', [ExpenseRequestController::class, 'reject'])->name('expense-requests.reject');
 
         Route::get('mandors/{mandor}/export-daily', [MandorController::class, 'exportDailyExpenses'])->name('mandors.export-daily');
         Route::resource('mandors', MandorController::class)->except(['create', 'edit']);
@@ -141,5 +137,12 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
         Route::resource('projects', DeliveryProjectController::class);
         Route::resource('shipments', ShipmentController::class);
     });
+
+// DESIGN SYSTEM PLAYGROUND (Dev only)
+Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
+    Route::get('/playground', function () {
+        return Inertia::render('Playground');
+    })->name('playground');
+});
 
 require __DIR__ . '/auth.php';

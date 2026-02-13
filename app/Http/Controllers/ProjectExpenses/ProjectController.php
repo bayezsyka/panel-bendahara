@@ -126,7 +126,7 @@ class ProjectController extends Controller
         ]);
 
         activity()
-            ->causedBy(auth()->user())
+            ->causedBy($request->user())
             ->performedOn($project)
             ->withProperties(['expense_type' => $expenseType ? $expenseType->name : 'Semua'])
             ->log('Melakukan export PDF laporan proyek: ' . $project->name);
@@ -192,7 +192,7 @@ class ProjectController extends Controller
             sort($newMandors);
             if ($oldMandors !== $newMandors) {
                 activity()
-                    ->causedBy(auth()->user())
+                    ->causedBy($request->user())
                     ->performedOn($project)
                     ->withProperties([
                         'old' => ['pelaksana' => implode(', ', $oldMandors)],

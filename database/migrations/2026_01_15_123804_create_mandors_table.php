@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('mandors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('whatsapp_number')->unique(); // Format: 628xxxx
+
             $table->timestamps();
         });
 

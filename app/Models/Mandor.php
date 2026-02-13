@@ -13,7 +13,6 @@ class Mandor extends Model
 
     protected $fillable = [
         'name',
-        'whatsapp_number',
         'office_id',
     ];
 

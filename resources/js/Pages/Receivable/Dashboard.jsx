@@ -25,12 +25,14 @@ import {
 
 export default function Dashboard({ stats, top_customers }) {
     const formatCurrency = (value) => {
+        const number = Number(value);
+        if (isNaN(number)) return 'Rp0';
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
-        }).format(value);
+        }).format(number);
     };
 
     const chartData = top_customers.map(c => ({

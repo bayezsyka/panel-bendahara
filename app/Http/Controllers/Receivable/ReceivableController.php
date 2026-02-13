@@ -25,6 +25,14 @@ class ReceivableController extends Controller
             ->get()
             ->sortByDesc('total_receivable')
             ->take(5)
+            ->map(function ($customer) {
+                return [
+                    'id' => $customer->id,
+                    'name' => $customer->name,
+                    'projects_count' => $customer->projects_count,
+                    'total_receivable' => (float) $customer->total_receivable,
+                ];
+            })
             ->values();
 
         return Inertia::render('Receivable/Dashboard', [
