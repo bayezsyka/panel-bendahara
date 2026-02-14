@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('delivery_shipments', function (Blueprint $table) {
-            $table->string('docket_number')->nullable()->change();
+            $table->integer('rit_number')->nullable()->change();
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('delivery_shipments', function (Blueprint $table) {
-            $table->string('docket_number')->nullable(false)->change();
+            $table->integer('rit_number')->nullable(false)->change();
         });
     }
 };

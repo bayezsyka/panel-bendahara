@@ -4,10 +4,22 @@ namespace App\Models\Delivery;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ConcreteGrade extends Model
 {
+    use LogsActivity;
+
     protected $guarded = ['id'];
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Mutu Beton ini telah di-{$eventName}");
+    }
 
     /**
      * Get the shipments for the concrete grade.

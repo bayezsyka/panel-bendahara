@@ -6,10 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\ReceivableTransaction;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DeliveryProject extends Model
 {
+    use LogsActivity;
+
     protected $guarded = ['id'];
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Proyek Delivery ini telah di-{$eventName}");
+    }
 
     public function getRouteKeyName()
     {

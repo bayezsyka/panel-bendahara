@@ -33,10 +33,8 @@ class ProjectController extends Controller
                 ->with('message', 'Silakan pilih customer terlebih dahulu sebelum membuat proyek.');
         }
 
-        $officeId = $this->officeService->getCurrentOfficeId();
-
-        $customers = Customer::where('office_id', $officeId)->get();
-        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+        $customers = Customer::get();
+        $concreteGrades = ConcreteGrade::get();
 
         return Inertia::render('Delivery/Project/Create', [
             'customers' => $customers,
@@ -87,10 +85,10 @@ class ProjectController extends Controller
      */
     public function edit(DeliveryProject $project)
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
+        // $officeId = $this->officeService->getCurrentOfficeId();
 
-        $customers = Customer::where('office_id', $officeId)->get();
-        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+        $customers = Customer::get();
+        $concreteGrades = ConcreteGrade::get();
 
         return Inertia::render('Delivery/Project/Edit', [
             'project' => $project,

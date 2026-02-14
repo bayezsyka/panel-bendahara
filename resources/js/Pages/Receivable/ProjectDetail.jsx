@@ -20,10 +20,13 @@ import {
     Clock
 } from 'lucide-react';
 
-export default function ProjectDetail({ project, unbilled_shipments, billed_shipments, payments }) {
-    const [activeTab, setActiveTab] = useState('unbilled');
+export default function ProjectDetail({ project, unbilled_shipments, billed_shipments, payments, concrete_grades = [], ledger = [] }) {
+    const [activeTab, setActiveTab] = useState('ledger');
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+    const [isLegacyModalOpen, setIsLegacyModalOpen] = useState(false);
+
+    // ... (keep form definitions)
 
     const paymentForm = useForm({
         amount: '',
@@ -77,7 +80,28 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         setIsInvoiceModalOpen(false);
     };
 
+    // ... (keep submitLegacy and legacyForm)
+
+    const legacyForm = useForm({
+        date: new Date().toISOString().split('T')[0],
+        concrete_grade_id: '',
+        volume: '',
+        price_per_m3: '',
+    });
+
+    const submitLegacy = (e) => {
+        e.preventDefault();
+        if (!project?.slug) return;
+        legacyForm.post(route('receivable.project.legacy.store', project.slug), {
+            onSuccess: () => {
+                setIsLegacyModalOpen(false);
+                legacyForm.reset();
+            },
+        });
+    };
+
     const tabs = [
+        { id: 'ledger', label: 'Kartu Piutang', icon: FileSpreadsheet },
         { id: 'unbilled', label: 'Belum Ditagih', icon: Clock },
         { id: 'history', label: 'Riwayat Tagihan', icon: History },
         { id: 'payments', label: 'Pembayaran', icon: CreditCard },
@@ -88,6 +112,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
             <Head title={`Transaksi ${project.name}`} />
 
             <div className="space-y-6">
+                {/* ... (keep header) */}
                 <Link 
                     href={project.customer_id ? route('receivable.customer.show', project.customer.slug) : '#'}
                     className="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
@@ -103,6 +128,13 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                         icon={FileSpreadsheet}
                     />
                     <div className="flex gap-2">
+                        <button 
+                            onClick={() => setIsLegacyModalOpen(true)}
+                            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center transition-all shadow-sm"
+                        >
+                            <Calendar className="w-4 h-4 mr-2" />
+                            Input Piutang
+                        </button>
                         <button 
                             onClick={() => setIsPaymentModalOpen(true)}
                             className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center transition-all shadow-sm"
@@ -121,12 +153,12 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-slate-200 gap-8">
+                <div className="flex border-b border-slate-200 gap-8 overflow-x-auto">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative ${
+                            className={`pb-4 text-sm font-bold flex items-center gap-2 transition-all relative whitespace-nowrap ${
                                 activeTab === tab.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                         >
@@ -141,6 +173,80 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
                 {/* Tab Content */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    {activeTab === 'ledger' && (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse whitespace-nowrap">
+                                <thead>
+                                    <tr className="bg-slate-50/50 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                        <th className="px-4 py-3 text-center border-r border-slate-100">No</th>
+                                        <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
+                                        <th className="px-4 py-3 border-r border-slate-100">Customer</th>
+                                        <th className="px-4 py-3 border-r border-slate-100">Mutu</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Harga m3</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Vol</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Total Vol</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Tagihan</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Total Tagihan</th>
+                                        <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Pembayaran</th>
+                                        <th className="px-4 py-3 text-right border-r border-slate-100">Saldo Akhir</th>
+                                        <th className="px-4 py-3">Ket</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                                    {ledger.length === 0 ? (
+                                        <tr><td colSpan="13" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi.</td></tr>
+                                    ) : (
+                                        ledger.map((item, index) => (
+                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                                <td className="px-4 py-3 text-center font-medium border-r border-slate-100">{index + 1}</td>
+                                                {/* Shipment Columns */}
+                                                <td className="px-4 py-3 border-r border-slate-100">
+                                                    {item.type === 'shipment' ? new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 font-bold border-r border-slate-100 truncate max-w-[150px]" title={project.name}>
+                                                    {project.name}
+                                                </td>
+                                                <td className="px-4 py-3 border-r border-slate-100">
+                                                    {item.type === 'shipment' ? (item.concrete_grade?.code || '-') : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100">
+                                                    {item.type === 'shipment' ? formatCurrency(item.price_per_m3) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">
+                                                    {item.type === 'shipment' ? item.volume.toLocaleString('id-ID') : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">
+                                                    {item.total_volume.toLocaleString('id-ID')}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
+                                                    {item.type === 'shipment' ? formatCurrency(item.debit) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
+                                                    {formatCurrency(item.total_tagihan)}
+                                                </td>
+                                                
+                                                {/* Payment Columns */}
+                                                <td className="px-4 py-3 border-r border-slate-100">
+                                                    {item.type === 'payment' ? new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-emerald-600 bg-emerald-50/30">
+                                                    {item.type === 'payment' ? formatCurrency(item.credit) : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-black text-indigo-700 bg-indigo-50/30">
+                                                    {formatCurrency(item.balance)}
+                                                </td>
+                                                <td className="px-4 py-3 italic text-slate-500">
+                                                    {item.type === 'payment' ? (item.description || item.notes) : (item.notes || '-')}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
                     {activeTab === 'unbilled' && (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
@@ -437,6 +543,92 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                         <SecondaryButton onClick={() => setIsInvoiceModalOpen(false)}>Batal</SecondaryButton>
                         <PrimaryButton className="bg-indigo-600 hover:bg-indigo-700">
                             Unduh PDF Invoice
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Legacy Input Modal */}
+            <Modal show={isLegacyModalOpen} onClose={() => setIsLegacyModalOpen(false)} maxWidth="lg">
+                <form onSubmit={submitLegacy} className="p-6">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
+                        <Calendar className="w-6 h-6 mr-2 text-orange-600" />
+                        Input Piutang (Migrasi Data)
+                    </h2>
+
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel htmlFor="legacy_date" value="Tanggal Transaksi/Surat Jalan" />
+                            <TextInput
+                                id="legacy_date"
+                                type="date"
+                                className="mt-1 block w-full"
+                                value={legacyForm.data.date}
+                                onChange={(e) => legacyForm.setData('date', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="concrete_grade_id" value="Mutu Beton" />
+                            <select
+                                id="concrete_grade_id"
+                                className="mt-1 block w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                value={legacyForm.data.concrete_grade_id}
+                                onChange={(e) => {
+                                    const grade = concrete_grades.find(g => g.id == e.target.value);
+                                    legacyForm.setData({
+                                        ...legacyForm.data,
+                                        concrete_grade_id: e.target.value,
+                                        price_per_m3: grade ? grade.price : legacyForm.data.price_per_m3
+                                    });
+                                }}
+                                required
+                            >
+                                <option value="">Pilih Mutu</option>
+                                {concrete_grades.map(grade => (
+                                    <option key={grade.id} value={grade.id}>{grade.code}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="volume" value="Volume (m&sup3;)" />
+                            <TextInput
+                                id="volume"
+                                type="number"
+                                step="0.01"
+                                className="mt-1 block w-full"
+                                value={legacyForm.data.volume}
+                                onChange={(e) => legacyForm.setData('volume', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="price_per_m3" value="Harga Satuan (Rp/m&sup3;)" />
+                            <TextInput
+                                id="price_per_m3"
+                                type="number"
+                                className="mt-1 block w-full"
+                                value={legacyForm.data.price_per_m3}
+                                onChange={(e) => legacyForm.setData('price_per_m3', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+                            <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Tagihan</p>
+                            <p className="text-2xl font-bold text-slate-900 mt-1">
+                                {formatCurrency((legacyForm.data.volume || 0) * (legacyForm.data.price_per_m3 || 0))}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-end gap-3">
+                        <SecondaryButton onClick={() => setIsLegacyModalOpen(false)}>Batal</SecondaryButton>
+                        <PrimaryButton disabled={legacyForm.processing} className="bg-orange-600 hover:bg-orange-700">
+                            Simpan Data Migrasi
                         </PrimaryButton>
                     </div>
                 </form>

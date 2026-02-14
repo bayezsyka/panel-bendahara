@@ -58,7 +58,7 @@ class Expense extends Model
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()
-            ->logOnly(['amount', 'title', 'status', 'transacted_at'])
+            ->logAll()
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "Pengeluaran ini telah di-{$eventName}");

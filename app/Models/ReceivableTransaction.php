@@ -7,9 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReceivableTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, \Spatie\Activitylog\Traits\LogsActivity;
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'date' => 'date',
+        'amount' => 'decimal:2',
+    ];
+
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Transaksi Piutang ini telah di-{$eventName}");
+    }
 
     public function customer()
     {

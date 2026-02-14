@@ -10,8 +10,8 @@ class PlantTransaction extends Model
 
     protected $fillable = [
         'transaction_date',
-        'type', // 'in', 'out'
-        'cash_type', // 'kas_besar', 'kas_kecil'
+        'type',
+        'cash_type',
         'amount',
         'description',
         'cash_source_id',

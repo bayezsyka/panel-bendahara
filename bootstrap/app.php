@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'check.plant.access' => \App\Http\Middleware\CheckPlantAccess::class,
+            'superadmin.utama' => \App\Http\Middleware\EnsureSuperAdminUtama::class,
+            'panel.access' => \App\Http\Middleware\EnsurePanelAccess::class,
+            'restrict.input' => \App\Http\Middleware\RestrictInputOnlyUsers::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [

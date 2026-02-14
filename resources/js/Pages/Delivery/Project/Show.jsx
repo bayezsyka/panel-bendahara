@@ -1,9 +1,12 @@
 import React from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function Show({ project }) {
+    const { auth } = usePage().props;
+    const { can_create, can_edit } = auth.permissions || {};
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -39,19 +42,23 @@ export default function Show({ project }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Link 
-                            href={route('delivery.projects.edit', project.slug)}
-                            className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm transition-colors"
-                        >
-                            Edit Proyek
-                        </Link>
-                        <Link 
-                            href={route('delivery.shipments.create', { project_id: project.id })}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                            Buat Pengiriman
-                        </Link>
+                        {can_edit && (
+                            <Link 
+                                href={route('delivery.projects.edit', project.slug)}
+                                className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm transition-colors"
+                            >
+                                Edit Proyek
+                            </Link>
+                        )}
+                        {can_create && (
+                            <Link 
+                                href={route('delivery.shipments.create', { project_id: project.id })}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                Buat Pengiriman
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -169,13 +176,15 @@ export default function Show({ project }) {
                                             <td className="px-4 py-3 text-sm text-gray-900 font-bold text-right tabular-nums">{formatCurrency(shipment.total_price_with_tax)}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Link 
-                                                        href={route('delivery.shipments.edit', shipment.id)}
-                                                        className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
-                                                        title="Edit"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                                                    </Link>
+                                                    {can_edit && (
+                                                        <Link 
+                                                            href={route('delivery.shipments.edit', shipment.id)}
+                                                            className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
+                                                            title="Edit"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                        </Link>
+                                                    )}
                                                     <Link 
                                                         href={route('delivery.shipments.show', shipment.id)}
                                                         className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
@@ -215,12 +224,14 @@ export default function Show({ project }) {
                             </div>
                             <h4 className="text-lg font-bold text-gray-900">Belum Ada Pengiriman</h4>
                             <p className="text-gray-500 mt-1 max-w-sm">Siapkan pengiriman pertama untuk mulai mencatat pengiriman beton pada proyek ini.</p>
-                            <Link 
-                                href={route('delivery.shipments.create', { project_id: project.id })}
-                                className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
-                            >
-                                + Mulai Buat Pengiriman
-                            </Link>
+                            {can_create && (
+                                <Link 
+                                    href={route('delivery.shipments.create', { project_id: project.id })}
+                                    className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                                >
+                                    + Mulai Buat Pengiriman
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>

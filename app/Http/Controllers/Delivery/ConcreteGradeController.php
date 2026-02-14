@@ -23,9 +23,8 @@ class ConcreteGradeController extends Controller
      */
     public function index()
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
-        $concreteGrades = ConcreteGrade::where('office_id', $officeId)
-            ->latest()
+        // Don't filter by office. Data is shared.
+        $concreteGrades = ConcreteGrade::latest()
             ->get();
 
         return Inertia::render('Delivery/ConcreteGrade/Index', [
@@ -45,9 +44,7 @@ class ConcreteGradeController extends Controller
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('concrete_grades')->where(function ($query) use ($officeId) {
-                    return $query->where('office_id', $officeId);
-                })
+                Rule::unique('concrete_grades')
             ],
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
@@ -74,9 +71,7 @@ class ConcreteGradeController extends Controller
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('concrete_grades')->where(function ($query) use ($officeId) {
-                    return $query->where('office_id', $officeId);
-                })->ignore($concreteGrade->id)
+                Rule::unique('concrete_grades')->ignore($concreteGrade->id)
             ],
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',

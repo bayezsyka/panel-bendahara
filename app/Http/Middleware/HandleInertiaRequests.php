@@ -38,7 +38,11 @@ class HandleInertiaRequests extends Middleware
                     'name' => app(\App\Services\OfficeContextService::class)->getOfficeName(),
                 ] : null,
                 'can_switch_office' => $request->user() ? $request->user()->isSuperAdmin() : false,
-                'can_manage_projects' => $request->user() ? !($request->user()->isSuperAdmin() && $request->user()->office_id === 2) : false,
+                'permissions' => $request->user() ? [
+                    'can_create' => !($request->user()->isSuperAdmin() && $request->user()->office_id === 2), // Superadmin Plant Cannot Create
+                    'can_edit' => !$request->user()->isRestrictedToInputOnly() && !($request->user()->isSuperAdmin() && $request->user()->office_id === 2),
+                    'can_delete' => !$request->user()->isRestrictedToInputOnly() && !($request->user()->isSuperAdmin() && $request->user()->office_id === 2),
+                ] : [],
             ],
 
             'flash' => [

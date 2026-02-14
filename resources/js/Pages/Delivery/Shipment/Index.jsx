@@ -1,8 +1,11 @@
 import React from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 export default function Index({ shipments }) {
+    const { auth } = usePage().props;
+    const { can_edit } = auth.permissions || {};
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -58,12 +61,14 @@ export default function Index({ shipments }) {
                                             <td className="px-6 py-4 text-sm text-gray-900 font-bold text-right">{shipment.volume} m³</td>
                                             <td className="px-6 py-4 text-sm text-gray-900 font-black text-right">{formatCurrency(shipment.total_price)}</td>
                                             <td className="px-6 py-4 text-center whitespace-nowrap">
-                                                <Link 
-                                                    href={route('delivery.shipments.edit', shipment.id)}
-                                                    className="text-indigo-600 hover:text-indigo-900 mx-1 text-xs font-bold"
-                                                >
-                                                    Edit
-                                                </Link>
+                                                {can_edit && (
+                                                    <Link 
+                                                        href={route('delivery.shipments.edit', shipment.id)}
+                                                        className="text-indigo-600 hover:text-indigo-900 mx-1 text-xs font-bold"
+                                                    >
+                                                        Edit
+                                                    </Link>
+                                                )}
                                             </td>
                                         </tr>
                                     ))

@@ -24,12 +24,8 @@ class ShipmentController extends Controller
      */
     public function index(Request $request)
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
-
+        // Don't filter by office. Data is shared.
         $query = DeliveryShipment::query()
-            ->whereHas('project', function ($q) use ($officeId) {
-                $q->where('office_id', $officeId);
-            })
             ->with(['project.customer', 'concreteGrade'])
             ->latest('date')
             ->latest('id');
@@ -51,13 +47,10 @@ class ShipmentController extends Controller
      */
     public function create(Request $request)
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
-
-        $projects = DeliveryProject::where('office_id', $officeId)
-            ->with('customer')
+        $projects = DeliveryProject::with('customer')
             ->get();
 
-        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+        $concreteGrades = ConcreteGrade::get();
 
         $selectedProject = null;
         if ($request->project_id) {
@@ -115,13 +108,10 @@ class ShipmentController extends Controller
      */
     public function edit(DeliveryShipment $shipment)
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
-
-        $projects = DeliveryProject::where('office_id', $officeId)
-            ->with('customer')
+        $projects = DeliveryProject::with('customer')
             ->get();
 
-        $concreteGrades = ConcreteGrade::where('office_id', $officeId)->get();
+        $concreteGrades = ConcreteGrade::get();
 
         return Inertia::render('Delivery/Shipment/Edit', [
             'shipment' => $shipment->load('project'),

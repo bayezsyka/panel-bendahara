@@ -47,11 +47,20 @@ export default function Dashboard({ stats, top_customers }) {
             <Head title="Dashboard Piutang" />
 
             <div className="space-y-6">
-                <PageHeader 
-                    title="Dashboard Piutang"
-                    subtitle="Ringkasan eksekutif piutang operasional dan status penagihan."
-                    icon={LayoutDashboard}
-                />
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <PageHeader 
+                        title="Dashboard Piutang"
+                        subtitle="Ringkasan eksekutif piutang operasional dan status penagihan."
+                        icon={LayoutDashboard}
+                    />
+                    <button 
+                        onClick={() => window.open(route('receivable.export.pdf'), '_blank')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center transition-all shadow-sm"
+                    >
+                        <ArrowUpRight className="w-4 h-4 mr-2" />
+                        Export Laporan Piutang
+                    </button>
+                </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

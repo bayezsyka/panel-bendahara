@@ -21,7 +21,7 @@ use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController
 use App\Http\Controllers\Delivery\ShipmentController;
 use App\Http\Controllers\Receivable\ReceivableController;
 
-Route::middleware(['auth', 'verified', 'role:superadmin'])
+Route::middleware(['auth', 'verified', 'role:superadmin', 'superadmin.utama'])
     ->prefix('superadmin')
     ->name('superadmin.')
     ->group(function () {
@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])
     });
 
 // PROJECT EXPENSES MODULAR ROUTES
-Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'check.plant.access'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:finance', 'restrict.input'])
     ->prefix('projectexpense')
     ->name('projectexpense.')
     ->group(function () {
@@ -56,7 +56,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'check.plant
     });
 
 // KAS PANEL ROUTES
-Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:kas', 'restrict.input'])
     ->prefix('kas')
     ->name('kas.')
     ->group(function () {
@@ -111,21 +111,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:receivable', 'restrict.input'])
     ->prefix('receivable')
     ->name('receivable.')
     ->group(function () {
         Route::get('/', [ReceivableController::class, 'dashboard'])->name('dashboard');
+        Route::get('/export-pdf', [ReceivableController::class, 'exportPdf'])->name('export.pdf');
         Route::get('/list', [ReceivableController::class, 'index'])->name('index');
         Route::get('/payments', [ReceivableController::class, 'payments'])->name('payments.index');
         Route::get('/customer/{customer}', [ReceivableController::class, 'showCustomer'])->name('customer.show');
         Route::get('/project/{project}', [ReceivableController::class, 'showProject'])->name('project.show');
         Route::post('/project/{project}/payment', [ReceivableController::class, 'storePayment'])->name('project.payment.store');
+        Route::post('/project/{project}/legacy', [ReceivableController::class, 'storeLegacy'])->name('project.legacy.store');
         Route::get('/project/{project}/export-invoice', [ReceivableController::class, 'exportInvoice'])->name('project.export-invoice');
     });
 
 // DELIVERY PANEL ROUTES
-Route::middleware(['auth', 'verified', 'role:bendahara,superadmin'])
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:delivery', 'restrict.input'])
     ->prefix('delivery')
     ->name('delivery.')
     ->group(function () {

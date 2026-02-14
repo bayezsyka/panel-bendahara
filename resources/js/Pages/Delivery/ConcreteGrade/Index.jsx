@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -10,6 +10,9 @@ import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 
 export default function Index({ concreteGrades }) {
+    const { auth } = usePage().props;
+    const { can_create, can_edit, can_delete } = auth.permissions || {};
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingGrade, setEditingGrade] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -89,9 +92,11 @@ export default function Index({ concreteGrades }) {
                         <h2 className="text-2xl font-bold text-gray-900">Mutu Beton</h2>
                         <p className="text-sm text-gray-500 mt-1">Kelola daftar mutu beton dan harga default</p>
                     </div>
-                    <PrimaryButton onClick={() => openModal()}>
-                        + Tambah Mutu
-                    </PrimaryButton>
+                    {can_create && (
+                        <PrimaryButton onClick={() => openModal()}>
+                            + Tambah Mutu
+                        </PrimaryButton>
+                    )}
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -112,8 +117,14 @@ export default function Index({ concreteGrades }) {
                                         <td className="px-6 py-4 text-sm text-gray-900 font-semibold">{formatCurrency(grade.price)}</td>
                                         <td className="px-6 py-4 text-sm text-gray-500">{grade.description || '-'}</td>
                                         <td className="px-6 py-4 text-center whitespace-nowrap">
-                                            <button onClick={() => openModal(grade)} className="text-indigo-600 hover:text-indigo-900 mx-2 text-sm font-medium">Edit</button>
-                                            <button onClick={() => confirmDelete(grade)} className="text-red-600 hover:text-red-900 mx-2 text-sm font-medium">Hapus</button>
+                                            <div className="flex justify-center">
+                                                {can_edit && (
+                                                    <button onClick={() => openModal(grade)} className="text-indigo-600 hover:text-indigo-900 mx-2 text-sm font-medium">Edit</button>
+                                                )}
+                                                {can_delete && (
+                                                    <button onClick={() => confirmDelete(grade)} className="text-red-600 hover:text-red-900 mx-2 text-sm font-medium">Hapus</button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))

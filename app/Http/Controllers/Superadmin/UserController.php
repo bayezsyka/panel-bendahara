@@ -14,26 +14,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        // Check general access via Policy (now allows all Superadmins)
-        if (!$request->user()->can('viewAny', User::class)) {
-            abort(403);
-        }
-
-        $user = $request->user();
-
-        // If not Kantor Utama, return restricted View
-        if (!$user->isKantorUtama()) {
-            // Return view with restricted flag and empty data (for security)
-            return Inertia::render('Superadmin/Users/Index', [
-                'users' => [
-                    'data' => [],
-                    'links' => [],
-                ],
-                'filters' => request()->only(['search']),
-                'offices' => [],
-                'restricted' => true, // Flag for Frontend Blur Effect
-            ]);
-        }
+        // Access is already restricted by 'superadmin.utama' middleware
 
         $users = User::query()
             ->when(request('search'), function ($query, $search) {
@@ -53,15 +34,12 @@ class UserController extends Controller
             'users' => $users,
             'filters' => request()->only(['search']),
             'offices' => $offices,
-            'restricted' => false,
         ]);
     }
 
     public function store(Request $request)
     {
-        if (!$request->user()->can('create', User::class)) {
-            abort(403, 'Akses ditolak. Hubungi Admin Kantor Utama.');
-        }
+        // Access restricted by middleware
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -71,7 +49,7 @@ class UserController extends Controller
             'office_id' => 'required|integer|in:1,2',
             'is_active' => 'boolean',
             'allowed_panels' => 'nullable|array',
-            'allowed_panels.*' => 'string|in:finance,plant_cash,receivable',
+            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery', // added delivery, kas
         ]);
 
         User::create([
@@ -90,9 +68,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        if (!$request->user()->can('update', $user)) {
-            abort(403, 'Akses ditolak. Hubungi Admin Kantor Utama.');
-        }
+        // Access restricted by middleware
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -102,7 +78,7 @@ class UserController extends Controller
             'is_active' => 'boolean',
             'password' => 'nullable|string|min:8',
             'allowed_panels' => 'nullable|array',
-            'allowed_panels.*' => 'string|in:finance,plant_cash,receivable',
+            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery', // added delivery, kas
         ]);
 
         $user->fill([

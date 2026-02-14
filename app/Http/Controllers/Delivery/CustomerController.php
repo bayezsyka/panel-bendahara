@@ -23,9 +23,8 @@ class CustomerController extends Controller
      */
     public function index()
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
-        $customers = Customer::where('office_id', $officeId)
-            ->latest()
+        // Don't filter by office. Data is shared.
+        $customers = Customer::latest()
             ->get();
 
         return Inertia::render('Delivery/Customer/Index', [
@@ -45,9 +44,7 @@ class CustomerController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('customers')->where(function ($query) use ($officeId) {
-                    return $query->where('office_id', $officeId);
-                })
+                Rule::unique('customers'), // Global uniqueness
             ],
             'address' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
@@ -78,16 +75,14 @@ class CustomerController extends Controller
      */
     public function update(Request $request, Customer $customer)
     {
-        $officeId = $this->officeService->getCurrentOfficeId();
+        // $officeId = $this->officeService->getCurrentOfficeId(); // Not needed for validation anymore
 
         $validated = $request->validate([
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('customers')->where(function ($query) use ($officeId) {
-                    return $query->where('office_id', $officeId);
-                })->ignore($customer->id)
+                Rule::unique('customers')->ignore($customer->id), // Global uniqueness
             ],
             'address' => 'nullable|string',
             'contact' => 'nullable|string|max:255',

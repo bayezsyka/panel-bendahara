@@ -190,36 +190,7 @@ export default function Index({ auth, users, filters, offices = [] }) {
             <Head title="Management User" />
 
             <div className="py-12 relative min-h-[500px]">
-                {/* Restricted Overlay */}
-                {offices.length === 0 && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center p-6">
-                        <div className="absolute inset-0 bg-white/60 backdrop-blur-md"></div>
-                        <div className="relative z-50 bg-white p-8 rounded-2xl shadow-2xl border border-gray-100 max-w-md w-full text-center animate-fade-in-up">
-                            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl font-black text-gray-900 mb-2">Akses Dibatasi</h3>
-                            <p className="text-gray-500 mb-6 font-medium">
-                                Halaman ini hanya dapat diakses oleh <span className="text-indigo-600 font-bold">Superadmin Kantor Utama</span>.
-                            </p>
-                            <div className="mt-6">
-                                <Link
-                                    href={route('projectexpense.overview')}
-                                    className="inline-flex items-center justify-center px-5 py-2.5 text-sm font-bold rounded-lg text-white bg-gray-900 hover:bg-gray-800 transition-all shadow-sm"
-                                >
-                                    <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                    </svg>
-                                    Kembali ke Dashboard
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className={`max-w-7xl mx-auto sm:px-6 lg:px-8 transition-all duration-500 ${offices.length === 0 ? 'blur-sm opacity-50 pointer-events-none select-none grayscale' : ''}`}>
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 transition-all duration-500">
                     <div className="space-y-6">
                         <PageHeader
                             title="Management User"
@@ -239,9 +210,9 @@ export default function Index({ auth, users, filters, offices = [] }) {
 
                         <DataTable
                             columns={columns}
-                            data={offices.length === 0 ? [] : users.data}
+                            data={users.data}
                             emptyMessage="Tidak ada data user."
-                            pagination={offices.length > 0 ? users.links : null}
+                            pagination={users.links}
                         />
                     </div>
                 </div>
@@ -328,15 +299,16 @@ export default function Index({ auth, users, filters, offices = [] }) {
                             <InputError message={errors.office_id} className="mt-2" />
                         </div>
 
-                        {/* Allowed Panels */}
-                        {data.role === 'bendahara' && (
+                        {/* Allowed Panels (Bendahara OR Superadmin Plant) */}
+                        {(data.role === 'bendahara' || (data.role === 'superadmin' && data.office_id === 2)) && (
                             <div>
                                 <InputLabel value="Akses Panel" className="mb-2" />
                                 <div className="flex flex-col gap-2">
                                     {[
                                         { id: 'finance', label: 'Finance (Biaya Proyek & Operasional)' },
-                                        { id: 'plant_cash', label: 'Plant Cash (Kas Besar & Kecil)' },
+                                        { id: 'kas', label: 'Cash (Kas Besar & Kecil)' },
                                         { id: 'receivable', label: 'Receivable (Piutang)' },
+                                        { id: 'delivery', label: 'Delivery (Pengiriman)' },
                                     ].map((panel) => (
                                         <label key={panel.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                             <Checkbox

@@ -12,6 +12,7 @@ import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputError from "@/Components/InputError";
 import Swal from "sweetalert2";
+import { SearchInput } from "@/Components/ui";
 
 const formatRupiah = (number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -110,6 +111,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
     const [showEditModal, setShowEditModal] = useState(false);
     const [showImageModal, setShowImageModal] = useState(null);
     const [sortBy, setSortBy] = useState("transacted_at");
+    const [search, setSearch] = useState("");
 
     const isCompleted = project.status === "completed";
     const totalExpense = project.expenses.reduce(
@@ -151,11 +153,24 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
         location: project.location || "",
     });
 
-    const sortedExpenses = [...project.expenses].sort((a, b) => {
-        const dateA = new Date(a[sortBy]);
-        const dateB = new Date(b[sortBy]);
-        return dateB - dateA;
-    });
+    const filteredExpenses = project.expenses
+        .filter((expense) => {
+            const searchLower = search.toLowerCase();
+            return (
+                expense.title?.toLowerCase().includes(searchLower) ||
+                expense.description?.toLowerCase().includes(searchLower) ||
+                expense.expense_type?.name?.toLowerCase().includes(searchLower) ||
+                (expense.items &&
+                    expense.items.some((item) =>
+                        item.name?.toLowerCase().includes(searchLower),
+                    ))
+            );
+        })
+        .sort((a, b) => {
+            const dateA = new Date(a[sortBy]);
+            const dateB = new Date(b[sortBy]);
+            return dateB - dateA;
+        });
 
     const [editingExpenseId, setEditingExpenseId] = useState(null);
 
@@ -596,74 +611,85 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
 
             {/* Expense Table */}
             <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <h3 className="font-semibold text-gray-800">
-                        Riwayat Pengeluaran
-                    </h3>
+                <div className="px-6 py-5 border-b border-gray-200 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">
+                            Riwayat Pengeluaran
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                            Kelola dan pantau semua transaksi proyek
+                        </p>
+                    </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Filter Tipe Biaya */}
-                        <select
-                            value={
-                                new URLSearchParams(window.location.search).get(
-                                    "expense_type_id",
-                                ) || ""
-                            }
-                            onChange={(e) => {
-                                const params = new URLSearchParams(
-                                    window.location.search,
-                                );
-                                if (e.target.value) {
-                                    params.set(
-                                        "expense_type_id",
-                                        e.target.value,
-                                    );
-                                } else {
-                                    params.delete("expense_type_id");
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                        <SearchInput
+                            value={search}
+                            onChange={setSearch}
+                            placeholder="Cari nota, barang..."
+                            className="w-full sm:w-64"
+                        />
+
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={
+                                    new URLSearchParams(
+                                        window.location.search,
+                                    ).get("expense_type_id") || ""
                                 }
-                                router.get(
-                                    `${window.location.pathname}?${params.toString()}`,
-                                    {},
-                                    {
-                                        preserveState: true,
-                                        preserveScroll: true,
-                                    },
-                                );
-                            }}
-                            className="text-xs border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                        >
-                            <option value="">Semua Tipe Biaya</option>
-                            {expenseTypes &&
-                                expenseTypes.map((type) => (
-                                    <option key={type.id} value={type.id}>
-                                        {type.name}
-                                    </option>
-                                ))}
-                        </select>
-
-                        <div className="w-px h-6 bg-gray-300 mx-1 hidden sm:block"></div>
-
-                        <div className="flex bg-gray-100 p-1 rounded-lg">
-                            <button
-                                onClick={() => setSortBy("transacted_at")}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                                    sortBy === "transacted_at"
-                                        ? "bg-white text-indigo-700 shadow-sm"
-                                        : "text-gray-500 hover:text-gray-700"
-                                }`}
+                                onChange={(e) => {
+                                    const params = new URLSearchParams(
+                                        window.location.search,
+                                    );
+                                    if (e.target.value) {
+                                        params.set(
+                                            "expense_type_id",
+                                            e.target.value,
+                                        );
+                                    } else {
+                                        params.delete("expense_type_id");
+                                    }
+                                    router.get(
+                                        `${window.location.pathname}?${params.toString()}`,
+                                        {},
+                                        {
+                                            preserveState: true,
+                                            preserveScroll: true,
+                                        },
+                                    );
+                                }}
+                                className="flex-1 sm:w-44 text-sm border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg shadow-sm py-2.5 bg-white"
                             >
-                                Tanggal Nota
-                            </button>
-                            <button
-                                onClick={() => setSortBy("created_at")}
-                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
-                                    sortBy === "created_at"
-                                        ? "bg-white text-indigo-700 shadow-sm"
-                                        : "text-gray-500 hover:text-gray-700"
-                                }`}
-                            >
-                                Tanggal Input
-                            </button>
+                                <option value="">Semua Tipe</option>
+                                {expenseTypes &&
+                                    expenseTypes.map((type) => (
+                                        <option key={type.id} value={type.id}>
+                                            {type.name}
+                                        </option>
+                                    ))}
+                            </select>
+
+                            <div className="flex bg-gray-100 p-1 rounded-lg h-[45px] items-center">
+                                <button
+                                    onClick={() => setSortBy("transacted_at")}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${
+                                        sortBy === "transacted_at"
+                                            ? "bg-white text-indigo-700 shadow-sm"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    Nota
+                                </button>
+                                <button
+                                    onClick={() => setSortBy("created_at")}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${
+                                        sortBy === "created_at"
+                                            ? "bg-white text-indigo-700 shadow-sm"
+                                            : "text-gray-500 hover:text-gray-700"
+                                    }`}
+                                >
+                                    Input
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -692,140 +718,146 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {sortedExpenses.map((expense) => (
-                                <tr
-                                    key={expense.id}
-                                    className="hover:bg-gray-50 transition"
-                                >
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 align-top">
-                                        <div className="font-semibold text-gray-900">
-                                            {new Date(
-                                                expense[sortBy],
-                                            ).toLocaleDateString("id-ID", {
-                                                day: "numeric",
-                                                month: "short",
-                                                year: "numeric",
-                                            })}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm align-top">
-                                        {expense.expense_type ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                                                {expense.expense_type.name}
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-400 text-xs italic">
-                                                -
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 align-top">
-                                        <div className="font-bold text-indigo-700 mb-1">
-                                            {expense.title}
-                                        </div>
+                            {filteredExpenses.length > 0 ? (
+                                filteredExpenses.map((expense) => (
+                                    <tr
+                                        key={expense.id}
+                                        className="hover:bg-gray-50 transition"
+                                    >
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 align-top">
+                                            <div className="font-semibold text-gray-900">
+                                                {new Date(
+                                                    expense[sortBy],
+                                                ).toLocaleDateString("id-ID", {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                })}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm align-top">
+                                            {expense.expense_type ? (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                                    {expense.expense_type.name}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">
+                                                    -
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 align-top">
+                                            <div className="font-bold text-indigo-700 mb-1">
+                                                {expense.title}
+                                            </div>
 
-                                        {expense.items &&
-                                        expense.items.length > 0 ? (
-                                            <ul className="text-sm text-gray-700 bg-gray-50 rounded-md p-2 space-y-1 border border-gray-100">
-                                                {expense.items.map(
-                                                    (item, idx) => (
-                                                        <li
-                                                            key={item.id || idx}
-                                                            className="flex justify-between items-center border-b border-gray-100 last:border-0 pb-1 last:pb-0"
-                                                        >
-                                                            <span className="flex-1">
-                                                                <span className="font-medium">
-                                                                    {item.name}
+                                            {expense.items &&
+                                            expense.items.length > 0 ? (
+                                                <ul className="text-sm text-gray-700 bg-gray-50 rounded-md p-2 space-y-1 border border-gray-100">
+                                                    {expense.items.map(
+                                                        (item, idx) => (
+                                                            <li
+                                                                key={
+                                                                    item.id ||
+                                                                    idx
+                                                                }
+                                                                className="flex justify-between items-center border-b border-gray-100 last:border-0 pb-1 last:pb-0"
+                                                            >
+                                                                <span className="flex-1">
+                                                                    <span className="font-medium">
+                                                                        {item.name}
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-500 ml-1">
+                                                                        (
+                                                                        {
+                                                                            item.quantity
+                                                                        }{" "}
+                                                                        x{" "}
+                                                                        {formatRupiah(
+                                                                            item.price,
+                                                                        )}
+                                                                        )
+                                                                    </span>
                                                                 </span>
-                                                                <span className="text-xs text-gray-500 ml-1">
-                                                                    (
-                                                                    {
-                                                                        item.quantity
-                                                                    }{" "}
-                                                                    x{" "}
+                                                                <span className="font-medium text-gray-900 ml-4">
                                                                     {formatRupiah(
-                                                                        item.price,
+                                                                        item.total_price,
                                                                     )}
-                                                                    )
                                                                 </span>
-                                                            </span>
-                                                            <span className="font-medium text-gray-900 ml-4">
-                                                                {formatRupiah(
-                                                                    item.total_price,
-                                                                )}
-                                                            </span>
-                                                        </li>
-                                                    ),
-                                                )}
-                                            </ul>
-                                        ) : (
-                                            <div className="text-sm text-gray-500 italic">
-                                                Tidak ada detail item.
-                                            </div>
-                                        )}
+                                                            </li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            ) : (
+                                                <div className="text-sm text-gray-500 italic">
+                                                    Tidak ada detail item.
+                                                </div>
+                                            )}
 
-                                        {expense.description && (
-                                            <div className="text-xs text-gray-500 mt-2 italic">
-                                                "{expense.description}"
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center align-top">
-                                        {expense.receipt_image ? (
-                                            <button
-                                                onClick={() =>
-                                                    setShowImageModal(
-                                                        `/storage/${expense.receipt_image}`,
-                                                    )
-                                                }
-                                                className="text-indigo-600 hover:text-indigo-900 text-xs font-medium underline border border-indigo-200 rounded px-2 py-1 bg-indigo-50"
-                                            >
-                                                Lihat Foto
-                                            </button>
-                                        ) : (
-                                            <span className="text-gray-400 text-xs italic">
-                                                -
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900 align-top">
-                                        {formatRupiah(expense.amount)}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
-                                        {!isCompleted && (
-                                            <div className="flex flex-col gap-2 align-end">
+                                            {expense.description && (
+                                                <div className="text-xs text-gray-500 mt-2 italic">
+                                                    "{expense.description}"
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center align-top">
+                                            {expense.receipt_image ? (
                                                 <button
                                                     onClick={() =>
-                                                        openEditExpenseModal(
-                                                            expense,
+                                                        setShowImageModal(
+                                                            `/storage/${expense.receipt_image}`,
                                                         )
                                                     }
-                                                    className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 text-xs text-center"
+                                                    className="text-indigo-600 hover:text-indigo-900 text-xs font-medium underline border border-indigo-200 rounded px-2 py-1 bg-indigo-50"
                                                 >
-                                                    Edit
+                                                    Lihat Foto
                                                 </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleDeleteExpense(
-                                                            expense.id,
-                                                        )
-                                                    }
-                                                    className="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded hover:bg-red-100 text-xs text-center"
-                                                >
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {sortedExpenses.length === 0 && (
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">
+                                                    -
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-900 align-top">
+                                            {formatRupiah(expense.amount)}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium align-top">
+                                            {!isCompleted && (
+                                                <div className="flex flex-col gap-2 align-end">
+                                                    <button
+                                                        onClick={() =>
+                                                            openEditExpenseModal(
+                                                                expense,
+                                                            )
+                                                        }
+                                                        className="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-2 py-1 rounded hover:bg-indigo-100 text-xs text-center"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleDeleteExpense(
+                                                                expense.id,
+                                                            )
+                                                        }
+                                                        className="text-red-600 hover:text-red-900 bg-red-50 px-2 py-1 rounded hover:bg-red-100 text-xs text-center"
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
                                 <tr>
                                     <td
                                         colSpan="6"
                                         className="px-6 py-12 text-center text-gray-500"
                                     >
-                                        Belum ada pengeluaran tercatat.
+                                        {project.expenses.length > 0
+                                            ? "Tidak ada data pengeluaran yang cocok dengan pencarian."
+                                            : "Belum ada pengeluaran tercatat."}
                                     </td>
                                 </tr>
                             )}

@@ -26,7 +26,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'office_id',
-        'allowed_panels', // Added
+        'allowed_panels',
     ];
 
     /**
@@ -51,7 +51,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'office_id' => 'integer',
-            'allowed_panels' => 'array', // Added
+            'allowed_panels' => 'array',
         ];
     }
 
@@ -65,6 +65,7 @@ class User extends Authenticatable
     const PANEL_FINANCE = 'finance'; // Biaya Proyek/Operasional
     const PANEL_CASH = 'kas'; // Kas Besar/Kecil
     const PANEL_RECEIVABLE = 'receivable'; // Piutang
+    const PANEL_DELIVERY = 'delivery'; // Pengiriman (Surat Jalan)
 
     // Role Helpers
     public function isSuperAdmin()
@@ -87,18 +88,26 @@ class User extends Authenticatable
         return $this->office_id === self::OFFICE_PLANT;
     }
 
+    /**
+     * Check if user is restricted to input only (Create/Store).
+     * Rule: "Bendahara kantor plant ... dia hanya bisa menginput data saja".
+     */
+    public function isRestrictedToInputOnly(): bool
+    {
+        return $this->isBendahara() && $this->isKantorPlant();
+    }
+
     // Unified Access Logic
     public function canAccessPanel(string $panel): bool
     {
-        // Superadmin access to everything
-        if ($this->isSuperAdmin()) {
+        // 1. Kantor Utama: Superadmin & Bendahara can open ALL panels.
+        if ($this->isKantorUtama()) {
             return true;
         }
 
-        // Bendahara restricted to assigned panels
-        // This decouples the panel access from the office ID as requested
+        // 2. Kantor Plant: Access restricted to allowed_panels.
+        // Also checks legacy mapping if needed.
 
-        // Handle legacy constant mapping for migration safety
         $panelsToCheck = [$panel];
         // 'kas' might be stored as 'plant_cash' in legacy data
         if ($panel === self::PANEL_CASH) {
@@ -121,113 +130,72 @@ class User extends Authenticatable
     {
         return $this->canAccessPanel(self::PANEL_FINANCE) ||
             $this->canAccessPanel(self::PANEL_CASH) ||
-            $this->canAccessPanel(self::PANEL_RECEIVABLE);
+            $this->canAccessPanel(self::PANEL_RECEIVABLE) ||
+            $this->canAccessPanel(self::PANEL_DELIVERY);
     }
 
     public function getHomeRoute(): string
     {
+        // Priority order for redirect
         if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
         if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.index';
         if ($this->canAccessPanel(self::PANEL_CASH)) return 'kas.dashboard';
+        if ($this->canAccessPanel(self::PANEL_DELIVERY)) return 'delivery.projects.index';
+
         return 'no.access';
     }
 
     /**
-     * Check if user can create/edit/delete data in a specific context.
-     * Contexts: 'finance', 'plant_cash', 'receivable'
+     * Check if user is Superadmin Utama (Full Admin Access: Users, Logs, etc.)
+     */
+    public function isSuperAdminUtama(): bool
+    {
+        return $this->isSuperAdmin() && $this->isKantorUtama();
+    }
+
+    /**
+     * Check if user can fully manage (Create, Update, Delete) data in a specific context.
+     * Context typically matches panel names or specific permissions.
      */
     public function canManage(string $context): bool
     {
-        // 1. Superadmin Utama: God mod
-        if ($this->isSuperAdmin() && $this->isKantorUtama()) {
-            return true;
-        }
-
-        // 2. Superadmin Plant
-        if ($this->isSuperAdmin() && $this->isKantorPlant()) {
-            // "Crud seperti bendahara-kantor plant"
-            // Assuming this means they control Plant Cash, and maybe partial Piutang?
-            // "misal panel piutang ... bendahara, kantor plant ... cuma bisa nambahin data aja"
-            // So for Superadmin Plant, logic follows Bendahara Plant for Write operations.
-            return $this->checkBendaharaPlantWriteAccess($context);
-        }
-
-        // 3. Bendahara Utama
-        if ($this->isBendahara() && $this->isKantorUtama()) {
-            if (!$this->canAccessPanel($context)) return false;
-
-            if ($context === self::PANEL_FINANCE || $context === self::PANEL_RECEIVABLE) {
-                return true;
-            }
-            if ($context === self::PANEL_CASH) {
-                return true; // Utama can manage Cash if assigned
-            }
-        }
-
-        // 4. Bendahara Plant / Generic Bendahara
-        // Since we are decoupling from office, we should check access.
-        // But for Receivable/Finance, the office rules might still apply?
-        // "Hak akses piutang: kantor 1 crud, kantor 2 create only". 
-        // So checking `isKantorPlant` is still valid for Receivable/Finance context.
-
-        if ($this->isBendahara()) {
-            // Fallback for generic Bendahara logic
-            if ($context === self::PANEL_CASH && $this->canAccessPanel(self::PANEL_CASH)) {
-                return true;
-            }
-
-            if ($this->isKantorPlant()) {
-                return $this->checkBendaharaPlantWriteAccess($context);
-            }
-        }
-
-        return false;
-    }
-
-    private function checkBendaharaPlantWriteAccess(string $context): bool
-    {
-        if (!$this->canAccessPanel($context) && !$this->isSuperAdmin()) return false;
-
-        if ($context === self::PANEL_CASH) {
-            return true;
-        }
-
-        if ($context === self::PANEL_RECEIVABLE) {
-            // "dia cuma bisa nambahin data aja, gabisa crud selain create"
+        // Must have basic access first
+        if (!$this->canAccessPanel($context)) {
             return false;
         }
 
-        if ($context === self::PANEL_FINANCE) {
+        // If restricted to input only (Bendahara Plant), they cannot manage (edit/delete)
+        if ($this->isRestrictedToInputOnly()) {
             return false;
         }
 
-        return false;
+        // Everyone else with access (Superadmin Utama, Bendahara Utama, Superadmin Plant) can manage
+        return true;
     }
 
+    /**
+     * Check if user can create data in a specific context.
+     */
     public function canCreate(string $context): bool
     {
-        if ($this->canManage($context)) return true;
-
-        if ($this->isKantorPlant() && $context === self::PANEL_RECEIVABLE) {
-            if ($this->isBendahara() && !$this->canAccessPanel($context)) return false;
-            return true;
+        // Must have basic access
+        if (!$this->canAccessPanel($context)) {
+            return false;
         }
 
-        return false;
+        // Even "Input Only" users can create
+        return true;
     }
 
-    // Access Methods (Legacy/Refactored)
+    // Legacy Access Helpers (can be removed later if unused)
     public function hasAccessToFinance()
     {
         return $this->canAccessPanel(self::PANEL_FINANCE);
     }
-
     public function hasAccessToReceivable()
     {
         return $this->canAccessPanel(self::PANEL_RECEIVABLE);
     }
-
-    // Removed duplicate getHomeRoute()
 
     public function getActivitylogOptions(): LogOptions
     {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -10,6 +10,9 @@ import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 
 export default function Index({ customers }) {
+    const { auth } = usePage().props;
+    const { can_create, can_edit, can_delete } = auth.permissions || {};
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -83,12 +86,14 @@ export default function Index({ customers }) {
                         <h2 className="text-3xl font-black text-gray-900 tracking-tight">Customer</h2>
                         <p className="text-sm text-gray-500 font-medium mt-1">Daftar pelanggan aktif pengiriman beton</p>
                     </div>
-                    <button 
-                        onClick={() => openModal()}
-                        className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm"
-                    >
-                        + Tambah Customer
-                    </button>
+                    {can_create && (
+                        <button 
+                            onClick={() => openModal()}
+                            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm"
+                        >
+                            + Tambah Customer
+                        </button>
+                    )}
                 </div>
 
                 {customers.length > 0 ? (
@@ -124,8 +129,12 @@ export default function Index({ customers }) {
                                         NPWP: {customer.npwp ? 'Tersedia' : 'N/A'}
                                     </div>
                                     <div className="flex gap-4">
-                                        <button onClick={() => openModal(customer)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase tracking-wider">Edit</button>
-                                        <button onClick={() => confirmDelete(customer)} className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase tracking-wider">Hapus</button>
+                                        {can_edit && (
+                                            <button onClick={() => openModal(customer)} className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors uppercase tracking-wider">Edit</button>
+                                        )}
+                                        {can_delete && (
+                                            <button onClick={() => confirmDelete(customer)} className="text-xs font-bold text-red-600 hover:text-red-800 transition-colors uppercase tracking-wider">Hapus</button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -138,12 +147,14 @@ export default function Index({ customers }) {
                         </div>
                         <h4 className="text-xl font-bold text-gray-900">Belum Ada Customer</h4>
                         <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto font-medium">Mulailah dengan menambahkan customer pertama Anda untuk mengelola proyek pengiriman.</p>
-                        <button 
-                            onClick={() => openModal()}
-                            className="mt-8 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
-                        >
-                            + Tambah Customer Sekarang
-                        </button>
+                        {can_create && (
+                            <button 
+                                onClick={() => openModal()}
+                                className="mt-8 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
+                            >
+                                + Tambah Customer Sekarang
+                            </button>
+                        )}
                     </div>
                 )}
             </div>
