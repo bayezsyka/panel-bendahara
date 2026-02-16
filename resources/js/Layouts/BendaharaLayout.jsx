@@ -125,7 +125,15 @@ export default function BendaharaLayout({ children, header }) {
     // Helper untuk mengecek akses panel
     const canAccessPanel = (panelName) => {
         if (!auth.user) return false;
-        if (auth.user.role === 'superadmin') return true; 
+        
+        // Superadmin Logic
+        if (auth.user.role === 'superadmin') {
+            // Superadmin Plant (office_id 2) cannot access finance panel
+            if (panelName === 'finance' && auth.user.office_id === 2) {
+                return false;
+            }
+            return true;
+        }
         
         // Bendahara Logic
         const allowed = auth.user.allowed_panels || [];
@@ -467,8 +475,8 @@ export default function BendaharaLayout({ children, header }) {
                                          Profil Saya
                                      </Link>
 
-                                     {/* Superadmin Menu */}
-                                     {auth.user.role === 'superadmin' && (
+                                     {/* Superadmin Menu (Hanya Admin Utama yang bisa kelola user & log) */}
+                                     {auth.user.role === 'superadmin' && auth.user.office_id === 1 && (
                                          <>
                                              <Link 
                                                  href={route('superadmin.users.index')}

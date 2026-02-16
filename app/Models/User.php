@@ -108,6 +108,16 @@ class User extends Authenticatable
         // 2. Kantor Plant: Access restricted to allowed_panels.
         // Also checks legacy mapping if needed.
 
+        // Kantor Plant cannot access finance panel
+        if ($panel === self::PANEL_FINANCE) {
+            return false;
+        }
+
+        // Superadmin Plant has access to all panels (except Finance)
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         $panelsToCheck = [$panel];
         // 'kas' might be stored as 'plant_cash' in legacy data
         if ($panel === self::PANEL_CASH) {

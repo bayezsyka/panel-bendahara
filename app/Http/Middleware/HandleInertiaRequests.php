@@ -39,9 +39,9 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
                 'can_switch_office' => $request->user() ? $request->user()->isSuperAdmin() : false,
                 'permissions' => $request->user() ? [
-                    'can_create' => !($request->user()->isSuperAdmin() && $request->user()->office_id === 2), // Superadmin Plant Cannot Create
-                    'can_edit' => !$request->user()->isRestrictedToInputOnly() && !($request->user()->isSuperAdmin() && $request->user()->office_id === 2),
-                    'can_delete' => !$request->user()->isRestrictedToInputOnly() && !($request->user()->isSuperAdmin() && $request->user()->office_id === 2),
+                    'can_create' => true,
+                    'can_edit' => !$request->user()->isRestrictedToInputOnly(),
+                    'can_delete' => !$request->user()->isRestrictedToInputOnly(),
                 ] : [],
             ],
 
