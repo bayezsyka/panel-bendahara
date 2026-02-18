@@ -16,8 +16,22 @@
         Deny from all
     </FilesMatch>
 
-    # Blokir akses ke folder sistem Laravel
-    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor) - [F,L]
+    # ----------------------------------------------------
+    # STORAGE ACCESS & SECURITY
+    # ----------------------------------------------------
+    
+    # 1. Map /storage/... ke /storage/app/public/... agar file public bisa diakses
+    # Rule ini diletakkan paling atas agar diproses sebelum rule pemblokiran folder
+    RewriteRule ^storage/(.*)$ storage/app/public/$1 [L]
+
+    # 2. Blokir akses ke folder sistem Laravel
+    # Kita keluarkan 'storage' dari rule ini agar bisa diproses lebih spesifik di rule nomor 3
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor) - [F,L]
+    
+    # 3. Blokir akses ke folder storage KECUALI yang sudah di-rewrite ke storage/app/public/
+    # Ini melindungi data sensitif seperti logs, cache, dan framework di dalam folder storage
+    RewriteCond %{REQUEST_URI} !^/storage/app/public/
+    RewriteRule ^storage/ - [F,L]
     
     # Blokir akses ke file log
     RewriteRule \.log$ - [F,L]

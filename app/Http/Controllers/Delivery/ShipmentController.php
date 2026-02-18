@@ -9,6 +9,8 @@ use App\Models\Delivery\DeliveryShipment;
 use App\Services\OfficeContextService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class ShipmentController extends Controller
 {
@@ -24,22 +26,73 @@ class ShipmentController extends Controller
      */
     public function index(Request $request)
     {
-        // Don't filter by office. Data is shared.
-        $query = DeliveryShipment::query()
-            ->with(['project.customer', 'concreteGrade'])
-            ->latest('date')
-            ->latest('id');
+        $date = $request->query('date', Carbon::today()->toDateString());
+        $carbonDate = Carbon::parse($date);
 
-        if ($request->project_id) {
-            $query->where('delivery_project_id', $request->project_id);
+        $prevDate = $carbonDate->copy()->subDay()->toDateString();
+        $nextDate = $carbonDate->copy()->addDay()->toDateString();
+
+        $query = DeliveryShipment::query()
+            ->with(['project.customer', 'concreteGrade']);
+
+        // Filter by Date (Main Navigation)
+        $query->whereDate('date', $date);
+
+        // Optional search if needed on top of date
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('docket_number', 'like', "%{$request->search}%")
+                    ->orWhere('vehicle_number', 'like', "%{$request->search}%")
+                    ->orWhere('driver_name', 'like', "%{$request->search}%")
+                    ->orWhereHas('project', function ($q2) use ($request) {
+                        $q2->where('name', 'like', "%{$request->search}%")
+                            ->orWhereHas('customer', function ($q3) use ($request) {
+                                $q3->where('name', 'like', "%{$request->search}%");
+                            });
+                    });
+            });
         }
 
-        $shipments = $query->paginate(20)->withQueryString();
+        $shipments = $query->orderBy('id', 'asc')->get();
 
         return Inertia::render('Delivery/Shipment/Index', [
             'shipments' => $shipments,
-            'filters' => $request->only(['project_id'])
+            'selectedDate' => $date,
+            'prevDate' => $prevDate,
+            'nextDate' => $nextDate,
+            'filters' => $request->only(['search'])
         ]);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $startDate = $request->input('start_date', Carbon::today()->toDateString());
+        $endDate = $request->input('end_date', Carbon::today()->toDateString());
+
+        $shipments = DeliveryShipment::with(['project.customer', 'concreteGrade'])
+            ->whereBetween('date', [$startDate, $endDate])
+            ->orderBy('date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $initialDate = Carbon::parse($startDate);
+        $finalDate = Carbon::parse($endDate);
+
+        if ($initialDate->equalTo($finalDate)) {
+            $periodText = 'Tanggal: ' . $initialDate->translatedFormat('d F Y');
+        } else {
+            $periodText = 'Periode: ' . $initialDate->translatedFormat('d F Y') . ' s/d ' . $finalDate->translatedFormat('d F Y');
+        }
+
+        $pdf = Pdf::loadView('pdf.delivery.shipment_report', [
+            'title' => 'Laporan Pengiriman Beton',
+            'periodText' => $periodText,
+            'shipments' => $shipments,
+            'totalVolume' => $shipments->sum('volume'),
+            'totalAmount' => $shipments->sum('total_price'),
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->stream('laporan_pengiriman_' . $startDate . '_' . $endDate . '.pdf');
     }
 
     /**

@@ -76,7 +76,7 @@ class ProjectController extends Controller
     public function show(DeliveryProject $project)
     {
         return Inertia::render('Delivery/Project/Show', [
-            'project' => $project->load(['customer', 'defaultConcreteGrade', 'shipments.concreteGrade'])
+            'project' => $project->load(['customer', 'defaultConcreteGrade', 'shipments.concreteGrade', 'pumpRentals'])
         ]);
     }
 
@@ -112,6 +112,11 @@ class ProjectController extends Controller
             'work_type' => 'nullable|string|max:255',
             'default_concrete_grade_id' => 'nullable|exists:concrete_grades,id',
             'has_ppn' => 'boolean',
+            'pump_rental_price' => 'nullable|numeric|min:0',
+            'pump_limit_volume' => 'nullable|numeric|min:0',
+            'pump_over_volume_price' => 'nullable|numeric|min:0',
+            'pump_limit_pipe' => 'nullable|integer|min:0',
+            'pump_over_pipe_price' => 'nullable|numeric|min:0',
         ]);
 
         $oldHasPpn = $project->has_ppn;

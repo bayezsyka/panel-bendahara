@@ -91,10 +91,12 @@ class User extends Authenticatable
     /**
      * Check if user is restricted to input only (Create/Store).
      * Rule: "Bendahara kantor plant ... dia hanya bisa menginput data saja".
+     * UPDATE: Bendahara Plant disamakan hak aksesnya dengan Superadmin Plant (Full Access).
      */
     public function isRestrictedToInputOnly(): bool
     {
-        return $this->isBendahara() && $this->isKantorPlant();
+        return false;
+        // return $this->isBendahara() && $this->isKantorPlant();
     }
 
     // Unified Access Logic
@@ -113,8 +115,8 @@ class User extends Authenticatable
             return false;
         }
 
-        // Superadmin Plant has access to all panels (except Finance)
-        if ($this->isSuperAdmin()) {
+        // Superadmin Plant & Bendahara Plant have access to all panels (except Finance)
+        if ($this->isSuperAdmin() || $this->isBendahara()) {
             return true;
         }
 

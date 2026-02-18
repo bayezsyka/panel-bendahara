@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, useForm, Link, usePage } from '@inertiajs/react';
+import { Head, useForm, Link, usePage, router } from '@inertiajs/react';
+import { SearchInput } from '@/Components/ui';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -9,9 +10,25 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 
-export default function Index({ customers }) {
+export default function Index({ customers, filters = {} }) {
     const { auth } = usePage().props;
     const { can_create, can_edit, can_delete } = auth.permissions || {};
+
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounced search
+    React.useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchTerm !== (filters.search || '')) {
+                router.get(
+                    route('delivery.customers.index'),
+                    { search: searchTerm },
+                    { preserveState: true, replace: true }
+                );
+            }
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCustomer, setEditingCustomer] = useState(null);
@@ -87,12 +104,28 @@ export default function Index({ customers }) {
                         <p className="text-sm text-gray-500 font-medium mt-1">Daftar pelanggan aktif pengiriman beton</p>
                     </div>
                     {can_create && (
-                        <button 
-                            onClick={() => openModal()}
-                            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm"
-                        >
-                            + Tambah Customer
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <SearchInput
+                                value={searchTerm}
+                                onChange={setSearchTerm}
+                                placeholder="Cari customer..."
+                            />
+                            <button 
+                                onClick={() => openModal()}
+                                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm whitespace-nowrap"
+                            >
+                                + Tambah Customer
+                            </button>
+                        </div>
+                    )}
+                    {!can_create && (
+                         <div className="flex items-center gap-3">
+                            <SearchInput
+                                value={searchTerm}
+                                onChange={setSearchTerm}
+                                placeholder="Cari customer..."
+                            />
+                        </div>
                     )}
                 </div>
 

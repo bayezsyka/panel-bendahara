@@ -16,10 +16,10 @@ class ReceivableController extends Controller
     public function exportPdf()
     {
         // Get all customers with their projects, shipments, and payments
-        $customers = Customer::with(['projects.shipments.concreteGrade', 'projects.payments'])
+        $customers = Customer::with(['projects.shipments.concreteGrade', 'projects.payments', 'projects.pumpRentals'])
             ->whereHas('projects', function ($q) {
                 // Ensure customer has projects causing some activity
-                $q->has('shipments')->orHas('payments');
+                $q->has('shipments')->orHas('payments')->orHas('pumpRentals');
             })
             ->get();
 
@@ -44,6 +44,25 @@ class ReceivableController extends Controller
                     ];
                 });
                 $ledger = $ledger->concat($shipments);
+
+                // Map Pump Rentals
+                $pumpRentals = $project->pumpRentals->map(function ($rental) use ($project) {
+                    $tax = $project->has_ppn ? ($rental->total_price * 0.11) : 0;
+                    return [
+                        'type' => 'pump_rental',
+                        'date' => $rental->date,
+                        'original_date' => $rental->date,
+                        'project_name' => $project->name,
+                        'docket_number' => $rental->docket_number ?? '-',
+                        'concrete_grade' => 'Sewa Pompa',
+                        'volume' => 0,
+                        'price_per_m3' => 0,
+                        'debit' => (float) ($rental->total_price),
+                        'credit' => 0,
+                        'description' => $rental->vehicle_number ? "Pompa: " . $rental->vehicle_number : "Sewa Pompa",
+                    ];
+                });
+                $ledger = $ledger->concat($pumpRentals);
 
                 // Map Payments
                 $payments = $project->payments->map(function ($payment) use ($project) {
@@ -70,7 +89,7 @@ class ReceivableController extends Controller
                 if (!$date instanceof \Carbon\Carbon) {
                     $date = \Carbon\Carbon::parse($date);
                 }
-                return $date->format('Ymd') . ($item['type'] === 'shipment' ? '0' : '1');
+                return $date->format('Ymd') . ($item['type'] === 'shipment' ? '0' : ($item['type'] === 'pump_rental' ? '1' : '2'));
             });
 
             // Calculate Running Totals
@@ -84,6 +103,10 @@ class ReceivableController extends Controller
 
                 if ($item['type'] === 'shipment') {
                     $totalVolume += $item['volume'];
+                    $totalTagihan += $item['debit'];
+                    $item['running_volume'] = $totalVolume;
+                    $item['running_tagihan'] = $totalTagihan;
+                } else if ($item['type'] === 'pump_rental') {
                     $totalTagihan += $item['debit'];
                     $item['running_volume'] = $totalVolume;
                     $item['running_tagihan'] = $totalTagihan;
@@ -189,7 +212,14 @@ class ReceivableController extends Controller
         $projects = $customer->projects()
             ->get()
             ->map(function ($project) {
+                $totalBill = $project->getRemainingBalanceAttribute(); // Use the attribute logic for accurate total? No, this is total bill + pump etc.
+                // Wait, getRemainingBalanceAttribute calculates everything. But here we want breakdown.
+                // The original code was:
                 $totalBill = $project->shipments->sum('total_price_with_tax');
+                $totalPump = $project->pumpRentals->sum('total_price');
+
+                $totalBillAll = $totalBill + $totalPump;
+
                 $totalPaid = $project->payments->sum('amount');
 
                 return [
@@ -197,11 +227,11 @@ class ReceivableController extends Controller
                     'slug' => $project->slug,
                     'name' => $project->name,
                     'location' => $project->location,
-                    'total_bill' => $totalBill,
-                    'total_bill_dpp' => $project->shipments->sum('total_price'),
+                    'total_bill' => $totalBillAll,
+                    'total_bill_dpp' => $project->shipments->sum('total_price') + $project->pumpRentals->sum('total_price'),
                     'has_ppn' => $project->has_ppn,
                     'total_paid' => $totalPaid,
-                    'remaining' => $totalBill - $totalPaid,
+                    'remaining' => $totalBillAll - $totalPaid,
                 ];
             });
 
@@ -213,14 +243,19 @@ class ReceivableController extends Controller
 
     public function showProject(DeliveryProject $project)
     {
-        $project->load(['customer', 'shipments.concreteGrade', 'payments']);
+        $project->load(['customer', 'shipments.concreteGrade', 'payments', 'pumpRentals']);
 
-        $ledger = $project->shipments->map(function ($shipment) {
+        // Calculate shipment ledger (Shipments + Payments)
+        $shipRunningBalance = 0;
+        $shipRunningVolume = 0;
+        $shipRunningTagihan = 0;
+
+        $shipItems = $project->shipments->map(function ($shipment) {
             return [
                 'id' => 's-' . $shipment->id,
                 'type' => 'shipment',
                 'date' => $shipment->date,
-                'original_date' => $shipment->date, // For sorting
+                'original_date' => $shipment->date,
                 'docket_number' => $shipment->docket_number,
                 'concrete_grade' => $shipment->concreteGrade,
                 'volume' => (float) $shipment->volume,
@@ -231,12 +266,14 @@ class ReceivableController extends Controller
                 'notes' => $shipment->docket_number,
                 'created_at' => $shipment->created_at,
             ];
-        })->concat($project->payments->map(function ($payment) {
+        });
+
+        $payItems = $project->payments->map(function ($payment) {
             return [
                 'id' => 'p-' . $payment->id,
                 'type' => 'payment',
                 'date' => $payment->date,
-                'original_date' => $payment->date, // For sorting
+                'original_date' => $payment->date,
                 'docket_number' => '-',
                 'concrete_grade' => null,
                 'volume' => 0,
@@ -247,36 +284,52 @@ class ReceivableController extends Controller
                 'notes' => $payment->notes,
                 'created_at' => $payment->created_at,
             ];
-        }))->sortBy(function ($item) {
+        });
+
+        $shipmentLedger = $shipItems->concat($payItems)->sortBy(function ($item) {
             $date = $item['original_date'];
             if (!$date instanceof \Carbon\Carbon) {
                 $date = \Carbon\Carbon::parse($date);
             }
-            return $date->format('Ymd') . ($item['type'] === 'shipment' ? '0' : '1'); // Shipments first on same day
+            return $date->format('Ymd') . ($item['type'] === 'shipment' ? '0' : '1');
+        })->values()->map(function ($item) use (&$shipRunningBalance, &$shipRunningVolume, &$shipRunningTagihan) {
+            $shipRunningBalance += $item['debit'] - $item['credit'];
+            if ($item['type'] === 'shipment') {
+                $shipRunningVolume += $item['volume'];
+            }
+            $shipRunningTagihan += $item['debit'];
+            $item['balance'] = $shipRunningBalance;
+            $item['total_volume'] = $shipRunningVolume;
+            $item['total_tagihan'] = $shipRunningTagihan;
+            return $item;
         });
 
-        // Calculate running totals
-        $runningBalance = 0;
-        $runningVolume = 0;
-        $runningTagihan = 0;
-
-        $ledger = $ledger->map(function ($item) use (&$runningBalance, &$runningVolume, &$runningTagihan) {
-            $runningBalance += $item['debit'] - $item['credit'];
-            $runningVolume += $item['volume'];
-            $runningTagihan += $item['debit'];
-
-            $item['balance'] = $runningBalance;
-            $item['total_volume'] = $runningVolume;
-            $item['total_tagihan'] = $runningTagihan;
-            return $item;
+        // Calculate pump ledger (Charges only)
+        $pumpRunningTagihan = 0;
+        $pumpLedger = $project->pumpRentals->sortBy('date')->values()->map(function ($rental) use (&$pumpRunningTagihan) {
+            $pumpRunningTagihan += (float) $rental->total_price;
+            return [
+                'id' => 'pr-' . $rental->id,
+                'type' => 'pump_rental',
+                'date' => $rental->date,
+                'docket_number' => $rental->docket_number ?? '-',
+                'vehicle_number' => $rental->vehicle_number,
+                'driver_name' => $rental->driver_name,
+                'volume_pumped' => $rental->volume_pumped,
+                'debit' => (float) $rental->total_price,
+                'total_tagihan' => $pumpRunningTagihan,
+                'notes' => $rental->notes,
+            ];
         });
 
         return Inertia::render('Receivable/ProjectDetail', [
             'project' => $project,
             'unbilled_shipments' => $project->shipments()->where('is_billed', false)->with('concreteGrade')->get(),
             'billed_shipments' => $project->shipments()->where('is_billed', true)->with('concreteGrade')->get(),
+            'pump_rentals' => $project->pumpRentals,
             'payments' => $project->payments()->orderBy('date', 'desc')->get(),
-            'ledger' => $ledger->values(),
+            'shipment_ledger' => $shipmentLedger,
+            'pump_ledger' => $pumpLedger,
             'concrete_grades' => \App\Models\Delivery\ConcreteGrade::all(['id', 'code', 'price']),
         ]);
     }
@@ -317,38 +370,131 @@ class ReceivableController extends Controller
 
     public function exportInvoice(Request $request, DeliveryProject $project)
     {
-        // 1. Ambil data Pengiriman (Items Invoice)
-        $query = $project->shipments()->with('concreteGrade');
-
+        // 1. Ambil Items Invoice
+        // Shipments
+        $shipmentQuery = $project->shipments()->with('concreteGrade');
         if ($request->start_date && $request->end_date) {
-            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+            $shipmentQuery->whereBetween('date', [$request->start_date, $request->end_date]);
+        }
+        $shipments = $shipmentQuery->get();
+
+        // Pump Rentals
+        $includePump = $request->boolean('include_pump', true);
+        $pumpRentals = collect();
+        if ($includePump) {
+            $pumpQuery = $project->pumpRentals();
+            if ($request->start_date && $request->end_date) {
+                $pumpQuery->whereBetween('date', [$request->start_date, $request->end_date]);
+            }
+            $pumpRentals = $pumpQuery->get();
         }
 
-        $shipments = $query->get();
+        // 2. Build Invoice Items
+        $invoiceItems = collect();
+        $totalVolume = 0;
+        $subtotal = 0;
 
-        // 2. Ambil data Pembayaran (DP)
-        // Menjumlahkan semua pembayaran yang masuk SEBELUM atau PADA tanggal invoice ini
+        // Process Shipments
+        foreach ($shipments as $shipment) {
+            $invoiceItems->push([
+                'type' => 'shipment',
+                'date' => $shipment->date,
+                'description' => "Readymix " . ($shipment->concreteGrade->code ?? 'Concrete') . ", pengiriman " . date('d/m/Y', strtotime($shipment->date)),
+                'docket_number' => $shipment->docket_number,
+                'volume' => $shipment->volume,
+                'unit' => 'M3',
+                'unit_price' => $shipment->price_per_m3,
+                'total_price' => $shipment->total_price,
+                'is_sub_item' => false,
+                'sort_key' => date('Ymd', strtotime($shipment->date)) . '_S_' . $shipment->id,
+            ]);
+            $totalVolume += $shipment->volume;
+            $subtotal += $shipment->total_price;
+        }
+
+        // Process Pump Rentals
+        foreach ($pumpRentals as $rental) {
+            // Main Rental Item
+            $invoiceItems->push([
+                'type' => 'pump_rental',
+                'date' => $rental->date,
+                'description' => "Sewa Concrete Pump (Tgl: " . date('d/m/Y', strtotime($rental->date)) . ")",
+                'docket_number' => $rental->docket_number,
+                'volume' => 1,
+                'unit' => 'Set',
+                'unit_price' => $rental->rental_price,
+                'total_price' => $rental->rental_price,
+                'is_sub_item' => false,
+                'sort_key' => date('Ymd', strtotime($rental->date)) . '_P_' . $rental->id . '_0',
+            ]);
+            $subtotal += $rental->rental_price;
+
+            // Over Volume
+            if ($rental->volume_pumped > $rental->limit_volume) {
+                $overVol = $rental->volume_pumped - $rental->limit_volume;
+                $cost = $overVol * $rental->over_volume_price;
+                $invoiceItems->push([
+                    'type' => 'pump_over_volume',
+                    'date' => $rental->date,
+                    'description' => "Over Volume ({$rental->volume_pumped} - {$rental->limit_volume})",
+                    'docket_number' => '',
+                    'volume' => $overVol,
+                    'unit' => 'M3',
+                    'unit_price' => $rental->over_volume_price,
+                    'total_price' => $cost,
+                    'is_sub_item' => true,
+                    'sort_key' => date('Ymd', strtotime($rental->date)) . '_P_' . $rental->id . '_1',
+                ]);
+                $subtotal += $cost;
+            }
+
+            // Over Pipe
+            if ($rental->pipes_used > $rental->limit_pipe) {
+                $overPipe = $rental->pipes_used - $rental->limit_pipe;
+                $cost = $overPipe * $rental->over_pipe_price;
+                $invoiceItems->push([
+                    'type' => 'pump_over_pipe',
+                    'date' => $rental->date,
+                    'description' => "Penambahan Pipa ({$rental->pipes_used} - {$rental->limit_pipe})",
+                    'docket_number' => '',
+                    'volume' => $overPipe,
+                    'unit' => 'Btg',
+                    'unit_price' => $rental->over_pipe_price,
+                    'total_price' => $cost,
+                    'is_sub_item' => true,
+                    'sort_key' => date('Ymd', strtotime($rental->date)) . '_P_' . $rental->id . '_2',
+                ]);
+                $subtotal += $cost;
+            }
+        }
+
+        // Sort items by date and grouping
+        $invoiceItems = $invoiceItems->sortBy('sort_key')->values();
+
+        // 3. Ambil Payments (DP)
         $paymentQuery = $project->payments();
         if ($request->end_date) {
             $paymentQuery->where('date', '<=', $request->end_date);
         }
         $totalDP = $paymentQuery->sum('amount');
 
-        // 3. Kalkulasi
-        $subtotal = $shipments->sum('total_price');
-
-        // Check project settings for PPN
-        $ppn = $project->has_ppn ? ($subtotal * 0.11) : 0; // PPN 11%
+        // 4. Kalkulasi Grand Total
+        $ppnRaw = 0;
+        foreach ($invoiceItems as $item) {
+            if ($item['type'] === 'shipment') {
+                $ppnRaw += $item['total_price'] * 0.11;
+            }
+        }
+        $ppn = $project->has_ppn ? $ppnRaw : 0;
         $grandTotal = ($subtotal + $ppn) - $totalDP;
 
-        // Helper Terbilang (ubah angka jadi teks)
         $terbilang = $this->terbilang($grandTotal) . ' Rupiah';
 
-        // 4. Generate PDF
         $pdf = PDF::loadView('pdf.invoice.jkk_invoice', [
             'project' => $project,
             'customer' => $project->customer,
-            'shipments' => $shipments,
+            'items' => $invoiceItems, // Pass items instead of shipments
+            'totalVolume' => $totalVolume, // Explicit total volume of concrete
             'subtotal' => $subtotal,
             'ppn' => $ppn,
             'dp' => $totalDP,
@@ -362,9 +508,9 @@ class ReceivableController extends Controller
             'due_date_jt' => $request->due_date_jt,
         ]);
 
-        // Mark shipments as billed
         if ($request->mark_as_billed) {
             $shipments->each->update(['is_billed' => true]);
+            $pumpRentals->each->update(['is_billed' => true]);
         }
 
         return $pdf->stream('Invoice-' . $project->name . '-' . now()->format('Ymd') . '.pdf');

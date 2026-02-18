@@ -20,7 +20,7 @@ import {
     Clock
 } from 'lucide-react';
 
-export default function ProjectDetail({ project, unbilled_shipments, billed_shipments, payments, concrete_grades = [], ledger = [] }) {
+export default function ProjectDetail({ project, unbilled_shipments, billed_shipments, payments, concrete_grades = [], shipment_ledger = [], pump_ledger = [] }) {
     const [activeTab, setActiveTab] = useState('ledger');
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -45,6 +45,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         po_so_no: '',
         terms_of_payment: '',
         due_date_jt: '',
+        include_pump: true,
     });
 
     const formatCurrency = (value) => {
@@ -174,76 +175,138 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                 {/* Tab Content */}
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     {activeTab === 'ledger' && (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse whitespace-nowrap">
-                                <thead>
-                                    <tr className="bg-slate-50/50 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                                        <th className="px-4 py-3 text-center border-r border-slate-100">No</th>
-                                        <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
-                                        <th className="px-4 py-3 border-r border-slate-100">Customer</th>
-                                        <th className="px-4 py-3 border-r border-slate-100">Mutu</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Harga m3</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Vol</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Total Vol</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Tagihan</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Total Tagihan</th>
-                                        <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Pembayaran</th>
-                                        <th className="px-4 py-3 text-right border-r border-slate-100">Saldo Akhir</th>
-                                        <th className="px-4 py-3">Ket</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                                    {ledger.length === 0 ? (
-                                        <tr><td colSpan="13" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi.</td></tr>
-                                    ) : (
-                                        ledger.map((item, index) => (
-                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                                                <td className="px-4 py-3 text-center font-medium border-r border-slate-100">{index + 1}</td>
-                                                {/* Shipment Columns */}
-                                                <td className="px-4 py-3 border-r border-slate-100">
-                                                    {item.type === 'shipment' ? new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 font-bold border-r border-slate-100 truncate max-w-[150px]" title={project.name}>
-                                                    {project.name}
-                                                </td>
-                                                <td className="px-4 py-3 border-r border-slate-100">
-                                                    {item.type === 'shipment' ? (item.concrete_grade?.code || '-') : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100">
-                                                    {item.type === 'shipment' ? formatCurrency(item.price_per_m3) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">
-                                                    {item.type === 'shipment' ? item.volume.toLocaleString('id-ID') : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">
-                                                    {item.total_volume.toLocaleString('id-ID')}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
-                                                    {item.type === 'shipment' ? formatCurrency(item.debit) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
-                                                    {formatCurrency(item.total_tagihan)}
-                                                </td>
-                                                
-                                                {/* Payment Columns */}
-                                                <td className="px-4 py-3 border-r border-slate-100">
-                                                    {item.type === 'payment' ? new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-emerald-600 bg-emerald-50/30">
-                                                    {item.type === 'payment' ? formatCurrency(item.credit) : '-'}
-                                                </td>
-                                                <td className="px-4 py-3 text-right border-r border-slate-100 font-black text-indigo-700 bg-indigo-50/30">
-                                                    {formatCurrency(item.balance)}
-                                                </td>
-                                                <td className="px-4 py-3 italic text-slate-500">
-                                                    {item.type === 'payment' ? (item.description || item.notes) : (item.notes || '-')}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                        <div className="space-y-8 p-4 bg-slate-50/50">
+                            {/* Section 1: Concrete Shipments */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center">
+                                        <div className="w-1.5 h-6 bg-indigo-600 rounded-full mr-3" />
+                                        Rekapitulasi Piutang Pengiriman Beton
+                                    </h3>
+                                    <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-md font-bold">
+                                        Concrete Ledger
+                                    </span>
+                                </div>
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse whitespace-nowrap">
+                                            <thead>
+                                                <tr className="bg-slate-50/80 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                                                    <th className="px-4 py-3 text-center border-r border-slate-100">No</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Mutu</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Harga m3</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Vol</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Total Vol</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Tagihan</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Total Tagihan</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Keterangan</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Pembayaran</th>
+                                                    <th className="px-4 py-3 text-right">Saldo Akhir</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                                                {shipment_ledger.length === 0 ? (
+                                                    <tr><td colSpan="11" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi pengiriman.</td></tr>
+                                                ) : (
+                                                    shipment_ledger.map((item, index) => (
+                                                        <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-3 text-center font-medium border-r border-slate-100 bg-slate-50/30">{index + 1}</td>
+                                                            <td className="px-4 py-3 border-r border-slate-100">
+                                                                {item.type === 'shipment' || item.type === 'payment' ? new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 border-r border-slate-100 font-bold">
+                                                                {item.type === 'shipment' ? (item.concrete_grade?.code || '-') : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100">
+                                                                {item.type === 'shipment' ? formatCurrency(item.price_per_m3) : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">
+                                                                {item.type === 'shipment' ? item.volume.toLocaleString('id-ID') : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-500">
+                                                                {item.total_volume.toLocaleString('id-ID')}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
+                                                                {item.type === 'shipment' ? formatCurrency(item.debit) : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-black text-slate-900 bg-slate-50/50">
+                                                                {formatCurrency(item.total_tagihan)}
+                                                            </td>
+                                                            <td className="px-4 py-3 border-r border-slate-100 italic text-slate-500 max-w-[200px] truncate" title={item.description || item.notes}>
+                                                                {item.description || item.notes || '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-emerald-600 bg-emerald-50/30">
+                                                                {item.type === 'payment' ? formatCurrency(item.credit) : '-'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right font-black text-indigo-700 bg-indigo-50/30">
+                                                                {formatCurrency(item.balance)}
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Pump Rentals */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between px-2">
+                                    <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center">
+                                        <div className="w-1.5 h-6 bg-orange-500 rounded-full mr-3" />
+                                        Rekapitulasi Sewa Pompa
+                                    </h3>
+                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-md font-bold">
+                                        Pump Rental History
+                                    </span>
+                                </div>
+                                <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse whitespace-nowrap">
+                                            <thead>
+                                                <tr className="bg-slate-50/80 text-[10px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                                                    <th className="px-4 py-3 text-center border-r border-slate-100">No</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Tanggal</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">DN</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Kendaraan</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Driver</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Volume</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800">Tagihan</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100 font-black text-slate-900">Total Tagihan</th>
+                                                    <th className="px-4 py-3">Catatan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                                                {pump_ledger.length === 0 ? (
+                                                    <tr><td colSpan="9" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi sewa pompa.</td></tr>
+                                                ) : (
+                                                    pump_ledger.map((item, index) => (
+                                                        <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                                                            <td className="px-4 py-3 text-center font-medium border-r border-slate-100 bg-slate-50/30">{index + 1}</td>
+                                                            <td className="px-4 py-3 border-r border-slate-100font-bold bg-orange-50/10">
+                                                                {new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })}
+                                                            </td>
+                                                            <td className="px-4 py-3 border-r border-slate-100 font-mono text-xs text-indigo-600 font-bold">{item.docket_number}</td>
+                                                            <td className="px-4 py-3 border-r border-slate-100 uppercase text-[10px] font-black">{item.vehicle_number || '-'}</td>
+                                                            <td className="px-4 py-3 border-r border-slate-100">{item.driver_name || '-'}</td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-medium">{item.volume_pumped} M3</td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800 bg-slate-50/30">
+                                                                {formatCurrency(item.debit)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right border-r border-slate-100 font-black text-slate-900 bg-orange-50/20">
+                                                                {formatCurrency(item.total_tagihan)}
+                                                            </td>
+                                                            <td className="px-4 py-3 italic text-slate-500 max-w-[200px] truncate">{item.notes || '-'}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -516,21 +579,32 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                     onChange={(e) => invoiceForm.setData('due_date_jt', e.target.value)}
                                 />
                             </div>
-                            
-                            {/* Checkbox aligns with the grid */}
-                            <div className="flex items-end pb-2">
-                                <div className="flex items-center">
-                                    <input 
-                                        type="checkbox" 
-                                        id="mark_as_billed" 
-                                        className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                        checked={invoiceForm.data.mark_as_billed}
-                                        onChange={(e) => invoiceForm.setData('mark_as_billed', e.target.checked)}
-                                    />
-                                    <label htmlFor="mark_as_billed" className="ml-2 text-sm text-slate-700 font-medium select-none cursor-pointer">
-                                        Tandai "Sudah Ditagih"
-                                    </label>
-                                </div>
+                        </div>
+
+                        <div className="flex items-center gap-8 mt-4 pt-4 border-t border-slate-100">
+                            <div className="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    id="include_pump" 
+                                    className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    checked={invoiceForm.data.include_pump}
+                                    onChange={(e) => invoiceForm.setData('include_pump', e.target.checked)}
+                                />
+                                <label htmlFor="include_pump" className="ml-2 text-sm text-slate-700 font-bold select-none cursor-pointer">
+                                    Sertakan Sewa Pompa
+                                </label>
+                            </div>
+                            <div className="flex items-center">
+                                <input 
+                                    type="checkbox" 
+                                    id="mark_as_billed" 
+                                    className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    checked={invoiceForm.data.mark_as_billed}
+                                    onChange={(e) => invoiceForm.setData('mark_as_billed', e.target.checked)}
+                                />
+                                <label htmlFor="mark_as_billed" className="ml-2 text-sm text-slate-700 font-bold select-none cursor-pointer">
+                                    Tandai "Sudah Ditagih"
+                                </label>
                             </div>
                         </div>
                     </div>

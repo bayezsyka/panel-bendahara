@@ -21,14 +21,21 @@ class ConcreteGradeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         // Don't filter by office. Data is shared.
-        $concreteGrades = ConcreteGrade::latest()
+        $concreteGrades = ConcreteGrade::when($search, function ($query, $search) {
+            $query->where('code', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+        })
+            ->latest()
             ->get();
 
         return Inertia::render('Delivery/ConcreteGrade/Index', [
-            'concreteGrades' => $concreteGrades
+            'concreteGrades' => $concreteGrades,
+            'filters' => $request->only(['search']),
         ]);
     }
 

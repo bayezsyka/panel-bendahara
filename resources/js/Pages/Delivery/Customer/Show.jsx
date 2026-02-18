@@ -2,8 +2,25 @@ import React from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { SearchInput } from '@/Components/ui';
+import { useState, useEffect } from 'react';
 
-export default function Show({ customer }) {
+export default function Show({ customer, filters = {} }) {
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounced search
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchTerm !== (filters.search || '')) {
+                router.get(
+                    route('delivery.customers.show', customer.slug),
+                    { search: searchTerm },
+                    { preserveState: true, replace: true }
+                );
+            }
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
     return (
         <BendaharaLayout>
             <Head title={`Customer: ${customer.name}`} />
@@ -41,12 +58,20 @@ export default function Show({ customer }) {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-xl font-bold text-gray-900 tracking-tight">Proyek Dipesan</h3>
-                        <Link 
-                            href={route('delivery.projects.create', { customer_id: customer.id })}
-                            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-                        >
-                            + Tambah Proyek
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <SearchInput
+                                value={searchTerm}
+                                onChange={setSearchTerm}
+                                placeholder="Cari proyek..."
+                                size="sm"
+                            />
+                            <Link 
+                                href={route('delivery.projects.create', { customer_id: customer.id })}
+                                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 whitespace-nowrap active:scale-95"
+                            >
+                                + Tambah Proyek
+                            </Link>
+                        </div>
                     </div>
 
                     {customer.delivery_projects && customer.delivery_projects.length > 0 ? (

@@ -1,6 +1,6 @@
 import React from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function Show({ project }) {
@@ -50,6 +50,13 @@ export default function Show({ project }) {
                                 Edit Proyek
                             </Link>
                         )}
+                                <Link 
+                                    href={route('delivery.pump-rentals.create', { project_id: project.id })}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                    Sewa Pompa
+                                </Link>
                         {can_create && (
                             <Link 
                                 href={route('delivery.shipments.create', { project_id: project.id })}
@@ -103,6 +110,43 @@ export default function Show({ project }) {
                             <div className="pt-2 border-t border-gray-50">
                                 <p className="text-xs text-gray-400 font-medium uppercase">Total Ritase</p>
                                 <p className="text-2xl font-bold text-gray-900 mt-1">{project.shipments.length} <span className="text-xs text-gray-400 font-medium">Pengiriman</span></p>
+                            </div>
+                        </div>
+                        </div>
+
+                    <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative group">
+                        <div className="flex justify-between items-start mb-4">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Sewa Pompa</h3>
+                            {can_edit && (
+                                <Link 
+                                    href={route('delivery.projects.edit', project.slug)}
+                                    className="text-gray-300 hover:text-indigo-600 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Edit Pengaturan Pompa"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                </Link>
+                            )}
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-xs text-gray-400 font-medium uppercase">Harga Sewa</p>
+                                <p className="text-sm text-gray-900 font-bold mt-1">
+                                    {project.pump_rental_price ? formatCurrency(project.pump_rental_price) : '-'}
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-xs text-gray-400 font-medium uppercase">Limit Vol</p>
+                                    <p className="text-sm text-gray-900 font-semibold mt-1">{project.pump_limit_volume ? project.pump_limit_volume + ' m³' : '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-400 font-medium uppercase">Limit Pipa</p>
+                                    <p className="text-sm text-gray-900 font-semibold mt-1">{project.pump_limit_pipe ? project.pump_limit_pipe + ' btg' : '-'}</p>
+                                </div>
+                            </div>
+                            <div className="pt-2 border-t border-gray-50">
+                                <p className="text-xs text-gray-400 font-medium uppercase">Total Sewa</p>
+                                <p className="text-2xl font-bold text-indigo-600 mt-1">{project.pump_rentals ? project.pump_rentals.length : 0} <span className="text-xs font-medium text-indigo-400">Kali</span></p>
                             </div>
                         </div>
                     </div>
@@ -235,7 +279,97 @@ export default function Show({ project }) {
                         </div>
                     )}
                 </div>
-            </div>
+
+                {/* Rekapitulasi Sewa Pompa */}
+                {project.pump_rentals && project.pump_rentals.length > 0 && (
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-6">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-bold text-gray-900 text-lg">Rekapitulasi Sewa Pompa</h3>
+                                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-tighter">
+                                    {project.pump_rentals.length} Sewa
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left whitespace-nowrap">
+                                <thead className="bg-gray-50/50">
+                                    <tr>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">No</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tanggal</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Ket.</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Vol Pump</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Pipa</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Total Biaya</th>
+                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-50">
+                                    {project.pump_rentals.map((rental, index) => (
+                                        <tr key={rental.id} className="hover:bg-gray-50/70 transition-colors group">
+                                            <td className="px-4 py-3 text-sm font-medium text-gray-400 text-center">{index + 1}</td>
+                                            <td className="px-4 py-3 text-sm text-gray-700 font-medium">
+                                                {new Date(rental.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-600 font-medium">
+                                                {rental.vehicle_number && <span className="block text-xs font-bold text-gray-500">{rental.vehicle_number}</span>}
+                                                {rental.driver_name || '-'}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 font-medium text-right font-mono">
+                                                {parseFloat(rental.volume_pumped) > parseFloat(rental.limit_volume) ? (
+                                                    <span className="text-red-600" title={`Over ${(rental.volume_pumped - rental.limit_volume)}`}>{rental.volume_pumped} (+{(rental.volume_pumped - rental.limit_volume)})</span>
+                                                ) : rental.volume_pumped} m³
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 font-medium text-right font-mono">
+                                                {parseInt(rental.pipes_used) > parseInt(rental.limit_pipe) ? (
+                                                    <span className="text-red-600" title={`Over ${(rental.pipes_used - rental.limit_pipe)}`}>{rental.pipes_used} (+{(rental.pipes_used - rental.limit_pipe)})</span>
+                                                ) : rental.pipes_used} btg
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-gray-900 font-bold text-right tabular-nums">{formatCurrency(rental.total_price)}</td>
+                                            <td className="px-4 py-3 text-center">
+                                                <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {can_edit && (
+                                                        <>
+                                                            <Link 
+                                                                href={route('delivery.pump-rentals.edit', rental.id)}
+                                                                className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
+                                                                title="Edit"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                            </Link>
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    if(confirm('Hapus data sewa pompa ini?')) {
+                                                                        router.delete(route('delivery.pump-rentals.destroy', rental.id));
+                                                                    }
+                                                                }}
+                                                                className="p-1 text-gray-400 hover:text-red-600 rounded-md transition-colors"
+                                                                title="Hapus"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-gray-50/80 font-black border-t-2 border-gray-100">
+                                    <tr>
+                                        <td colSpan="5" className="px-4 py-4 text-xs text-gray-400 uppercase tracking-widest text-right">Total Sewa</td>
+                                        <td className="px-4 py-4 text-base text-indigo-700 text-right tabular-nums">
+                                            {formatCurrency(project.pump_rentals.reduce((sum, s) => sum + parseFloat(s.total_price), 0))}
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                )}
+                </div>
         </BendaharaLayout>
     );
 }

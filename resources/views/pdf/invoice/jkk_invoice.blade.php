@@ -148,44 +148,31 @@
 <body>
 
     <div class="container">
-        <div style="width: 100%; margin-bottom: 20px;">
-            <div style="float: left; width: 40%;">
-                @php
-                    $logoPath = public_path('images/logo.png');
-                    $logoData = '';
-                    if (file_exists($logoPath)) {
-                        $logoData = base64_encode(file_get_contents($logoPath));
-                    }
-                @endphp
-                @if ($logoData)
-                    <img src="data:image/png;base64,{{ $logoData }}" style="height: 80px;">
-                @endif
-            </div>
-            <div style="float: right; width: 55%; text-align: right;">
-                <div style="width: 100%; height: 12px; margin-bottom: 5px;">
-                    <div style="float: right; width: 120px; height: 12px; background-color: #0c5e9c; margin-left: 2px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 40%; vertical-align: top;">
+                    @php
+                        $logoPath = public_path('images/logo.png');
+                        $logoData = '';
+                        if (file_exists($logoPath)) {
+                            $logoData = base64_encode(file_get_contents($logoPath));
+                        }
+                    @endphp
+                    @if ($logoData)
+                        <img src="data:image/png;base64,{{ $logoData }}" style="height: 80px;">
+                    @endif
+                </td>
+                <td style="width: 60%; text-align: right; vertical-align: top; padding-top: 5px;">
+                    <div class="header-title" style="font-size: 14px; margin-bottom: 5px;">PT. JAYA KARYA KONTRUKSI</div>
+                    <div class="header-address" style="font-size: 9px; line-height: 1.4;">
+                        DESA BULAKELOR, KEC. KETANGGUNGAN<br>
+                        KAB. BREBES, JAWA TENGAH, INDONESIA<br>
+                        TELP : (0283) 673063, HP. 081333019023<br>
+                        NPWP : 75.692.855.2.501.000
                     </div>
-                    <div
-                        style="float: right; width: 15px; height: 12px; background-color: #000; transform: skewX(-30deg); margin-left: 2px;">
-                    </div>
-                    <div
-                        style="float: right; width: 15px; height: 12px; background-color: #000; transform: skewX(-30deg); margin-left: 2px;">
-                    </div>
-                    <div
-                        style="float: right; width: 15px; height: 12px; background-color: #000; transform: skewX(-30deg);">
-                    </div>
-                </div>
-                <div style="clear: both;"></div>
-                <div class="header-title" style="font-size: 14px; margin-top: 5px;">PT. JAYA KARYA KONTRUKSI</div>
-                <div class="header-address" style="font-size: 9px; margin-top: 2px;">
-                    DESA BULAKELOR, KEC. KETANGGUNGAN<br>
-                    KAB. BREBES, JAWA TENGAH, INDONESIA<br>
-                    TELP : (0283) 673063, HP. 081333019023<br>
-                    NPWP : 75.692.855.2.501.000
-                </div>
-            </div>
-            <div style="clear: both;"></div>
-        </div>
+                </td>
+            </tr>
+        </table>
 
         <div class="invoice-title" style="margin-top: 0; padding-top: 10px;">I N V O I C E</div>
 
@@ -209,36 +196,60 @@
                 <td class="content">{{ date('d-m-Y', strtotime($invoiceDate)) }}</td>
             </tr>
             <tr>
-                <td class="label">NPWP</td>
+                <td class="label">Contact</td>
                 <td class="separator">:</td>
-                <td class="content">{{ $customer->npwp ?? '-' }}</td>
+                <td class="content">{{ $customer->contact ?? '-' }}</td>
                 <td class="label">Delivery Note/Date</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $delivery_note ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="label">Material</td>
+                <td class="label">NPWP</td>
                 <td class="separator">:</td>
-                <td class="content">Readymix Concrete</td>
+                <td class="content">{{ $customer->npwp ?? '-' }}</td>
                 <td class="label">PO atau SO No./Date</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $po_so_no ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="label">Location</td>
+                <td class="label">Subcon</td>
                 <td class="separator">:</td>
-                <td class="content">{{ $project->location ?? '-' }}</td>
+                <td class="content">{{ $project->sub_contractor ?? '-' }}</td>
                 <td class="label">Terms of Payment</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $terms_of_payment ?? '-' }}</td>
             </tr>
             <tr>
-                <td class="label">Pekerjaan</td>
+                <td class="label">Contact Person</td>
                 <td class="separator">:</td>
-                <td class="content">Cor / Pengecoran</td>
+                <td class="content">{{ $project->contact_person ?? '-' }}</td>
                 <td class="label">Due Date / JT</td>
                 <td class="separator">:</td>
                 <td class="content">{{ $due_date_jt ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td class="label">Material</td>
+                <td class="separator">:</td>
+                <td class="content">Readymix Concrete</td>
+                <td class="label"></td>
+                <td class="separator"></td>
+                <td class="content"></td>
+            </tr>
+            <tr>
+                <td class="label">Location</td>
+                <td class="separator">:</td>
+                <td class="content">{{ $project->location ?? '-' }}</td>
+                <td class="label"></td>
+                <td class="separator"></td>
+                <td class="content"></td>
+            </tr>
+            <tr>
+                <td class="label">Pekerjaan</td>
+                <td class="separator">:</td>
+                <td class="content">Cor / Pengecoran</td>
+                <td class="label"></td>
+                <td class="separator"></td>
+                <td class="content"></td>
             </tr>
         </table>
 
@@ -254,21 +265,27 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($shipments as $index => $item)
+                @php $no = 0; @endphp
+                @foreach ($items as $item)
                     <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>
-                            Readymix {{ $item->concreteGrade->code ?? 'Concrete' }}, pengiriman
-                            {{ date('d/m/Y', strtotime($item->date)) }}
+                        <td class="text-center">
+                            @if (empty($item['is_sub_item']))
+                                @php $no++; @endphp
+                                {{ $no }}
+                            @endif
                         </td>
-                        <td class="text-center">{{ number_format($item->volume, 2, ',', '.') }}</td>
-                        <td class="text-center">M3</td>
-                        <td class="text-right">{{ number_format($item->price_per_m3, 0, ',', '.') }}</td>
-                        <td class="text-right">{{ number_format($item->total_price, 0, ',', '.') }}</td>
+                        <td
+                            style="{{ !empty($item['is_sub_item']) ? 'padding-left: 20px; font-style: italic;' : '' }}">
+                            {{ $item['description'] }}
+                        </td>
+                        <td class="text-center">{{ number_format($item['volume'], 2, ',', '.') }}</td>
+                        <td class="text-center">{{ $item['unit'] }}</td>
+                        <td class="text-right">{{ number_format($item['unit_price'], 0, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($item['total_price'], 0, ',', '.') }}</td>
                     </tr>
                 @endforeach
 
-                @for ($i = count($shipments); $i < 10; $i++)
+                @for ($i = count($items); $i < 10; $i++)
                     <tr>
                         <td class="text-center">{{ $i + 1 }}</td>
                         <td>&nbsp;</td>
@@ -280,7 +297,12 @@
                 @endfor
 
                 <tr class="total-row">
-                    <td colspan="4" style="border:none;"></td>
+                    <td colspan="2" style="border:none; text-align:right; font-weight:bold; padding-right:10px;">
+                        TOTAL VOLUME</td>
+                    <td class="text-center" style="border:1px solid #000; font-weight:bold;">
+                        {{ number_format($totalVolume, 2, ',', '.') }}
+                    </td>
+                    <td class="text-center" style="border:1px solid #000; font-weight:bold;">M3</td>
                     <td class="text-right">Jumlah</td>
                     <td class="text-right" style="border:1px solid #000;">{{ number_format($subtotal, 0, ',', '.') }}
                     </td>
@@ -296,7 +318,8 @@
                 <tr class="total-row">
                     <td colspan="4" style="border:none;"></td>
                     <td class="text-right">D.P. / Pembayaran</td>
-                    <td class="text-right" style="border:1px solid #000;">({{ number_format($dp, 0, ',', '.') }})</td>
+                    <td class="text-right" style="border:1px solid #000;">({{ number_format($dp, 0, ',', '.') }})
+                    </td>
                 </tr>
                 <tr class="total-row">
                     <td colspan="4" style="border:none;"></td>
@@ -311,13 +334,23 @@
             # {{ $terbilang }} #
         </div>
 
-        <table class="footer-table">
+        <table class="footer-table" style="border-collapse: collapse; margin-top: 10px;">
             <tr>
-                <td width="30%"></td>
-                <td width="40%"></td>
-                <td width="30%">
+                <td width="60%"
+                    style="border: 1px solid #000; height: 18px; text-align: center; vertical-align: middle; background-color: #fff; font-weight: normal;">
+                    Notes/ Signature
+                </td>
+                <td width="40%"
+                    style="border: 1px solid #000; height: 18px; text-align: center; vertical-align: middle; background-color: #fff; font-weight: normal;">
                     AUTHORIZED SIGNED
-                    <br><br><br><br><br>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; height: 80px; vertical-align: top; padding: 5px;">
+                    <!-- Area untuk catatan atau tanda tangan customer -->
+                </td>
+                <td
+                    style="border: 1px solid #000; height: 80px; text-align: center; vertical-align: bottom; padding-bottom: 5px;">
                     <b><u>MASHURI</u></b><br>
                     Kepala Plant
                 </td>

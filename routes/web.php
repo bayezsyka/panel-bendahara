@@ -20,6 +20,7 @@ use App\Http\Controllers\Delivery\CustomerController;
 use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController;
 use App\Http\Controllers\Delivery\ShipmentController;
 use App\Http\Controllers\Receivable\ReceivableController;
+use App\Http\Controllers\Delivery\PumpRentalController;
 
 Route::middleware(['auth', 'verified', 'role:superadmin', 'superadmin.utama'])
     ->prefix('superadmin')
@@ -141,7 +142,14 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
 
         Route::resource('projects', DeliveryProjectController::class)->except(['index', 'create']);
 
+        Route::get('shipments/export-pdf', [ShipmentController::class, 'exportPdf'])->name('shipments.export-pdf');
         Route::resource('shipments', ShipmentController::class);
+
+        Route::get('pump-rentals/create', [PumpRentalController::class, 'create'])->name('pump-rentals.create');
+        Route::resource('pump-rentals', PumpRentalController::class)->only(['store', 'destroy', 'edit', 'update']);
+
+        Route::get('pump-rental-settings', [\App\Http\Controllers\Delivery\PumpRentalSettingController::class, 'index'])->name('pump-rental-settings.index');
+        Route::post('pump-rental-settings', [\App\Http\Controllers\Delivery\PumpRentalSettingController::class, 'update'])->name('pump-rental-settings.update');
     });
 
 // DESIGN SYSTEM PLAYGROUND (Dev only)

@@ -68,6 +68,14 @@ class DeliveryProject extends Model
     }
 
     /**
+     * Get the pump rentals for the project.
+     */
+    public function pumpRentals(): HasMany
+    {
+        return $this->hasMany(DeliveryPumpRental::class);
+    }
+
+    /**
      * Get the default concrete grade for the project.
      */
     public function defaultConcreteGrade(): BelongsTo
@@ -84,9 +92,14 @@ class DeliveryProject extends Model
     // Hitung Sisa Tagihan per Proyek
     public function getRemainingBalanceAttribute()
     {
-        $totalTagihan = $this->shipments->sum('total_price_with_tax'); // Asumsi ada field kalkulasi
+        $totalTagihanShipment = $this->shipments->sum('total_price_with_tax');
+
+        $pumpRentalsTotal = $this->pumpRentals->sum('total_price');
+        $pumpRentalsTax = $this->has_ppn ? ($pumpRentalsTotal * 0.11) : 0;
+        $totalTagihanPump = $pumpRentalsTotal + $pumpRentalsTax;
+
         $totalBayar = $this->payments->sum('amount');
 
-        return $totalTagihan - $totalBayar;
+        return ($totalTagihanShipment + $totalTagihanPump) - $totalBayar;
     }
 }

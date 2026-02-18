@@ -19,6 +19,11 @@ export default function Edit({ project, customers, concreteGrades }) {
         work_type: project.work_type || 'Cor',
         default_concrete_grade_id: project.default_concrete_grade_id || '',
         has_ppn: project.has_ppn == 1 || project.has_ppn == true,
+        pump_rental_price: project.pump_rental_price || 0,
+        pump_limit_volume: project.pump_limit_volume || 0,
+        pump_over_volume_price: project.pump_over_volume_price || 0,
+        pump_limit_pipe: project.pump_limit_pipe || 0,
+        pump_over_pipe_price: project.pump_over_pipe_price || 0,
     });
 
     const [useCustomerName, setUseCustomerName] = useState(false);
@@ -199,6 +204,79 @@ export default function Edit({ project, customers, concreteGrades }) {
                                 ))}
                             </select>
                             <InputError message={errors.default_concrete_grade_id} className="mt-1" />
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-50 pt-4 mt-6">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Pengaturan Sewa Pompa</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <InputLabel htmlFor="pump_rental_price" value="Harga Sewa Pompa (per Set)" />
+                                <TextInput
+                                    id="pump_rental_price"
+                                    type="number"
+                                    className="w-full mt-1"
+                                    value={data.pump_rental_price}
+                                    onChange={e => setData('pump_rental_price', e.target.value)}
+                                    placeholder="0"
+                                />
+                                <InputError message={errors.pump_rental_price} className="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="pump_limit_volume" value="Limit Volume (m³)" />
+                                <div className="flex items-center gap-2">
+                                    <TextInput
+                                        id="pump_limit_volume"
+                                        type="number"
+                                        step="0.01"
+                                        className="w-full mt-1"
+                                        value={data.pump_limit_volume}
+                                        onChange={e => setData('pump_limit_volume', e.target.value)}
+                                        placeholder="0"
+                                    />
+                                    <span className="text-sm text-gray-500 mt-1">m³</span>
+                                </div>
+                                <InputError message={errors.pump_limit_volume} className="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="pump_over_volume_price" value="Harga Over Volume (per m³)" />
+                                <TextInput
+                                    id="pump_over_volume_price"
+                                    type="number"
+                                    className="w-full mt-1"
+                                    value={data.pump_over_volume_price}
+                                    onChange={e => setData('pump_over_volume_price', e.target.value)}
+                                    placeholder="0"
+                                />
+                                <InputError message={errors.pump_over_volume_price} className="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="pump_limit_pipe" value="Limit Pipa (Batang)" />
+                                <div className="flex items-center gap-2">
+                                    <TextInput
+                                        id="pump_limit_pipe"
+                                        type="number"
+                                        className="w-full mt-1"
+                                        value={data.pump_limit_pipe}
+                                        onChange={e => setData('pump_limit_pipe', e.target.value)}
+                                        placeholder="0"
+                                    />
+                                    <span className="text-sm text-gray-500 mt-1">btg</span>
+                                </div>
+                                <InputError message={errors.pump_limit_pipe} className="mt-1" />
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="pump_over_pipe_price" value="Harga Over Pipa (per Batang)" />
+                                <TextInput
+                                    id="pump_over_pipe_price"
+                                    type="number"
+                                    className="w-full mt-1"
+                                    value={data.pump_over_pipe_price}
+                                    onChange={e => setData('pump_over_pipe_price', e.target.value)}
+                                    placeholder="0"
+                                />
+                                <InputError message={errors.pump_over_pipe_price} className="mt-1" />
+                            </div>
                         </div>
                     </div>
 

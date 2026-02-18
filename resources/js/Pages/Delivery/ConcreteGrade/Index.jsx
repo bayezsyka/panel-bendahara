@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage, router } from '@inertiajs/react';
+import { SearchInput } from '@/Components/ui';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
@@ -9,9 +10,25 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
 
-export default function Index({ concreteGrades }) {
+export default function Index({ concreteGrades, filters = {} }) {
     const { auth } = usePage().props;
     const { can_create, can_edit, can_delete } = auth.permissions || {};
+
+    const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+    // Debounced search
+    React.useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchTerm !== (filters.search || '')) {
+                router.get(
+                    route('delivery.concrete-grades.index'),
+                    { search: searchTerm },
+                    { preserveState: true, replace: true }
+                );
+            }
+        }, 300);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingGrade, setEditingGrade] = useState(null);
@@ -92,11 +109,18 @@ export default function Index({ concreteGrades }) {
                         <h2 className="text-2xl font-bold text-gray-900">Mutu Beton</h2>
                         <p className="text-sm text-gray-500 mt-1">Kelola daftar mutu beton dan harga default</p>
                     </div>
-                    {can_create && (
-                        <PrimaryButton onClick={() => openModal()}>
-                            + Tambah Mutu
-                        </PrimaryButton>
-                    )}
+                    <div className="flex items-center gap-3">
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={setSearchTerm}
+                            placeholder="Cari mutu..."
+                        />
+                        {can_create && (
+                            <PrimaryButton onClick={() => openModal()}>
+                                + Tambah Mutu
+                            </PrimaryButton>
+                        )}
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

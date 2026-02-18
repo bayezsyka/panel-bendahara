@@ -21,14 +21,22 @@ class CustomerController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
         // Don't filter by office. Data is shared.
-        $customers = Customer::latest()
+        $customers = Customer::when($search, function ($query, $search) {
+            $query->where('name', 'like', "%{$search}%")
+                ->orWhere('address', 'like', "%{$search}%")
+                ->orWhere('contact', 'like', "%{$search}%");
+        })
+            ->latest()
             ->get();
 
         return Inertia::render('Delivery/Customer/Index', [
-            'customers' => $customers
+            'customers' => $customers,
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -63,10 +71,21 @@ class CustomerController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Customer $customer)
+    public function show(Request $request, Customer $customer)
     {
+        $search = $request->input('search');
+
+        $customer->load(['deliveryProjects' => function ($query) use ($search) {
+            $query->when($search, function ($q, $search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhere('work_type', 'like', "%{$search}%");
+            });
+        }]);
+
         return Inertia::render('Delivery/Customer/Show', [
-            'customer' => $customer->load('deliveryProjects')
+            'customer' => $customer,
+            'filters' => $request->only(['search']),
         ]);
     }
 
