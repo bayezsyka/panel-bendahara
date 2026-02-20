@@ -7,13 +7,14 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 
-export default function Edit({ shipment, projects, concreteGrades }) {
+export default function Edit({ shipment, projects, concreteGrades, trucks }) {
     const { data, setData, put, processing, errors } = useForm({
         delivery_project_id: shipment.delivery_project_id,
         date: shipment.date,
         docket_number: shipment.docket_number,
         rit_number: shipment.rit_number,
         concrete_grade_id: shipment.concrete_grade_id,
+        delivery_truck_id: shipment.delivery_truck_id || '',
         slump: shipment.slump || '',
         volume: shipment.volume,
         vehicle_number: shipment.vehicle_number || '',
@@ -33,6 +34,24 @@ export default function Edit({ shipment, projects, concreteGrades }) {
         const grade = concreteGrades.find(g => g.id === parseInt(gradeId));
         if (grade) {
             setData('price_per_m3', grade.price);
+        }
+    };
+
+    const handleTruckChange = (truckId) => {
+        const truck = trucks?.find(t => t.id === parseInt(truckId));
+        if (truck) {
+            setData(data => ({
+                ...data,
+                delivery_truck_id: truck.id,
+                vehicle_number: truck.vehicle_number,
+                driver_name: truck.driver_name || ''
+            }));
+        } else {
+            setData(data => ({
+                ...data,
+                delivery_truck_id: '',
+                 // Keep existing values
+            }));
         }
     };
 
@@ -198,7 +217,29 @@ export default function Edit({ shipment, projects, concreteGrades }) {
                     </div>
 
                     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Armada & Driver</h3>
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Armada & Driver</h3>
+                            <a href={route('delivery.trucks.index')} target="_blank" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">+ Kelola Master Truck</a>
+                        </div>
+                        
+                        <div className="mb-4">
+                            <InputLabel htmlFor="delivery_truck_id" value="Pilih Truck (Auto-fill)" />
+                            <select
+                                id="delivery_truck_id"
+                                className="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                value={data.delivery_truck_id || ''}
+                                onChange={e => handleTruckChange(e.target.value)}
+                            >
+                                <option value="">-- Manual / Tidak Ada di List --</option>
+                                {trucks && trucks.map(truck => (
+                                    <option key={truck.id} value={truck.id}>
+                                        {truck.vehicle_number} {truck.driver_name ? `- ${truck.driver_name}` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={errors.delivery_truck_id} className="mt-1" />
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <InputLabel htmlFor="vehicle_number" value="Nomor Polisi Kendaraan" />

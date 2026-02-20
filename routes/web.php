@@ -16,6 +16,7 @@ use App\Http\Controllers\Bendahara\PlantTransactionController;
 use App\Http\Controllers\Bendahara\CashSourceController;
 use App\Http\Controllers\Bendahara\CashExpenseTypeController;
 use App\Http\Controllers\Delivery\ConcreteGradeController;
+use App\Http\Controllers\Delivery\DeliveryTruckController;
 use App\Http\Controllers\Delivery\CustomerController;
 use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController;
 use App\Http\Controllers\Delivery\ShipmentController;
@@ -133,6 +134,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
     ->name('delivery.')
     ->group(function () {
         Route::resource('concrete-grades', ConcreteGradeController::class);
+        Route::resource('trucks', DeliveryTruckController::class);
         Route::resource('customers', CustomerController::class);
 
         // Explicitly define create route BEFORE resource to avoid any ambiguity, although resource should handle it.

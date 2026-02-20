@@ -104,6 +104,7 @@ class ShipmentController extends Controller
             ->get();
 
         $concreteGrades = ConcreteGrade::get();
+        $trucks = \App\Models\Delivery\DeliveryTruck::where('is_active', true)->get();
 
         $selectedProject = null;
         if ($request->project_id) {
@@ -113,6 +114,7 @@ class ShipmentController extends Controller
         return Inertia::render('Delivery/Shipment/Create', [
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
+            'trucks' => $trucks,
             'selectedProjectId' => $request->project_id,
             'defaultValues' => $selectedProject ? [
                 'concrete_grade_id' => $selectedProject->default_concrete_grade_id,
@@ -132,6 +134,7 @@ class ShipmentController extends Controller
             'docket_number' => 'nullable|string|max:255',
             'rit_number' => 'required|integer|min:1',
             'concrete_grade_id' => 'required|exists:concrete_grades,id',
+            'delivery_truck_id' => 'nullable|exists:delivery_trucks,id',
             'slump' => 'nullable|string|max:50',
             'volume' => 'required|numeric|min:0',
             'vehicle_number' => 'nullable|string|max:50',
@@ -165,11 +168,13 @@ class ShipmentController extends Controller
             ->get();
 
         $concreteGrades = ConcreteGrade::get();
+        $trucks = \App\Models\Delivery\DeliveryTruck::get();
 
         return Inertia::render('Delivery/Shipment/Edit', [
             'shipment' => $shipment->load('project'),
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
+            'trucks' => $trucks,
         ]);
     }
 
@@ -184,6 +189,7 @@ class ShipmentController extends Controller
             'docket_number' => 'nullable|string|max:255',
             'rit_number' => 'required|integer|min:1',
             'concrete_grade_id' => 'required|exists:concrete_grades,id',
+            'delivery_truck_id' => 'nullable|exists:delivery_trucks,id',
             'slump' => 'nullable|string|max:50',
             'volume' => 'required|numeric|min:0',
             'vehicle_number' => 'nullable|string|max:50',
