@@ -70,7 +70,7 @@ class DeliveryTruckController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DeliveryTruck $deliveryTruck)
+    public function update(Request $request, DeliveryTruck $truck)
     {
         // $officeId = $this->officeService->getCurrentOfficeId(); // Not used currently
 
@@ -79,7 +79,7 @@ class DeliveryTruckController extends Controller
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('delivery_trucks')->ignore($deliveryTruck->id)
+                Rule::unique('delivery_trucks')->ignore($truck->id)
             ],
             'driver_name' => 'nullable|string|max:255',
             'is_active' => 'boolean',
@@ -87,7 +87,7 @@ class DeliveryTruckController extends Controller
             'vehicle_number.unique' => 'Nomor Polisi sudah ada.',
         ]);
 
-        $deliveryTruck->update($validated);
+        $truck->update($validated);
 
         return redirect()->back()->with('message', 'Truck Berhasil Diperbarui');
     }
@@ -95,9 +95,9 @@ class DeliveryTruckController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DeliveryTruck $deliveryTruck)
+    public function destroy(DeliveryTruck $truck)
     {
-        $deliveryTruck->delete();
+        $truck->delete();
         return redirect()->back()->with('message', 'Truck Berhasil Dihapus');
     }
 }
