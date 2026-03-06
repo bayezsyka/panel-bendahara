@@ -90,7 +90,7 @@ class ShipmentController extends Controller
             'shipments' => $shipments,
             'totalVolume' => $shipments->sum('volume'),
             'totalAmount' => $shipments->sum('total_price'),
-        ])->setPaper('a4', 'landscape');
+        ])->setPaper('a4', 'portrait');
 
         return $pdf->stream('laporan_pengiriman_' . $startDate . '_' . $endDate . '.pdf');
     }
@@ -167,7 +167,9 @@ class ShipmentController extends Controller
         $concreteGrades = ConcreteGrade::get();
 
         return Inertia::render('Delivery/Shipment/Edit', [
-            'shipment' => $shipment->load('project'),
+            'shipment' => array_merge($shipment->load('project')->toArray(), [
+                'date' => $shipment->date ? $shipment->date->format('Y-m-d') : null
+            ]),
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
         ]);
@@ -209,5 +211,13 @@ class ShipmentController extends Controller
 
         return redirect()->route('delivery.projects.show', $project)
             ->with('message', 'Surat Jalan Berhasil Dihapus');
+    }
+
+    public function restore($id)
+    {
+        $shipment = DeliveryShipment::onlyTrashed()->findOrFail($id);
+        $shipment->restore();
+
+        return redirect()->back()->with('message', 'Surat Jalan Berhasil Dipulihkan');
     }
 }

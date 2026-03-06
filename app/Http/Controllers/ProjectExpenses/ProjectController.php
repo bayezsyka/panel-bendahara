@@ -24,6 +24,14 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function trash()
+    {
+        $trashedProjects = Project::onlyTrashed()->with(['mandors', 'mandor', 'bendera'])->latest()->get();
+        return Inertia::render('ProjectExpenses/Projects/Trash', [
+            'trashedProjects' => $trashedProjects,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -64,6 +72,13 @@ class ProjectController extends Controller
                 $query->where('expense_type_id', $expenseTypeId);
             }
         }, 'mandors', 'mandor', 'bendera']); // Load mandors (many-to-many) dan mandor (backward compatibility)
+
+        $project->expenses->transform(function ($expense) {
+            if ($expense->transacted_at instanceof \DateTimeInterface) {
+                $expense->transacted_at = $expense->transacted_at->format('Y-m-d');
+            }
+            return $expense;
+        });
 
         $mandors = Mandor::all();
         $benderas = \App\Models\Bendera::all();
@@ -208,6 +223,15 @@ class ProjectController extends Controller
     {
         $this->authorize('delete', $project);
         $project->delete();
-        return redirect()->route('bendahara.projects.index')->with('message', 'Proyek Berhasil Dihapus');
+        return redirect()->route('projectexpense.projects.index')->with('message', 'Proyek Berhasil Dihapus');
+    }
+
+    public function restore($id)
+    {
+        $project = Project::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $project);
+        $project->restore();
+
+        return redirect()->back()->with('message', 'Proyek Berhasil Dipulihkan');
     }
 }

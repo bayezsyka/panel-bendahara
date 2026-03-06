@@ -89,8 +89,15 @@ class PlantTransactionController extends Controller
             ->orderBy('id', 'asc') // Urutkan sesuai input/ID
             ->get();
 
-        $incomes = $dailyTransactions->where('type', 'in')->values();
-        $expenses = $dailyTransactions->where('type', 'out')->values();
+        $incomes = $dailyTransactions->where('type', 'in')->map(function ($item) {
+            $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
+            return $item;
+        })->values();
+
+        $expenses = $dailyTransactions->where('type', 'out')->map(function ($item) {
+            $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
+            return $item;
+        })->values();
 
         // Master Data for Selects
         $cashSources = CashSource::orderBy('name')->get();
@@ -147,8 +154,15 @@ class PlantTransactionController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
-        $incomes = $dailyTransactions->where('type', 'in')->values();
-        $expenses = $dailyTransactions->where('type', 'out')->values();
+        $incomes = $dailyTransactions->where('type', 'in')->map(function ($item) {
+            $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
+            return $item;
+        })->values();
+
+        $expenses = $dailyTransactions->where('type', 'out')->map(function ($item) {
+            $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
+            return $item;
+        })->values();
 
         // Master Data for Selects
         $cashSources = CashSource::orderBy('name')->get();

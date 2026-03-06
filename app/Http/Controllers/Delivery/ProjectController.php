@@ -21,6 +21,16 @@ class ProjectController extends Controller
         $this->officeService = $officeService;
     }
 
+    public function trash()
+    {
+        $trashedProjects = DeliveryProject::onlyTrashed()->with(['customer' => function($q) {
+            $q->withTrashed();
+        }])->latest()->get();
+        return Inertia::render('Delivery/Project/Trash', [
+            'trashedProjects' => $trashedProjects,
+        ]);
+    }
+
 
 
     /**
@@ -76,7 +86,9 @@ class ProjectController extends Controller
     public function show(DeliveryProject $project)
     {
         return Inertia::render('Delivery/Project/Show', [
-            'project' => $project->load(['customer', 'defaultConcreteGrade', 'shipments.concreteGrade', 'pumpRentals'])
+            'project' => $project->load(['customer', 'defaultConcreteGrade', 'shipments.concreteGrade', 'pumpRentals']),
+            'trashedShipments' => $project->shipments()->onlyTrashed()->with('concreteGrade')->get(),
+            'trashedPumpRentals' => $project->pumpRentals()->onlyTrashed()->get(),
         ]);
     }
 
@@ -164,10 +176,26 @@ class ProjectController extends Controller
             'project' => $project->load('customer'),
             'shipments' => $shipments,
             'period' => $period
-        ])->setPaper('a4', 'landscape');
+        ])->setPaper('a4', 'portrait');
 
         $filename = 'rekap_pengiriman_' . str_replace(' ', '_', strtolower($project->name)) . '.pdf';
 
         return $pdf->stream($filename);
+    }
+
+    /**
+     * Restore the specified soft-deleted resource.
+     */
+    public function restore($id)
+    {
+        $project = DeliveryProject::onlyTrashed()->findOrFail($id);
+        $project->restore();
+
+        $customer = Customer::withTrashed()->find($project->customer_id);
+        if ($customer && $customer->trashed()) {
+            $customer->restore();
+        }
+
+        return redirect()->back()->with('message', 'Proyek Pengiriman Berhasil Dipulihkan');
     }
 }

@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import InputError from '@/Components/InputError';
+import Swal from 'sweetalert2';
 
 export default function Index({ customers, filters = {} }) {
     const { auth } = usePage().props;
@@ -78,19 +79,21 @@ export default function Index({ customers, filters = {} }) {
     };
 
     const confirmDelete = (customer) => {
-        setCustomerToDelete(customer);
-        setIsDeleteModalOpen(true);
-    };
-
-    const handleDelete = () => {
-        if (customerToDelete) {
-            destroy(route('delivery.customers.destroy', customerToDelete.slug), {
-                onSuccess: () => {
-                    setIsDeleteModalOpen(false);
-                    setCustomerToDelete(null);
-                },
-            });
-        }
+        Swal.fire({
+            title: 'Hapus Customer?',
+            html: `<p class="text-sm text-gray-500">Customer <strong>"${customer.name}"</strong> beserta semua proyek pengiriman di dalamnya akan dipindahkan ke keranjang sampah.</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                destroy(route('delivery.customers.destroy', customer.slug));
+            }
+        });
     };
 
     return (
@@ -100,40 +103,31 @@ export default function Index({ customers, filters = {} }) {
             <div className="space-y-8">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h2 className="text-3xl font-black text-gray-900 tracking-tight">Customer</h2>
-                        <p className="text-sm text-gray-500 font-medium mt-1">Daftar pelanggan aktif pengiriman beton</p>
+                        <h2 className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Customer</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mt-1">Daftar pelanggan aktif pengiriman beton</p>
                     </div>
-                    {can_create && (
-                        <div className="flex items-center gap-3">
-                            <SearchInput
-                                value={searchTerm}
-                                onChange={setSearchTerm}
-                                placeholder="Cari customer..."
-                            />
-                            <button 
+                    <div className="flex items-center gap-3">
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={setSearchTerm}
+                            placeholder="Cari customer..."
+                        />
+                        {can_create && (
+                            <button
                                 onClick={() => openModal()}
-                                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-sm whitespace-nowrap"
+                                className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 dark:shadow-none transition-all active:scale-95 text-sm whitespace-nowrap"
                             >
                                 + Tambah Customer
                             </button>
-                        </div>
-                    )}
-                    {!can_create && (
-                         <div className="flex items-center gap-3">
-                            <SearchInput
-                                value={searchTerm}
-                                onChange={setSearchTerm}
-                                placeholder="Cari customer..."
-                            />
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {customers.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {customers.map((customer) => (
                             <div key={customer.id} className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300 overflow-hidden flex flex-col">
-                                <Link 
+                                <Link
                                     href={route('delivery.customers.show', customer.slug)}
                                     className="p-6 flex-1"
                                 >
@@ -181,7 +175,7 @@ export default function Index({ customers, filters = {} }) {
                         <h4 className="text-xl font-bold text-gray-900">Belum Ada Customer</h4>
                         <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto font-medium">Mulailah dengan menambahkan customer pertama Anda untuk mengelola proyek pengiriman.</p>
                         {can_create && (
-                            <button 
+                            <button
                                 onClick={() => openModal()}
                                 className="mt-8 px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 shadow-xl shadow-indigo-100 transition-all active:scale-95"
                             >
@@ -271,15 +265,15 @@ export default function Index({ customers, filters = {} }) {
                         </div>
 
                         <div className="flex justify-end gap-3 mt-10">
-                            <button 
+                            <button
                                 type="button"
-                                onClick={closeModal} 
+                                onClick={closeModal}
                                 className="px-6 py-2.5 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors uppercase tracking-wider"
                                 disabled={processing}
                             >
                                 Batal
                             </button>
-                            <button 
+                            <button
                                 type="submit"
                                 className="px-8 py-2.5 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 text-xs uppercase tracking-widest disabled:opacity-50"
                                 disabled={processing}
@@ -291,21 +285,6 @@ export default function Index({ customers, filters = {} }) {
                 </div>
             </Modal>
 
-            {/* Delete Modal */}
-            <Modal show={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)}>
-                <div className="p-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-2">Hapus Customer?</h2>
-                    <p className="text-gray-600 mb-6 font-medium">
-                        Apakah Anda yakin ingin menghapus customer ini? Semua data terkait mungkin akan terdampak.
-                    </p>
-                    <div className="flex justify-end gap-2">
-                        <SecondaryButton onClick={() => setIsDeleteModalOpen(false)}>Batal</SecondaryButton>
-                        <DangerButton onClick={handleDelete} disabled={processing}>
-                            {processing ? 'Menghapus...' : 'Hapus'}
-                        </DangerButton>
-                    </div>
-                </div>
-            </Modal>
         </BendaharaLayout>
     );
 }

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DeliveryPumpRental extends Model
 {
-    use LogsActivity;
+    use LogsActivity, SoftDeletes;
 
     protected $guarded = ['id'];
 

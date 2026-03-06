@@ -4,9 +4,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { SearchInput } from '@/Components/ui';
 import { useState, useEffect } from 'react';
+import Swal from 'sweetalert2';
 
-export default function Show({ customer, filters = {} }) {
+export default function Show({ customer, auth, filters = {} }) {
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
+
+
 
     // Debounced search
     useEffect(() => {
@@ -29,7 +32,7 @@ export default function Show({ customer, filters = {} }) {
                 {/* Header Section */}
                 <div className="flex justify-between items-start">
                     <div>
-                        <Link 
+                        <Link
                             href={route('delivery.customers.index')}
                             className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                         >
@@ -65,7 +68,16 @@ export default function Show({ customer, filters = {} }) {
                                 placeholder="Cari proyek..."
                                 size="sm"
                             />
-                            <Link 
+                            <Link
+                                href={route('delivery.projects.trash')}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                title="Tempat Sampah Proyek"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </Link>
+                            <Link
                                 href={route('delivery.projects.create', { customer_id: customer.id })}
                                 className="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 whitespace-nowrap active:scale-95"
                             >
@@ -77,11 +89,11 @@ export default function Show({ customer, filters = {} }) {
                     {customer.delivery_projects && customer.delivery_projects.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {customer.delivery_projects.map((project) => (
-                                <div 
-                                    key={project.id} 
+                                <div
+                                    key={project.id}
                                     className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-300"
                                 >
-                                    <Link 
+                                    <Link
                                         href={route('delivery.projects.show', project.slug)}
                                         className="block p-5"
                                     >
@@ -103,25 +115,37 @@ export default function Show({ customer, filters = {} }) {
                                                 {project.work_type || 'Pekerjaan Umum'}
                                             </div>
                                         </div>
-                                        <div className="mt-4 pt-3 border-t border-gray-50 flex justify-end">
+                                        <div className="mt-4 pt-3 border-t border-gray-50 flex justify-between items-center">
+                                            {auth.permissions.can_delete && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        Swal.fire({
+                                                            title: 'Hapus Proyek?',
+                                                            html: `<p class="text-sm text-gray-500">Proyek <strong>"${project.name}"</strong> akan dipindahkan ke keranjang sampah.</p>`,
+                                                            icon: 'warning',
+                                                            showCancelButton: true,
+                                                            confirmButtonColor: '#dc2626',
+                                                            cancelButtonColor: '#6b7280',
+                                                            confirmButtonText: 'Ya, Hapus!',
+                                                            cancelButtonText: 'Batal',
+                                                            reverseButtons: true,
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                router.delete(route('delivery.projects.destroy', project.slug));
+                                                            }
+                                                        });
+                                                    }}
+                                                    className="text-[10px] font-bold text-red-400 hover:text-red-600 uppercase transition-colors"
+                                                >
+                                                    Hapus Proyek
+                                                </button>
+                                            )}
                                             <div className="inline-flex items-center text-[10px] font-black text-indigo-600 uppercase tracking-widest group-hover:translate-x-1 transition-transform">
                                                 Lihat Unit Rekapitulasi →
                                             </div>
                                         </div>
                                     </Link>
-                                    
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            if (confirm('Yakin ingin menghapus proyek ini?')) {
-                                                router.delete(route('delivery.projects.destroy', project.slug));
-                                            }
-                                        }}
-                                        className="absolute top-2 right-2 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 z-10"
-                                        title="Hapus Proyek"
-                                    >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -131,6 +155,8 @@ export default function Show({ customer, filters = {} }) {
                         </div>
                     )}
                 </div>
+
+
             </div>
         </BendaharaLayout>
     );

@@ -2,8 +2,9 @@ import React from 'react';
 import BendaharaLayout from '@/Layouts/BendaharaLayout';
 import { Head, Link, usePage, router } from '@inertiajs/react';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Swal from 'sweetalert2';
 
-export default function Show({ project }) {
+export default function Show({ project, trashedShipments = [], trashedPumpRentals = [] }) {
     const { auth } = usePage().props;
     const { can_create, can_edit } = auth.permissions || {};
 
@@ -15,6 +16,46 @@ export default function Show({ project }) {
         }).format(amount);
     };
 
+    const restoreShipment = (id) => {
+        Swal.fire({
+            title: 'Pulihkan Pengiriman?',
+            text: 'Data pengiriman ini akan dikembalikan ke daftar aktif.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Pulihkan!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('delivery.shipments.restore', id), {}, {
+                    preserveScroll: true,
+                });
+            }
+        });
+    };
+
+    const restorePumpRental = (id) => {
+        Swal.fire({
+            title: 'Pulihkan Sewa Pompa?',
+            text: 'Data sewa pompa ini akan dikembalikan ke daftar aktif.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ya, Pulihkan!',
+            cancelButtonText: 'Batal',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('delivery.pump-rentals.restore', id), {}, {
+                    preserveScroll: true,
+                });
+            }
+        });
+    };
+
     return (
         <BendaharaLayout>
             <Head title={`Proyek: ${project.name}`} />
@@ -23,7 +64,7 @@ export default function Show({ project }) {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                     <div>
-                        <Link 
+                        <Link
                             href={route('delivery.customers.show', project.customer.slug)}
                             className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                         >
@@ -43,22 +84,22 @@ export default function Show({ project }) {
 
                     <div className="flex items-center gap-2">
                         {can_edit && (
-                            <Link 
+                            <Link
                                 href={route('delivery.projects.edit', project.slug)}
                                 className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm text-sm transition-colors"
                             >
                                 Edit Proyek
                             </Link>
                         )}
-                                <Link 
-                                    href={route('delivery.pump-rentals.create', { project_id: project.id })}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                                    Sewa Pompa
-                                </Link>
+                        <Link
+                            href={route('delivery.pump-rentals.create', { project_id: project.id })}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                            Sewa Pompa
+                        </Link>
                         {can_create && (
-                            <Link 
+                            <Link
                                 href={route('delivery.shipments.create', { project_id: project.id })}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm text-sm transition-colors"
                             >
@@ -112,13 +153,13 @@ export default function Show({ project }) {
                                 <p className="text-2xl font-bold text-gray-900 mt-1">{project.shipments.length} <span className="text-xs text-gray-400 font-medium">Pengiriman</span></p>
                             </div>
                         </div>
-                        </div>
+                    </div>
 
                     <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm relative group">
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Sewa Pompa</h3>
                             {can_edit && (
-                                <Link 
+                                <Link
                                     href={route('delivery.projects.edit', project.slug)}
                                     className="text-gray-300 hover:text-indigo-600 transition-colors opacity-0 group-hover:opacity-100"
                                     title="Edit Pengaturan Pompa"
@@ -163,7 +204,7 @@ export default function Show({ project }) {
                         </div>
                         <div className="flex gap-2">
                             {project.shipments.length > 0 && (
-                                <a 
+                                <a
                                     href={route('delivery.projects.export-recap-pdf', project.slug)}
                                     target="_blank"
                                     className="text-xs bg-white border border-gray-200 px-3 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-2"
@@ -174,7 +215,7 @@ export default function Show({ project }) {
                             )}
                         </div>
                     </div>
-                    
+
                     {project.shipments.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left whitespace-nowrap">
@@ -221,7 +262,7 @@ export default function Show({ project }) {
                                             <td className="px-4 py-3 text-center">
                                                 <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     {can_edit && (
-                                                        <Link 
+                                                        <Link
                                                             href={route('delivery.shipments.edit', shipment.id)}
                                                             className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
                                                             title="Edit"
@@ -229,13 +270,38 @@ export default function Show({ project }) {
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                         </Link>
                                                     )}
-                                                    <Link 
+                                                    <Link
                                                         href={route('delivery.shipments.show', shipment.id)}
                                                         className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
                                                         title="Detail"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                     </Link>
+                                                    {can_edit && (
+                                                        <button
+                                                            onClick={() => {
+                                                                Swal.fire({
+                                                                    title: 'Hapus Pengiriman?',
+                                                                    html: `<p class="text-sm text-gray-500">Data pengiriman <strong>"${shipment.docket_number}"</strong> akan dipindahkan ke sampah.</p>`,
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonColor: '#dc2626',
+                                                                    cancelButtonColor: '#6b7280',
+                                                                    confirmButtonText: 'Ya, Hapus!',
+                                                                    cancelButtonText: 'Batal',
+                                                                    reverseButtons: true,
+                                                                }).then((result) => {
+                                                                    if (result.isConfirmed) {
+                                                                        router.delete(route('delivery.shipments.destroy', shipment.id));
+                                                                    }
+                                                                });
+                                                            }}
+                                                            className="p-1 text-gray-400 hover:text-red-600 rounded-md transition-colors"
+                                                            title="Hapus"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -269,7 +335,7 @@ export default function Show({ project }) {
                             <h4 className="text-lg font-bold text-gray-900">Belum Ada Pengiriman</h4>
                             <p className="text-gray-500 mt-1 max-w-sm">Siapkan pengiriman pertama untuk mulai mencatat pengiriman beton pada proyek ini.</p>
                             {can_create && (
-                                <Link 
+                                <Link
                                     href={route('delivery.shipments.create', { project_id: project.id })}
                                     className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
                                 >
@@ -291,7 +357,7 @@ export default function Show({ project }) {
                                 </span>
                             </div>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead className="bg-gray-50/50">
@@ -331,18 +397,30 @@ export default function Show({ project }) {
                                                 <div className="flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     {can_edit && (
                                                         <>
-                                                            <Link 
+                                                            <Link
                                                                 href={route('delivery.pump-rentals.edit', rental.id)}
                                                                 className="p-1 text-gray-400 hover:text-indigo-600 rounded-md transition-colors"
                                                                 title="Edit"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                             </Link>
-                                                            <button 
+                                                            <button
                                                                 onClick={(e) => {
-                                                                    if(confirm('Hapus data sewa pompa ini?')) {
-                                                                        router.delete(route('delivery.pump-rentals.destroy', rental.id));
-                                                                    }
+                                                                    Swal.fire({
+                                                                        title: 'Hapus Sewa Pompa?',
+                                                                        text: 'Data sewa pompa ini akan dipindahkan ke sampah.',
+                                                                        icon: 'warning',
+                                                                        showCancelButton: true,
+                                                                        confirmButtonColor: '#dc2626',
+                                                                        cancelButtonColor: '#6b7280',
+                                                                        confirmButtonText: 'Ya, Hapus!',
+                                                                        cancelButtonText: 'Batal',
+                                                                        reverseButtons: true,
+                                                                    }).then((result) => {
+                                                                        if (result.isConfirmed) {
+                                                                            router.delete(route('delivery.pump-rentals.destroy', rental.id));
+                                                                        }
+                                                                    });
                                                                 }}
                                                                 className="p-1 text-gray-400 hover:text-red-600 rounded-md transition-colors"
                                                                 title="Hapus"
@@ -369,7 +447,93 @@ export default function Show({ project }) {
                         </div>
                     </div>
                 )}
-                </div>
+
+                {/* Trashed Items Section */}
+                {(trashedShipments.length > 0 || trashedPumpRentals.length > 0) && (
+                    <div className="mt-12 pt-12 border-t border-gray-200">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Sampah (Data yang Dihapus)
+                        </h3>
+
+                        <div className="space-y-8">
+                            {trashedShipments.length > 0 && (
+                                <div className="bg-red-50/30 rounded-xl border border-red-100 overflow-hidden">
+                                    <div className="px-6 py-3 bg-red-50/50 border-b border-red-100">
+                                        <h4 className="text-sm font-bold text-red-700">Pengiriman Dihapus</h4>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left whitespace-nowrap">
+                                            <thead className="bg-gray-50/50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase">Tgl</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase">Docket</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase text-right">Vol</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase text-right">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-red-50">
+                                                {trashedShipments.map((s) => (
+                                                    <tr key={s.id} className="text-xs">
+                                                        <td className="px-4 py-2">{new Date(s.date).toLocaleDateString()}</td>
+                                                        <td className="px-4 py-2 font-mono">{s.docket_number}</td>
+                                                        <td className="px-4 py-2 text-right">{s.volume} m³</td>
+                                                        <td className="px-4 py-2 text-right">
+                                                            <button
+                                                                onClick={() => restoreShipment(s.id)}
+                                                                className="inline-flex items-center px-3 py-1 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[10px] font-black uppercase transition-all shadow-sm active:scale-95"
+                                                            >
+                                                                Pulihkan
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {trashedPumpRentals.length > 0 && (
+                                <div className="bg-red-50/30 rounded-xl border border-red-100 overflow-hidden">
+                                    <div className="px-6 py-3 bg-red-50/50 border-b border-red-100">
+                                        <h4 className="text-sm font-bold text-red-700">Sewa Pompa Dihapus</h4>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left whitespace-nowrap">
+                                            <thead className="bg-gray-50/50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase">Tgl</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase text-right">Total</th>
+                                                    <th className="px-4 py-3 text-[10px] font-black text-gray-400 uppercase text-right">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-red-50">
+                                                {trashedPumpRentals.map((r) => (
+                                                    <tr key={r.id} className="text-xs">
+                                                        <td className="px-4 py-2">{new Date(r.date).toLocaleDateString()}</td>
+                                                        <td className="px-4 py-2 text-right">{formatCurrency(r.total_price)}</td>
+                                                        <td className="px-4 py-2 text-right">
+                                                            <button
+                                                                onClick={() => restorePumpRental(r.id)}
+                                                                className="inline-flex items-center px-3 py-1 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-600 hover:text-white rounded-lg text-[10px] font-black uppercase transition-all shadow-sm active:scale-95"
+                                                            >
+                                                                Pulihkan
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
         </BendaharaLayout>
     );
 }

@@ -147,8 +147,8 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
         mandor_ids: project.mandors
             ? project.mandors.map((m) => m.id)
             : project.mandor_id
-              ? [project.mandor_id]
-              : [],
+                ? [project.mandor_id]
+                : [],
         bendera_id: project.bendera_id || "",
         location: project.location || "",
     });
@@ -299,7 +299,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
     const handleDeleteProject = () => {
         Swal.fire({
             title: "Hapus Proyek?",
-            html: `<p class="text-gray-600">Proyek <strong>${project.name}</strong> beserta seluruh data pengeluaran akan dihapus permanen.</p>`,
+            html: `<p class="text-gray-600">Proyek <strong>${project.name}</strong> akan dipindahkan ke sampah.</p>`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#dc2626",
@@ -599,11 +599,11 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                     <div className="text-2xl font-bold text-gray-900 mt-1">
                         {project.expenses.length > 0
                             ? new Date(
-                                  project.expenses[0].transacted_at,
-                              ).toLocaleDateString("id-ID", {
-                                  day: "numeric",
-                                  month: "short",
-                              })
+                                project.expenses[0].transacted_at,
+                            ).toLocaleDateString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                            })
                             : "-"}
                     </div>
                 </div>
@@ -671,21 +671,19 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                             <div className="flex bg-gray-100 p-1 rounded-lg h-[45px] items-center">
                                 <button
                                     onClick={() => setSortBy("transacted_at")}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${
-                                        sortBy === "transacted_at"
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${sortBy === "transacted_at"
                                             ? "bg-white text-indigo-700 shadow-sm"
                                             : "text-gray-500 hover:text-gray-700"
-                                    }`}
+                                        }`}
                                 >
                                     Nota
                                 </button>
                                 <button
                                     onClick={() => setSortBy("created_at")}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${
-                                        sortBy === "created_at"
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-md transition whitespace-nowrap ${sortBy === "created_at"
                                             ? "bg-white text-indigo-700 shadow-sm"
                                             : "text-gray-500 hover:text-gray-700"
-                                    }`}
+                                        }`}
                                 >
                                     Input
                                 </button>
@@ -752,7 +750,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                                             </div>
 
                                             {expense.items &&
-                                            expense.items.length > 0 ? (
+                                                expense.items.length > 0 ? (
                                                 <ul className="text-sm text-gray-700 bg-gray-50 rounded-md p-2 space-y-1 border border-gray-100">
                                                     {expense.items.map(
                                                         (item, idx) => (
@@ -917,7 +915,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                                 />
                             </div>
 
-                             <div>
+                            <div>
                                 <InputLabel value="Status" />
                                 <select
                                     value={editForm.data.status}
@@ -1153,7 +1151,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                                                     index,
                                                     "quantity",
                                                     parseInt(e.target.value) ||
-                                                        0,
+                                                    0,
                                                 )
                                             }
                                             className="w-full text-sm text-center"
@@ -1267,8 +1265,8 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
                             {processing
                                 ? "Menyimpan..."
                                 : editingExpenseId
-                                  ? "Simpan Perubahan"
-                                  : "Simpan Pengeluaran"}
+                                    ? "Simpan Perubahan"
+                                    : "Simpan Pengeluaran"}
                         </PrimaryButton>
                     </div>
                 </form>

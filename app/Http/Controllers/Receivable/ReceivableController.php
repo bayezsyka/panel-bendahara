@@ -370,6 +370,25 @@ class ReceivableController extends Controller
 
     public function exportInvoice(Request $request, DeliveryProject $project)
     {
+        // Calculate Starting No based on prior items to ensure absolute numbering
+        $startingNo = 0;
+        $includePump = $request->boolean('include_pump', true);
+        
+        if ($request->start_date) {
+            $priorShipments = $project->shipments()
+                ->where('date', '<', $request->start_date)
+                ->count();
+                
+            $priorPumps = 0;
+            if ($includePump) {
+                $priorPumps = $project->pumpRentals()
+                    ->where('date', '<', $request->start_date)
+                    ->count();
+            }
+            
+            $startingNo = $priorShipments + $priorPumps;
+        }
+
         // 1. Ambil Items Invoice
         // Shipments
         $shipmentQuery = $project->shipments()->with('concreteGrade');
@@ -494,6 +513,7 @@ class ReceivableController extends Controller
             'project' => $project,
             'customer' => $project->customer,
             'items' => $invoiceItems, // Pass items instead of shipments
+            'startingNo' => $startingNo,
             'totalVolume' => $totalVolume, // Explicit total volume of concrete
             'subtotal' => $subtotal,
             'ppn' => $ppn,

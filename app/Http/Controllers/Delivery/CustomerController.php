@@ -83,8 +83,11 @@ class CustomerController extends Controller
             });
         }]);
 
+        $trashedProjects = $customer->deliveryProjects()->onlyTrashed()->get();
+
         return Inertia::render('Delivery/Customer/Show', [
             'customer' => $customer,
+            'trashedProjects' => $trashedProjects,
             'filters' => $request->only(['search']),
         ]);
     }
@@ -120,7 +123,37 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
+        $customer->deliveryProjects()->delete();
         $customer->delete();
-        return redirect()->back()->with('message', 'Customer Berhasil Dihapus');
+        return redirect()->back()->with('message', 'Customer dan Proyek Berhasil Dihapus');
+    }
+
+    public function trash(Request $request)
+    {
+        $search = $request->input('search');
+
+        $trashedCustomers = Customer::onlyTrashed()
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->get();
+
+        return Inertia::render('Delivery/Customer/Trash', [
+            'trashedCustomers' => $trashedCustomers,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function restore($id)
+    {
+        $customer = Customer::onlyTrashed()->findOrFail($id);
+        $customer->restore();
+        
+        // Restore all related projects
+        $customer->deliveryProjects()->onlyTrashed()->restore();
+
+        return redirect()->back()->with('message', 'Customer dan Proyek Berhasil Dipulihkan');
     }
 }

@@ -110,7 +110,9 @@ class PumpRentalController extends Controller
         $pumpRental = DeliveryPumpRental::with('deliveryProject.customer')->findOrFail($id);
 
         return Inertia::render('Delivery/PumpRental/Edit', [
-            'pumpRental' => $pumpRental,
+            'pumpRental' => array_merge($pumpRental->toArray(), [
+                 'date' => $pumpRental->date ? $pumpRental->date->format('Y-m-d') : null
+            ]),
             'project' => $pumpRental->deliveryProject
         ]);
     }
@@ -195,5 +197,13 @@ class PumpRentalController extends Controller
         }
 
         return redirect()->back()->with('message', 'Penyewaan Pompa Berhasil Dihapus');
+    }
+
+    public function restore($id)
+    {
+        $pumpRental = DeliveryPumpRental::onlyTrashed()->findOrFail($id);
+        $pumpRental->restore();
+
+        return redirect()->back()->with('message', 'Penyewaan Pompa Berhasil Dipulihkan');
     }
 }

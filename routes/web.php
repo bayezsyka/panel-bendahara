@@ -41,6 +41,8 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::get('/export-all-pdf', [OverviewController::class, 'exportAllPdf'])->name('export.all.pdf');
         Route::get('/export-by-type-pdf', [OverviewController::class, 'exportByTypePdf'])->name('export.by.type.pdf');
 
+        Route::get('/projects/trash', [ProjectController::class, 'trash'])->name('projects.trash');
+        Route::post('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
         Route::resource('projects', ProjectController::class);
         Route::get('/projects/{project}/export', [ProjectController::class, 'exportPdf'])->name('projects.export');
 
@@ -133,6 +135,9 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
     ->name('delivery.')
     ->group(function () {
         Route::resource('concrete-grades', ConcreteGradeController::class);
+        
+        Route::get('customers/trash', [CustomerController::class, 'trash'])->name('customers.trash');
+        Route::post('customers/{id}/restore', [CustomerController::class, 'restore'])->name('customers.restore');
         Route::resource('customers', CustomerController::class);
 
         // Explicitly define create route BEFORE resource to avoid any ambiguity, although resource should handle it.
@@ -140,12 +145,15 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::get('projects/create', [DeliveryProjectController::class, 'create'])->name('projects.create');
         Route::get('projects/{project}/export-recap-pdf', [DeliveryProjectController::class, 'exportRecapPdf'])->name('projects.export-recap-pdf');
 
+        Route::get('projects/trash', [DeliveryProjectController::class, 'trash'])->name('projects.trash');
+        Route::post('projects/{id}/restore', [DeliveryProjectController::class, 'restore'])->name('projects.restore');
         Route::resource('projects', DeliveryProjectController::class)->except(['index', 'create']);
 
-        Route::get('shipments/export-pdf', [ShipmentController::class, 'exportPdf'])->name('shipments.export-pdf');
+        Route::post('shipments/{id}/restore', [ShipmentController::class, 'restore'])->name('shipments.restore');
         Route::resource('shipments', ShipmentController::class);
 
         Route::get('pump-rentals/create', [PumpRentalController::class, 'create'])->name('pump-rentals.create');
+        Route::post('pump-rentals/{id}/restore', [PumpRentalController::class, 'restore'])->name('pump-rentals.restore');
         Route::resource('pump-rentals', PumpRentalController::class)->only(['store', 'destroy', 'edit', 'update']);
 
         Route::get('pump-rental-settings', [\App\Http\Controllers\Delivery\PumpRentalSettingController::class, 'index'])->name('pump-rental-settings.index');

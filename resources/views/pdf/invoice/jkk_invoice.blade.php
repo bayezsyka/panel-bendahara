@@ -265,7 +265,7 @@
                 </tr>
             </thead>
             <tbody>
-                @php $no = 0; @endphp
+                @php $no = $startingNo ?? 0; @endphp
                 @foreach ($items as $item)
                     <tr>
                         <td class="text-center">
@@ -287,7 +287,10 @@
 
                 @for ($i = count($items); $i < 10; $i++)
                     <tr>
-                        <td class="text-center">{{ $i + 1 }}</td>
+                        <td class="text-center">
+                            @php $no++; @endphp
+                            {{ $no }}
+                        </td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;</td>
