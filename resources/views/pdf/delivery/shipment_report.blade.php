@@ -147,22 +147,6 @@
         </tfoot>
     </table>
 
-    <table class="footer-sig">
-        <tr>
-            <td>
-                Dibuat Oleh,<br><br><br><br>
-                ( ________________ )<br>
-                Admin Plant
-            </td>
-            <td></td>
-            <td>
-                Mengetahui,<br><br><br><br>
-                ( ________________ )<br>
-                Kepala Plant
-            </td>
-        </tr>
-    </table>
-
 </body>
 
 </html>

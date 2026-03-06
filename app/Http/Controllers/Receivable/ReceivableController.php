@@ -373,20 +373,24 @@ class ReceivableController extends Controller
         // Calculate Starting No based on prior items to ensure absolute numbering
         $startingNo = 0;
         $includePump = $request->boolean('include_pump', true);
-        
+
         if ($request->start_date) {
-            $priorShipments = $project->shipments()
+            // Hitung jumlah hari unik sebelum start_date (bukan per pengiriman)
+            $priorDays = $project->shipments()
                 ->where('date', '<', $request->start_date)
+                ->selectRaw('DATE(date) as day, concrete_grade_id')
+                ->groupBy('day', 'concrete_grade_id')
+                ->get()
                 ->count();
-                
+
             $priorPumps = 0;
             if ($includePump) {
                 $priorPumps = $project->pumpRentals()
                     ->where('date', '<', $request->start_date)
                     ->count();
             }
-            
-            $startingNo = $priorShipments + $priorPumps;
+
+            $startingNo = $priorDays + $priorPumps;
         }
 
         // 1. Ambil Items Invoice
@@ -395,7 +399,7 @@ class ReceivableController extends Controller
         if ($request->start_date && $request->end_date) {
             $shipmentQuery->whereBetween('date', [$request->start_date, $request->end_date]);
         }
-        $shipments = $shipmentQuery->get();
+        $shipments = $shipmentQuery->orderBy('date')->get();
 
         // Pump Rentals
         $includePump = $request->boolean('include_pump', true);
@@ -413,22 +417,36 @@ class ReceivableController extends Controller
         $totalVolume = 0;
         $subtotal = 0;
 
-        // Process Shipments
-        foreach ($shipments as $shipment) {
+        // Process Shipments — dikelompokkan per hari + mutu beton
+        $groupedShipments = $shipments->groupBy(function ($shipment) {
+            return date('Ymd', strtotime($shipment->date)) . '_' . $shipment->concrete_grade_id;
+        });
+
+        foreach ($groupedShipments as $groupKey => $group) {
+            $firstShipment = $group->first();
+            $dateStr = $firstShipment->date;
+            $gradeCode = $firstShipment->concreteGrade->code ?? 'Concrete';
+            $unitPrice = (float) $firstShipment->price_per_m3;
+
+            // Akumulasi volume & total harga untuk hari + mutu ini
+            $dayVolume = $group->sum('volume');
+            $dayTotalPrice = $group->sum('total_price');
+
             $invoiceItems->push([
-                'type' => 'shipment',
-                'date' => $shipment->date,
-                'description' => "Readymix " . ($shipment->concreteGrade->code ?? 'Concrete') . ", pengiriman " . date('d/m/Y', strtotime($shipment->date)),
-                'docket_number' => $shipment->docket_number,
-                'volume' => $shipment->volume,
-                'unit' => 'M3',
-                'unit_price' => $shipment->price_per_m3,
-                'total_price' => $shipment->total_price,
-                'is_sub_item' => false,
-                'sort_key' => date('Ymd', strtotime($shipment->date)) . '_S_' . $shipment->id,
+                'type'         => 'shipment',
+                'date'         => $dateStr,
+                'description'  => "Readymix {$gradeCode}, tgl " . date('d/m/Y', strtotime($dateStr)),
+                'docket_number'=> null,
+                'volume'       => $dayVolume,
+                'unit'         => 'M3',
+                'unit_price'   => $unitPrice,
+                'total_price'  => $dayTotalPrice,
+                'is_sub_item'  => false,
+                'sort_key'     => date('Ymd', strtotime($dateStr)) . '_S_' . $groupKey,
             ]);
-            $totalVolume += $shipment->volume;
-            $subtotal += $shipment->total_price;
+
+            $totalVolume += $dayVolume;
+            $subtotal    += $dayTotalPrice;
         }
 
         // Process Pump Rentals

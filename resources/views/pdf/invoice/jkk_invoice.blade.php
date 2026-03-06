@@ -9,8 +9,7 @@
             font-family: Arial, sans-serif;
             font-size: 11px;
             color: #000;
-            margin: 0;
-            padding: 20px;
+            padding: 10px 20px;
         }
 
         .container {
@@ -24,17 +23,11 @@
             margin-bottom: 2px;
         }
 
-        .header-address {
-            font-size: 10px;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-
         .invoice-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
-            margin: 15px 0;
+            margin: 10px 0;
             letter-spacing: 2px;
             text-decoration: underline;
         }
@@ -42,7 +35,7 @@
         /* Info Grid (Customer & Project Details) */
         .info-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-collapse: collapse;
         }
 
@@ -69,7 +62,7 @@
         .trans-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .trans-table th {
@@ -111,7 +104,7 @@
             padding: 8px;
             font-style: italic;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             background-color: #f9f9f9;
         }
 
@@ -124,7 +117,7 @@
         .footer-table td {
             text-align: center;
             vertical-align: bottom;
-            height: 80px;
+            height: 60px;
         }
 
         /* Bank Info */
@@ -148,7 +141,7 @@
 <body>
 
     <div class="container">
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
             <tr>
                 <td style="width: 40%; vertical-align: top;">
                     @php
@@ -159,7 +152,7 @@
                         }
                     @endphp
                     @if ($logoData)
-                        <img src="data:image/png;base64,{{ $logoData }}" style="height: 80px;">
+                        <img src="data:image/png;base64,{{ $logoData }}" style="height: 65px;">
                     @endif
                 </td>
                 <td style="width: 60%; text-align: right; vertical-align: top; padding-top: 5px;">
@@ -285,7 +278,7 @@
                     </tr>
                 @endforeach
 
-                @for ($i = count($items); $i < 10; $i++)
+                @for ($i = count($items); $i < 6; $i++)
                     <tr>
                         <td class="text-center">
                             @php $no++; @endphp
@@ -353,7 +346,7 @@
                     <!-- Area untuk catatan atau tanda tangan customer -->
                 </td>
                 <td
-                    style="border: 1px solid #000; height: 80px; text-align: center; vertical-align: bottom; padding-bottom: 5px;">
+                    style="border: 1px solid #000; height: 60px; text-align: center; vertical-align: bottom; padding-bottom: 5px;">
                     <b><u>MASHURI</u></b><br>
                     Kepala Plant
                 </td>
@@ -363,7 +356,18 @@
         <div class="bank-info">
             *) Pembayaran Bilyet Giro Atau Cheq Dianggap Sah Bila Telah Dikliring/Dicairkan.<br>
             *) Pembayaran Dapat Dilakukan Pada :<br>
-            &nbsp;&nbsp;&nbsp;<b>Bank BCA a/c : 131044155 (JAYA KARYA KONTRUKSI)</b>
+            <table style="width: 100%; border: none; font-size: 9px; margin-top: 2px;">
+                <tr>
+                    <td style="padding-left: 12px; width: 100%;">
+                        <b>Bank BCA a/c : 1310441551 an. AFIF ZAMRONI</b><br>
+                        <b>Bank BCA a/c : 1311231231 an. PT. JAYA KARYA KONTRUKSI</b><br>
+                        <b>Bank BPD JATENG a/c : 1028003915 an. PT. JAYA KARYA KONTRUKSI</b><br>
+                        <b>Bank BNI a/c : 1348433680 an. PT. JAYA KARYA KONTRUKSI</b><br>
+                        <b>Bank MANDIRI a/c : 1390024348793 an. PT JAYA KARYA KONTRUKSI</b><br>
+                        <b>Bank BRI a/c : 019001002172309 an. PT JAYA KARYA KONTRUKSI</b>
+                    </td>
+                </tr>
+            </table>
         </div>
 
     </div>

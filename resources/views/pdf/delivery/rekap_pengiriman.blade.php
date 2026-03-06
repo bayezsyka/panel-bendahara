@@ -26,7 +26,7 @@
 
         .header-info {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-collapse: collapse;
         }
 
@@ -81,7 +81,7 @@
 <body>
     @include('pdf.komponen.header')
 
-    <div class="text-center" style="margin-bottom: 20px;">
+    <div class="text-center" style="margin-bottom: 10px;">
         <h3 style="margin-bottom: 5px; text-decoration: underline; text-transform: uppercase;">REKAPITULASI TIKET BUKTI
             KIRIM</h3>
     </div>
@@ -149,15 +149,6 @@
         </tfoot>
     </table>
 
-    <div class="sign-section">
-        <div class="sign-box">
-            Pekalongan, {{ now()->translatedFormat('d F Y') }}<br>
-            Hormat Kami,<br>
-            <br><br><br><br>
-            ( ____________________ )
-        </div>
-        <div style="clear: both;"></div>
-    </div>
 </body>
 
 </html>
