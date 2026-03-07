@@ -190,15 +190,15 @@ class ActivityLogController extends Controller
 
         // 1. Cek Foreign Keys
         if ($key === 'bendera_id') {
-            $model = \App\Models\Bendera::withTrashed()->find($value);
+            $model = \App\Models\Bendera::find($value);
             return $model ? $model->name : "ID: $value (Terhapus Permanent)";
         }
         if ($key === 'mandor_id') {
-            $model = \App\Models\Mandor::withTrashed()->find($value);
+            $model = \App\Models\Mandor::find($value);
             return $model ? $model->name : "ID: $value (Terhapus Permanent)";
         }
         if ($key === 'expense_type_id') {
-            $model = \App\Models\ExpenseType::withTrashed()->find($value);
+            $model = \App\Models\ExpenseType::find($value);
             return $model ? $model->name : "ID: $value (Terhapus Permanent)";
         }
         if ($key === 'project_id') {
@@ -206,7 +206,7 @@ class ActivityLogController extends Controller
             return $model ? $model->name : "ID: $value (Terhapus Permanent)";
         }
         if ($key === 'user_id' || $key === 'approved_by' || $key === 'rejected_by') {
-            $model = \App\Models\User::withTrashed()->find($value);
+            $model = \App\Models\User::find($value);
             return $model ? $model->name : "ID: $value (Terhapus Permanent)";
         }
 
@@ -249,7 +249,7 @@ class ActivityLogController extends Controller
         try {
             switch ($log->subject_type) {
                 case 'App\Models\User':
-                    $user = $log->subject ?? \App\Models\User::withTrashed()->find($log->subject_id);
+                    $user = $log->subject ?? \App\Models\User::find($log->subject_id);
                     return $user ? route('superadmin.users.index', ['search' => $user->name]) : null;
 
                 case 'App\Models\Project':
@@ -260,7 +260,7 @@ class ActivityLogController extends Controller
                     return route('projectexpense.mandors.show', $log->subject_id);
 
                 case 'App\Models\Expense':
-                    $expense = $log->subject ?? \App\Models\Expense::withTrashed()->find($log->subject_id);
+                    $expense = $log->subject ?? \App\Models\Expense::find($log->subject_id);
                     if ($expense && $expense->project_id) {
                         $project = \App\Models\Project::withTrashed()->find($expense->project_id);
                         return $project ? route('projectexpense.projects.show', $project->slug ?? $project->id) : null;
