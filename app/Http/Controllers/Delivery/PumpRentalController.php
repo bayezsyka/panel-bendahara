@@ -5,11 +5,19 @@ namespace App\Http\Controllers\Delivery;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery\DeliveryProject;
 use App\Models\Delivery\DeliveryPumpRental;
+use App\Models\Delivery\Vehicle;
+use App\Services\OfficeContextService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PumpRentalController extends Controller
 {
+    protected $officeService;
+
+    public function __construct(OfficeContextService $officeService)
+    {
+        $this->officeService = $officeService;
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -33,8 +41,11 @@ class PumpRentalController extends Controller
             if ($project->pump_over_pipe_price == 0) $project->pump_over_pipe_price = $globalSettings->pump_over_pipe_price;
         }
 
+        $vehicles = Vehicle::get();
+
         return Inertia::render('Delivery/PumpRental/Create', [
-            'project' => $project
+            'project' => $project,
+            'vehicles' => $vehicles
         ]);
     }
 
@@ -108,12 +119,14 @@ class PumpRentalController extends Controller
     public function edit($id)
     {
         $pumpRental = DeliveryPumpRental::with('deliveryProject.customer')->findOrFail($id);
+        $vehicles = Vehicle::get();
 
         return Inertia::render('Delivery/PumpRental/Edit', [
             'pumpRental' => array_merge($pumpRental->toArray(), [
                  'date' => $pumpRental->date ? $pumpRental->date->format('Y-m-d') : null
             ]),
-            'project' => $pumpRental->deliveryProject
+            'project' => $pumpRental->deliveryProject,
+            'vehicles' => $vehicles
         ]);
     }
 

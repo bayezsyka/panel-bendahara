@@ -8,7 +8,7 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import { Disclosure } from '@headlessui/react';
 
-export default function Create({ project }) {
+export default function Create({ project, vehicles }) {
     const { data, setData, post, processing, errors } = useForm({
         delivery_project_id: project.id,
         date: new Date().toISOString().split('T')[0],
@@ -16,7 +16,7 @@ export default function Create({ project }) {
         vehicle_number: '',
         driver_name: '',
         volume_pumped: '', // User wants blank by default? or 0? 
-        pipes_used: '',    
+        pipes_used: '',
         notes: '',
     });
 
@@ -39,7 +39,7 @@ export default function Create({ project }) {
 
         const limitVol = parseFloat(project.pump_limit_volume) || 0;
         const limitPipe = parseInt(project.pump_limit_pipe) || 0;
-        
+
         const rentalPrice = parseFloat(project.pump_rental_price) || 0;
         const overVolPrice = parseFloat(project.pump_over_volume_price) || 0;
         const overPipePrice = parseFloat(project.pump_over_pipe_price) || 0;
@@ -59,13 +59,27 @@ export default function Create({ project }) {
         post(route('delivery.pump-rentals.store'));
     };
 
+    const handleVehicleChange = (e) => {
+        const selectedId = e.target.value;
+        if (selectedId) {
+            const vehicle = vehicles.find(v => v.id === parseInt(selectedId));
+            if (vehicle) {
+                setData(prevData => ({
+                    ...prevData,
+                    vehicle_number: vehicle.vehicle_number,
+                    driver_name: vehicle.driver_name || ''
+                }));
+            }
+        }
+    };
+
     return (
         <BendaharaLayout>
             <Head title={`Sewa Pompa: ${project.name}`} />
 
             <div className="max-w-2xl mx-auto space-y-6">
                 <div>
-                    <Link 
+                    <Link
                         href={route('delivery.projects.show', project.slug)}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
@@ -107,6 +121,22 @@ export default function Create({ project }) {
                             </div>
                         </div>
 
+                        <div className="grid grid-cols-1 gap-6 mb-6">
+                            <div>
+                                <InputLabel htmlFor="master_vehicle" value="Pilih dari Master Armada (Opsional)" />
+                                <select
+                                    id="master_vehicle"
+                                    className="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm bg-indigo-50"
+                                    onChange={handleVehicleChange}
+                                >
+                                    <option value="">-- Ketik manual di bawah atau pilih master data --</option>
+                                    {vehicles?.filter(v => v.is_active).map(v => (
+                                        <option key={v.id} value={v.id}>{v.vehicle_number} {v.driver_name ? `- ${v.driver_name}` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <InputLabel htmlFor="vehicle_number" value="No. Polisi Truk Pompa" />
@@ -145,11 +175,10 @@ export default function Create({ project }) {
                                                 <span className="bg-indigo-100 text-indigo-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Active</span>
                                             )}
                                         </div>
-                                        <svg 
-                                            className={`${
-                                                open ? 'rotate-180 transform' : ''
-                                            } h-5 w-5 text-gray-500 transition-transform`}
-                                            fill="currentColor" 
+                                        <svg
+                                            className={`${open ? 'rotate-180 transform' : ''
+                                                } h-5 w-5 text-gray-500 transition-transform`}
+                                            fill="currentColor"
                                             viewBox="0 0 20 20"
                                         >
                                             <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
@@ -169,7 +198,7 @@ export default function Create({ project }) {
                                                     placeholder="0"
                                                 />
                                                 <p className="text-xs text-gray-400 mt-1">
-                                                    Limit: {project.pump_limit_volume} m³. 
+                                                    Limit: {project.pump_limit_volume} m³.
                                                     {overVolume > 0 && <span className="text-red-600 font-bold ml-1">Over: {overVolume.toFixed(2)} m³ (+ {formatCurrency(overVolume * project.pump_over_volume_price)})</span>}
                                                 </p>
                                                 <InputError message={errors.volume_pumped} className="mt-1" />

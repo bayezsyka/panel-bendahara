@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Delivery\ConcreteGrade;
 use App\Models\Delivery\DeliveryProject;
 use App\Models\Delivery\DeliveryShipment;
+use App\Models\Delivery\Vehicle;
 use App\Services\OfficeContextService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -104,6 +105,7 @@ class ShipmentController extends Controller
             ->get();
 
         $concreteGrades = ConcreteGrade::get();
+        $vehicles = Vehicle::get();
 
         $selectedProject = null;
         if ($request->project_id) {
@@ -113,6 +115,7 @@ class ShipmentController extends Controller
         return Inertia::render('Delivery/Shipment/Create', [
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
+            'vehicles' => $vehicles,
             'selectedProjectId' => $request->project_id,
             'defaultValues' => $selectedProject ? [
                 'concrete_grade_id' => $selectedProject->default_concrete_grade_id,
@@ -165,6 +168,7 @@ class ShipmentController extends Controller
             ->get();
 
         $concreteGrades = ConcreteGrade::get();
+        $vehicles = Vehicle::get();
 
         return Inertia::render('Delivery/Shipment/Edit', [
             'shipment' => array_merge($shipment->load('project')->toArray(), [
@@ -172,6 +176,7 @@ class ShipmentController extends Controller
             ]),
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
+            'vehicles' => $vehicles,
         ]);
     }
 

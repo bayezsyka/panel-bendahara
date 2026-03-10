@@ -327,7 +327,9 @@
 
         <div style="margin-bottom: 5px; font-weight: bold;">Invoice Amount :</div>
         <div class="terbilang-box">
-            # {{ $terbilang }} #
+            @if (isset($grandTotal) && $grandTotal > 0)
+                # {{ $terbilang }} #
+            @endif
         </div>
 
         <table class="footer-table" style="border-collapse: collapse; margin-top: 10px;">
@@ -346,7 +348,7 @@
                     <!-- Area untuk catatan atau tanda tangan customer -->
                 </td>
                 <td
-                    style="border: 1px solid #000; height: 60px; text-align: center; vertical-align: bottom; padding-bottom: 5px;">
+                    style="border: 1px solid #000; height: 150px; text-align: center; vertical-align: bottom; padding-bottom: 5px;">
                     <b><u>MASHURI</u></b><br>
                     Kepala Plant
                 </td>

@@ -7,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 
-export default function Create({ projects, concreteGrades, selectedProjectId, defaultValues }) {
+export default function Create({ projects, concreteGrades, selectedProjectId, defaultValues, vehicles }) {
     const { data, setData, post, processing, errors } = useForm({
         delivery_project_id: selectedProjectId || '',
         date: new Date().toISOString().split('T')[0],
@@ -40,6 +40,20 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
         }
     };
 
+    const handleVehicleChange = (e) => {
+        const selectedId = e.target.value;
+        if (selectedId) {
+            const vehicle = vehicles.find(v => v.id === parseInt(selectedId));
+            if (vehicle) {
+                setData(prevData => ({
+                    ...prevData,
+                    vehicle_number: vehicle.vehicle_number,
+                    driver_name: vehicle.driver_name || ''
+                }));
+            }
+        }
+    };
+
     const handleGradeChange = (gradeId) => {
         setData('concrete_grade_id', gradeId);
         const grade = concreteGrades.find(g => g.id === parseInt(gradeId));
@@ -67,7 +81,7 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
 
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
-                    <Link 
+                    <Link
                         href={data.delivery_project_id ? route('delivery.projects.show', projects.find(p => p.id == data.delivery_project_id)?.slug || '#') : route('delivery.shipments.index')}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
@@ -211,7 +225,24 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
 
                     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Armada & Driver</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <InputLabel htmlFor="master_vehicle" value="Pilih dari Master Armada (Opsional)" />
+                                <select
+                                    id="master_vehicle"
+                                    className="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm bg-indigo-50"
+                                    onChange={handleVehicleChange}
+                                >
+                                    <option value="">-- Ketik manual di bawah atau pilih master data --</option>
+                                    {vehicles?.filter(v => v.is_active).map(v => (
+                                        <option key={v.id} value={v.id}>{v.vehicle_number} {v.driver_name ? `- ${v.driver_name}` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                             <div>
                                 <InputLabel htmlFor="vehicle_number" value="Nomor Polisi Kendaraan" />
                                 <TextInput
@@ -252,7 +283,7 @@ export default function Create({ projects, concreteGrades, selectedProjectId, de
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6">
-                        <Link 
+                        <Link
                             href={data.delivery_project_id ? route('delivery.projects.show', projects.find(p => p.id == data.delivery_project_id)?.slug || '#') : route('delivery.shipments.index')}
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >

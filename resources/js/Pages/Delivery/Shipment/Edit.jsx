@@ -7,7 +7,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 
-export default function Edit({ shipment, projects, concreteGrades }) {
+export default function Edit({ shipment, projects, concreteGrades, vehicles }) {
     const { data, setData, put, processing, errors } = useForm({
         delivery_project_id: shipment.delivery_project_id,
         date: shipment.date,
@@ -27,6 +27,20 @@ export default function Edit({ shipment, projects, concreteGrades }) {
         const total = parseFloat(data.volume || 0) * parseFloat(data.price_per_m3 || 0);
         setData('total_price', total);
     }, [data.volume, data.price_per_m3]);
+
+    const handleVehicleChange = (e) => {
+        const selectedId = e.target.value;
+        if (selectedId) {
+            const vehicle = vehicles.find(v => v.id === parseInt(selectedId));
+            if (vehicle) {
+                setData(prevData => ({
+                    ...prevData,
+                    vehicle_number: vehicle.vehicle_number,
+                    driver_name: vehicle.driver_name || ''
+                }));
+            }
+        }
+    };
 
     const handleGradeChange = (gradeId) => {
         setData('concrete_grade_id', gradeId);
@@ -55,7 +69,7 @@ export default function Edit({ shipment, projects, concreteGrades }) {
 
             <div className="max-w-4xl mx-auto">
                 <div className="mb-6">
-                    <Link 
+                    <Link
                         href={route('delivery.projects.show', shipment.project.slug)}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
@@ -199,7 +213,24 @@ export default function Edit({ shipment, projects, concreteGrades }) {
 
                     <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm space-y-6">
                         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Armada & Driver</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <InputLabel htmlFor="master_vehicle" value="Pilih dari Master Armada (Opsional)" />
+                                <select
+                                    id="master_vehicle"
+                                    className="w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm bg-indigo-50"
+                                    onChange={handleVehicleChange}
+                                >
+                                    <option value="">-- Ketik manual di bawah atau pilih master data --</option>
+                                    {vehicles?.filter(v => v.is_active).map(v => (
+                                        <option key={v.id} value={v.id}>{v.vehicle_number} {v.driver_name ? `- ${v.driver_name}` : ''}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                             <div>
                                 <InputLabel htmlFor="vehicle_number" value="Nomor Polisi Kendaraan" />
                                 <TextInput
@@ -240,7 +271,7 @@ export default function Edit({ shipment, projects, concreteGrades }) {
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6">
-                        <Link 
+                        <Link
                             href={route('delivery.projects.show', shipment.project.slug)}
                             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >

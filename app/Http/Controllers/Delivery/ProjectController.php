@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Delivery;
 
 use App\Http\Controllers\Controller;
-use App\Models\Delivery\Customer;
 use App\Models\Delivery\ConcreteGrade;
+use App\Models\Delivery\Customer;
 use App\Models\Delivery\DeliveryProject;
 use App\Services\OfficeContextService;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
@@ -23,22 +23,21 @@ class ProjectController extends Controller
 
     public function trash()
     {
-        $trashedProjects = DeliveryProject::onlyTrashed()->with(['customer' => function($q) {
+        $trashedProjects = DeliveryProject::onlyTrashed()->with(['customer' => function ($q) {
             $q->withTrashed();
         }])->latest()->get();
+
         return Inertia::render('Delivery/Project/Trash', [
             'trashedProjects' => $trashedProjects,
         ]);
     }
-
-
 
     /**
      * Show the form for creating a new resource.
      */
     public function create(Request $request)
     {
-        if (!$request->has('customer_id')) {
+        if (! $request->has('customer_id')) {
             return redirect()->route('delivery.customers.index')
                 ->with('message', 'Silakan pilih customer terlebih dahulu sebelum membuat proyek.');
         }
@@ -49,7 +48,7 @@ class ProjectController extends Controller
         return Inertia::render('Delivery/Project/Create', [
             'customers' => $customers,
             'concreteGrades' => $concreteGrades,
-            'selectedCustomerId' => (int) $request->customer_id
+            'selectedCustomerId' => (int) $request->customer_id,
         ]);
     }
 
@@ -169,16 +168,16 @@ class ProjectController extends Controller
 
         $period = '-';
         if ($firstDate && $lastDate) {
-            $period = Carbon::parse($firstDate)->translatedFormat('d F Y') . ' s/d ' . Carbon::parse($lastDate)->translatedFormat('d F Y');
+            $period = Carbon::parse($firstDate)->translatedFormat('d F Y').' s/d '.Carbon::parse($lastDate)->translatedFormat('d F Y');
         }
 
         $pdf = Pdf::loadView('pdf.delivery.rekap_pengiriman', [
             'project' => $project->load('customer'),
             'shipments' => $shipments,
-            'period' => $period
+            'period' => $period,
         ])->setPaper('a4', 'portrait');
 
-        $filename = 'rekap_pengiriman_' . str_replace(' ', '_', strtolower($project->name)) . '.pdf';
+        $filename = 'rekap_pengiriman_'.str_replace(' ', '_', strtolower($project->name)).'.pdf';
 
         return $pdf->stream($filename);
     }

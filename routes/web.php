@@ -140,6 +140,8 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::post('customers/{id}/restore', [CustomerController::class, 'restore'])->name('customers.restore');
         Route::resource('customers', CustomerController::class);
 
+        Route::resource('vehicles', \App\Http\Controllers\Delivery\VehicleController::class)->except(['create', 'show', 'edit']);
+
         // Explicitly define create route BEFORE resource to avoid any ambiguity, although resource should handle it.
         // Also ensuring export-recap-pdf is handled.
         Route::get('projects/create', [DeliveryProjectController::class, 'create'])->name('projects.create');
