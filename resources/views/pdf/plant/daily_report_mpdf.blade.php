@@ -14,17 +14,9 @@
             padding: 0;
         }
 
-        .text-right {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .text-bold {
-            font-weight: bold;
-        }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-bold { font-weight: bold; }
 
         .judul {
             text-align: left;
@@ -68,13 +60,8 @@
             text-align: center;
         }
 
-        .bg-green-light {
-            background-color: #e8f5e9;
-        }
-
-        .text-red {
-            color: #d32f2f;
-        }
+        .bg-green-light { background-color: #e8f5e9; }
+        .text-red { color: #d32f2f; }
 
         .section-title {
             font-size: 14px;
@@ -92,7 +79,7 @@
         }
 
         /* =====================================================
-         * TANDA TANGAN - mPDF support inline-block dengan benar
+         * TANDA TANGAN - Dengan penuh CSS mPDF yang berfungsi
          * ===================================================== */
         .signature-box {
             margin-top: 40px;
@@ -117,15 +104,15 @@
         }
 
         .td-space {
-            height: 100px;
+            height: 75px;
         }
 
         .td-name {
-            padding: 6px 10px 5px 5px;
+            padding: 6px 10px 14px 10px;
             text-align: center;
         }
 
-        /* mPDF support inline-block dengan baik — nama & jabatan lurus */
+        /* mPDF support inline-block dengan baik */
         .sign-name-block {
             display: inline-block;
             text-align: left;
@@ -214,8 +201,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center" style="font-style: italic; color: #777;">Tidak ada
-                        pengeluaran</td>
+                    <td colspan="5" class="text-center" style="font-style: italic; color: #777;">Tidak ada pengeluaran</td>
                 </tr>
             @endforelse
 
@@ -232,8 +218,7 @@
                 <td style="border: none; text-align: right; width: 75%; padding-right: 15px; font-size: 11pt;">
                     <strong>SISA SALDO AKHIR:</strong>
                 </td>
-                <td
-                    style="border: 1px solid #000; text-align: right; font-size: 12pt; font-weight: bold; background-color: #fff3e0;">
+                <td style="border: 1px solid #000; text-align: right; font-size: 12pt; font-weight: bold; background-color: #fff3e0;">
                     Rp {{ number_format($finalBalance, 0, ',', '.') }}
                 </td>
             </tr>

@@ -212,10 +212,7 @@ class PlantTransactionController extends Controller
             'cash_expense_type_id' => 'required_if:type,out|nullable|exists:cash_expense_types,id',
         ]);
 
-        // Prevent manual income for Kas Kecil
-        if ($request->cash_type === 'kas_kecil' && $request->type === 'in') {
-            return redirect()->back()->withErrors(['type' => 'Pemasukan Kas Kecil hanya diperbolehkan melalui transfer dari Kas Besar.']);
-        }
+
 
         PlantTransaction::create([
             'transaction_date' => $request->transaction_date,
@@ -356,19 +353,98 @@ class PlantTransactionController extends Controller
             $periodText = 'Periode: ' . $initialDate->translatedFormat('d F Y') . ' s/d ' . $finalDate->translatedFormat('d F Y');
         }
 
-        $pdf = Pdf::loadView('pdf.plant.daily_report', [
-            'title' => $title,
-            'periodText' => $periodText,
-            'initialBalance' => $initialBalance,
-            'incomes' => $incomes,
-            'expenses' => $expenses,
-            'totalInRaw' => $totalInRaw,
+        $html = view('pdf.plant.daily_report', [
+            'title'              => $title,
+            'periodText'         => $periodText,
+            'initialBalance'     => $initialBalance,
+            'incomes'            => $incomes,
+            'expenses'           => $expenses,
+            'totalInRaw'         => $totalInRaw,
             'totalIncomeDisplay' => $totalIncomeDisplay,
-            'totalOutRaw' => $totalOutRaw,
-            'finalBalance' => $finalBalance,
-            'cashType' => $cashType,
-        ])->setPaper('a4', 'portrait');
+            'totalOutRaw'        => $totalOutRaw,
+            'finalBalance'       => $finalBalance,
+            'cashType'           => $cashType,
+        ])->render();
 
-        return $pdf->stream('laporan_' . $cashType . '_' . $startDate . '.pdf');
+        $mpdf = new \Mpdf\Mpdf([
+            'format'        => 'A4',
+            'orientation'   => 'P',
+            'margin_left'   => 15,
+            'margin_right'  => 15,
+            'margin_top'    => 10,
+            'margin_bottom' => 15,
+        ]);
+
+        $mpdf->WriteHTML($html);
+
+        $filename = 'laporan_' . $cashType . '_' . $startDate . '.pdf';
+
+        return response($mpdf->Output($filename, 'S'), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function exportPdfMpdf(Request $request)
+    {
+        $this->ensurePlantContext();
+
+        $cashType  = $request->input('cash_type', 'kas_besar');
+        $startDate = $request->input('start_date', Carbon::today()->toDateString());
+        $endDate   = $request->input('end_date', Carbon::today()->toDateString());
+
+        // 1. Opening Balance
+        $inPrev  = PlantTransaction::where('cash_type', $cashType)->where('transaction_date', '<', $startDate)->where('type', 'in')->sum('amount');
+        $outPrev = PlantTransaction::where('cash_type', $cashType)->where('transaction_date', '<', $startDate)->where('type', 'out')->sum('amount');
+        $initialBalance = $inPrev - $outPrev;
+
+        // 2. Transactions in Range
+        $transactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', $cashType)
+            ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->orderBy('transaction_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $incomes  = $transactions->where('type', 'in');
+        $expenses = $transactions->where('type', 'out');
+
+        $totalInRaw       = $incomes->sum('amount');
+        $totalOutRaw      = $expenses->sum('amount');
+        $totalIncomeDisplay = $initialBalance + $totalInRaw;
+        $finalBalance     = $totalIncomeDisplay - $totalOutRaw;
+
+        $title = $cashType === 'kas_besar' ? 'Laporan Kas Besar' : 'Laporan Kas Kecil';
+
+        $initialDate = Carbon::parse($startDate);
+        $finalDate   = Carbon::parse($endDate);
+        $periodText  = $initialDate->equalTo($finalDate)
+            ? 'Tanggal: ' . $initialDate->translatedFormat('d F Y')
+            : 'Periode: ' . $initialDate->translatedFormat('d F Y') . ' s/d ' . $finalDate->translatedFormat('d F Y');
+
+        $html = view('pdf.plant.daily_report_mpdf', compact(
+            'title', 'periodText', 'initialBalance',
+            'incomes', 'expenses',
+            'totalInRaw', 'totalIncomeDisplay', 'totalOutRaw',
+            'finalBalance', 'cashType'
+        ))->render();
+
+        $mpdf = new \Mpdf\Mpdf([
+            'format'       => 'A4',
+            'orientation'  => 'P',
+            'margin_left'  => 15,
+            'margin_right' => 15,
+            'margin_top'   => 10,
+            'margin_bottom'=> 15,
+        ]);
+
+        $mpdf->WriteHTML($html);
+
+        $filename = 'laporan_' . $cashType . '_' . $startDate . '.pdf';
+
+        return response($mpdf->Output($filename, 'S'), 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
     }
 }

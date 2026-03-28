@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::resource('expense-types', CashExpenseTypeController::class)->names('expense-types');
 
         Route::get('/export-pdf', [PlantTransactionController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/export-pdf-mpdf', [PlantTransactionController::class, 'exportPdfMpdf'])->name('export-pdf-mpdf');
 
         // Transaction CRUD placeholders
         // Transaction CRUD

@@ -198,6 +198,9 @@ export default function KasKecil({
                     <div className="flex flex-col md:flex-row gap-4">
                         {/* Action Buttons */}
                         <div className="flex gap-2">
+                            <PrimaryButton onClick={() => openModal('in')} className="bg-emerald-600 hover:bg-emerald-700 whitespace-nowrap gap-2">
+                                <Plus className="w-4 h-4" /> Masuk
+                            </PrimaryButton>
                             <PrimaryButton onClick={() => openModal('out')} className="bg-red-600 hover:bg-red-700 whitespace-nowrap gap-2">
                                 <Plus className="w-4 h-4" /> Keluar
                             </PrimaryButton>
@@ -319,7 +322,14 @@ export default function KasKecil({
                                                 + {formatRupiah(item.amount)}
                                             </td>
                                             <td className="px-6 py-4 text-center">
-                                                {/* Actions removed for Kas Kecil Income (Transfer only) */}
+                                                <div className="flex justify-center gap-1">
+                                                    <button onClick={() => openModal('in', item)} className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                                                    </button>
+                                                    <button onClick={() => confirmDelete(item)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     )) : (
@@ -440,7 +450,7 @@ export default function KasKecil({
             <Modal show={isModalOpen} onClose={closeModal} maxWidth="3xl">
                 <div className="p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                        {editingTransaction ? 'Edit Transaksi' : 'Tambah Pengeluaran Kas Kecil'}
+                        {editingTransaction ? 'Edit Transaksi' : (modalType === 'in' ? 'Tambah Pemasukan Kas Kecil' : 'Tambah Pengeluaran Kas Kecil')}
                     </h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -450,6 +460,20 @@ export default function KasKecil({
                                 {errors.transaction_date && <div className="text-red-500 text-xs mt-1">{errors.transaction_date}</div>}
                             </div>
 
+                            {modalType === 'in' ? (
+                                <div>
+                                    <InputLabel value="Sumber Dana" />
+                                    <Select
+                                        className="mt-1"
+                                        value={data.cash_source_id}
+                                        onChange={e => setData('cash_source_id', e.target.value)}
+                                        placeholder="-- Pilih Sumber Dana --"
+                                        options={cashSources.map(s => ({ value: s.id, label: s.name }))}
+                                        required
+                                    />
+                                    {errors.cash_source_id && <div className="text-red-500 text-xs mt-1">{errors.cash_source_id}</div>}
+                                </div>
+                            ) : (
                                 <div>
                                     <InputLabel value="Tipe Biaya" />
                                     <Select
@@ -462,6 +486,7 @@ export default function KasKecil({
                                     />
                                     {errors.cash_expense_type_id && <div className="text-red-500 text-xs mt-1">{errors.cash_expense_type_id}</div>}
                                 </div>
+                            )}
 
                             <div>
                                 <InputLabel value="Nominal (Rp)" />
@@ -478,7 +503,7 @@ export default function KasKecil({
 
                         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 mt-6">
                             <SecondaryButton onClick={closeModal} disabled={processing}>Batal</SecondaryButton>
-                            <PrimaryButton className={'bg-red-600 hover:bg-red-700'} disabled={processing}>
+                            <PrimaryButton className={modalType === 'in' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} disabled={processing}>
                                 {processing ? 'Menyimpan...' : 'Simpan Transaksi'}
                             </PrimaryButton>
                         </div>
