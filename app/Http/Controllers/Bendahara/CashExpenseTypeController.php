@@ -40,14 +40,14 @@ class CashExpenseTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CashExpenseType $cashExpenseType)
+    public function update(Request $request, CashExpenseType $expense_type)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:cash_expense_types,name,' . $cashExpenseType->id,
+            'name' => 'required|string|max:255|unique:cash_expense_types,name,' . $expense_type->id,
             'description' => 'nullable|string',
         ]);
 
-        $cashExpenseType->update($request->all());
+        $expense_type->update($request->all());
 
         return redirect()->back()->with('message', 'Tipe Biaya Kas berhasil diperbarui');
     }
@@ -55,10 +55,10 @@ class CashExpenseTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CashExpenseType $cashExpenseType)
+    public function destroy(CashExpenseType $expense_type)
     {
         try {
-            $cashExpenseType->delete();
+            $expense_type->delete();
             return redirect()->back()->with('message', 'Tipe Biaya Kas berhasil dihapus');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() === '23000') {

@@ -58,6 +58,7 @@ class User extends Authenticatable
     // Constants
     const ROLE_SUPERADMIN = 'superadmin';
     const ROLE_BENDAHARA = 'bendahara';
+    const ROLE_OWNER = 'owner';
 
     const OFFICE_UTAMA = 1;
     const OFFICE_PLANT = 2;
@@ -76,6 +77,11 @@ class User extends Authenticatable
     public function isBendahara()
     {
         return $this->role === self::ROLE_BENDAHARA;
+    }
+
+    public function isOwner()
+    {
+        return $this->role === self::ROLE_OWNER;
     }
 
     public function isKantorUtama()
@@ -102,6 +108,11 @@ class User extends Authenticatable
     // Unified Access Logic
     public function canAccessPanel(string $panel): bool
     {
+        // Owner has access to all panels (read-only)
+        if ($this->isOwner()) {
+            return true;
+        }
+
         // 1. Kantor Utama: Superadmin & Bendahara can open ALL panels.
         if ($this->isKantorUtama()) {
             return true;
@@ -171,6 +182,11 @@ class User extends Authenticatable
      */
     public function canManage(string $context): bool
     {
+        // Owner is strictly read-only
+        if ($this->isOwner()) {
+            return false;
+        }
+
         // Must have basic access first
         if (!$this->canAccessPanel($context)) {
             return false;
@@ -190,6 +206,11 @@ class User extends Authenticatable
      */
     public function canCreate(string $context): bool
     {
+        // Owner is strictly read-only
+        if ($this->isOwner()) {
+            return false;
+        }
+
         // Must have basic access
         if (!$this->canAccessPanel($context)) {
             return false;

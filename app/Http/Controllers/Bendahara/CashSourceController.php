@@ -40,14 +40,14 @@ class CashSourceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CashSource $cashSource)
+    public function update(Request $request, CashSource $source)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:cash_sources,name,' . $cashSource->id,
+            'name' => 'required|string|max:255|unique:cash_sources,name,' . $source->id,
             'description' => 'nullable|string',
         ]);
 
-        $cashSource->update($request->all());
+        $source->update($request->all());
 
         return redirect()->back()->with('message', 'Sumber Dana berhasil diperbarui');
     }
@@ -55,10 +55,10 @@ class CashSourceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CashSource $cashSource)
+    public function destroy(CashSource $source)
     {
         try {
-            $cashSource->delete();
+            $source->delete();
             return redirect()->back()->with('message', 'Sumber Dana berhasil dihapus');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() === '23000') {

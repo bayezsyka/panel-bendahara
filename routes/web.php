@@ -32,6 +32,27 @@ Route::middleware(['auth', 'verified', 'role:superadmin', 'superadmin.utama'])
         Route::post('/switch-office', [\App\Http\Controllers\Superadmin\OfficeSwitcherController::class, 'switch'])->name('office.switch');
     });
 
+// OWNER (STRICTLY READ-ONLY DASHBOARD)
+Route::middleware(['auth', 'verified', 'role:owner'])
+    ->prefix('owner')
+    ->name('owner.')
+    ->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Owner\OwnerDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/search',   [\App\Http\Controllers\Owner\SearchController::class, 'index'])->name('search');
+        Route::get('/audit-log',[\App\Http\Controllers\Owner\OwnerActivityLogController::class, 'index'])->name('audit-log');
+
+        // ── Data Panel Pages (READ-ONLY, with filters) ──────────────────────
+        Route::get('/kas',     [\App\Http\Controllers\Owner\OwnerKasController::class, 'index'])->name('kas');
+        Route::get('/proyek',  [\App\Http\Controllers\Owner\OwnerProyekController::class, 'index'])->name('proyek');
+        Route::get('/piutang',     [\App\Http\Controllers\Owner\OwnerPiutangController::class,    'index'])->name('piutang');
+        Route::get('/pengiriman',  [\App\Http\Controllers\Owner\OwnerPengirimanController::class, 'index'])->name('pengiriman');
+
+        // ── Download Center (READ-ONLY PDF exports) ─────────────────────────
+        Route::get('/reports/laporan-proyek', [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanKeseluruhan'])->name('reports.laporan-proyek');
+        Route::get('/reports/laporan-kas',    [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanKas'])->name('reports.laporan-kas');
+        Route::get('/reports/laporan-piutang',[\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanPiutang'])->name('reports.laporan-piutang');
+    });
+
 // PROJECT EXPENSES MODULAR ROUTES
 Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:finance', 'restrict.input'])
     ->prefix('projectexpense')

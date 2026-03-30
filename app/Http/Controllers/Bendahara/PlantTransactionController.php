@@ -69,9 +69,17 @@ class PlantTransactionController extends Controller
         $carbonDate = Carbon::parse($date);
 
         $prevDate = $carbonDate->copy()->subDay()->toDateString();
-        $nextDate = $carbonDate->copy()->addDay()->toDateString();
+        $today = Carbon::today()->toDateString();
+        $nextDate = $carbonDate->toDateString() >= $today ? null : $carbonDate->copy()->addDay()->toDateString();
 
-        // 1. Opening Balance (Sisa Saldo Kemarin)
+        $search = $request->query('search');
+        $cashSourceId = $request->query('cash_source_id');
+        $cashExpenseTypeId = $request->query('cash_expense_type_id');
+        $isSearching = $search || $cashSourceId || $cashExpenseTypeId;
+
+        // 1. Opening Balance (Only relevant if not searching globally or if searching within date context)
+        // For simplicity, if searching, we might still want to show daily balance OR we show global search results.
+        // If searching, we'll keep the date context unless specified otherwise.
         $inPrev = PlantTransaction::where('cash_type', 'kas_besar')
             ->where('transaction_date', '<', $date)
             ->where('type', 'in')
@@ -82,12 +90,28 @@ class PlantTransactionController extends Controller
             ->sum('amount');
         $saldoAwal = $inPrev - $outPrev;
 
-        // 2. Daily Transactions
-        $dailyTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
-            ->where('cash_type', 'kas_besar')
-            ->whereDate('transaction_date', $date)
-            ->orderBy('id', 'asc') // Urutkan sesuai input/ID
-            ->get();
+        // 2. Transactions Query
+        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', 'kas_besar');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhereHas('cashSource', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('cashExpenseType', function($eq) use ($search) {
+                      $eq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhere('transaction_date', 'like', "%{$search}%");
+            });
+        } else {
+            $query->whereDate('transaction_date', $date);
+        }
+
+        $dailyTransactions = $query->orderBy('transaction_date', 'desc')
+                                   ->orderBy('id', 'desc')
+                                   ->get();
 
         $incomes = $dailyTransactions->where('type', 'in')->map(function ($item) {
             $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
@@ -120,6 +144,12 @@ class PlantTransactionController extends Controller
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
+            'filters' => [
+                'search' => $search,
+                'cash_source_id' => $cashSourceId,
+                'cash_expense_type_id' => $cashExpenseTypeId,
+            ],
+            'isSearching' => $isSearching,
         ]);
     }
 
@@ -134,7 +164,13 @@ class PlantTransactionController extends Controller
         $carbonDate = Carbon::parse($date);
 
         $prevDate = $carbonDate->copy()->subDay()->toDateString();
-        $nextDate = $carbonDate->copy()->addDay()->toDateString();
+        $today = Carbon::today()->toDateString();
+        $nextDate = $carbonDate->toDateString() >= $today ? null : $carbonDate->copy()->addDay()->toDateString();
+
+        $search = $request->query('search');
+        $cashSourceId = $request->query('cash_source_id');
+        $cashExpenseTypeId = $request->query('cash_expense_type_id');
+        $isSearching = $search || $cashSourceId || $cashExpenseTypeId;
 
         // 1. Opening Balance (Sisa Saldo Kemarin)
         $inPrev = PlantTransaction::where('cash_type', 'kas_kecil')
@@ -147,12 +183,28 @@ class PlantTransactionController extends Controller
             ->sum('amount');
         $saldoAwal = $inPrev - $outPrev;
 
-        // 2. Daily Transactions
-        $dailyTransactions = PlantTransaction::with(['cashSource', 'cashExpenseType'])
-            ->where('cash_type', 'kas_kecil')
-            ->whereDate('transaction_date', $date)
-            ->orderBy('id', 'asc')
-            ->get();
+        // 2. Transactions Query
+        $query = PlantTransaction::with(['cashSource', 'cashExpenseType'])
+            ->where('cash_type', 'kas_kecil');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('description', 'like', "%{$search}%")
+                  ->orWhereHas('cashSource', function($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('cashExpenseType', function($eq) use ($search) {
+                      $eq->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhere('transaction_date', 'like', "%{$search}%");
+            });
+        } else {
+            $query->whereDate('transaction_date', $date);
+        }
+
+        $dailyTransactions = $query->orderBy('transaction_date', 'desc')
+                                   ->orderBy('id', 'desc')
+                                   ->get();
 
         $incomes = $dailyTransactions->where('type', 'in')->map(function ($item) {
             $item->transaction_date = $item->transaction_date ? $item->transaction_date->format('Y-m-d') : null;
@@ -185,6 +237,12 @@ class PlantTransactionController extends Controller
             'totalIn' => $totalIn,
             'totalOut' => $totalOut,
             'balance' => $balance,
+            'filters' => [
+                'search' => $search,
+                'cash_source_id' => $cashSourceId,
+                'cash_expense_type_id' => $cashExpenseTypeId,
+            ],
+            'isSearching' => $isSearching,
         ]);
     }
 
@@ -203,7 +261,7 @@ class PlantTransactionController extends Controller
         }
 
         $request->validate([
-            'transaction_date' => 'required|date',
+            'transaction_date' => 'required|date|before_or_equal:today',
             'type' => 'required|in:in,out',
             'cash_type' => 'required|in:kas_besar,kas_kecil',
             'amount' => 'required|numeric|min:0',
@@ -236,7 +294,7 @@ class PlantTransactionController extends Controller
         }
 
         $request->validate([
-            'transaction_date' => 'required|date',
+            'transaction_date' => 'required|date|before_or_equal:today',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',
         ]);
@@ -275,7 +333,7 @@ class PlantTransactionController extends Controller
         }
 
         $request->validate([
-            'transaction_date' => 'required|date',
+            'transaction_date' => 'required|date|before_or_equal:today',
             'amount' => 'required|numeric|min:0',
             'description' => 'required|string',
             'cash_source_id' => 'required_if:type,in|nullable|exists:cash_sources,id',
