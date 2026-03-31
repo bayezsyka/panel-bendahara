@@ -240,17 +240,17 @@ export default function ActivityLog({ logs, filters, filterOptions }) {
             {/* ── Summary Stats ───────────────────────────────────────────── */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 {[
-                    { label: 'Total Log',    value: logs.total?.toLocaleString('id-ID') ?? '—',                                       bg: 'from-indigo-50 to-white',  ibg: 'bg-indigo-100',  ic: 'text-indigo-600' },
-                    { label: 'Halaman',      value: `${logs.current_page} / ${logs.last_page}`,                                        bg: 'from-blue-50 to-white',    ibg: 'bg-blue-100',    ic: 'text-blue-600'   },
-                    { label: 'Per Halaman',  value: logs.per_page,                                                                      bg: 'from-teal-50 to-white',    ibg: 'bg-teal-100',    ic: 'text-teal-600'   },
-                    { label: 'Filter Aktif', value: Object.values(filters).filter(Boolean).length || 'Tidak ada',                      bg: 'from-amber-50 to-white',   ibg: 'bg-amber-100',   ic: 'text-amber-600'  },
+                    { label: 'Total Log',    value: logs.total?.toLocaleString('id-ID') ?? '—',                                       bg: 'from-indigo-50 dark:from-indigo-900/20 to-white dark:to-gray-900',  ibg: 'bg-indigo-100 dark:bg-indigo-900/40',  ic: 'text-indigo-600 dark:text-indigo-400' },
+                    { label: 'Halaman',      value: `${logs.current_page} / ${logs.last_page}`,                                        bg: 'from-blue-50 dark:from-blue-900/20 to-white dark:to-gray-900',    ibg: 'bg-blue-100 dark:bg-blue-900/40',    ic: 'text-blue-600 dark:text-blue-400'   },
+                    { label: 'Per Halaman',  value: logs.per_page,                                                                      bg: 'from-teal-50 dark:from-teal-900/20 to-white dark:to-gray-900',    ibg: 'bg-teal-100 dark:bg-teal-900/40',    ic: 'text-teal-600 dark:text-teal-400'   },
+                    { label: 'Filter Aktif', value: Object.values(filters).filter(Boolean).length || 'Tidak ada',                      bg: 'from-amber-50 dark:from-amber-900/20 to-white dark:to-gray-900',   ibg: 'bg-amber-100 dark:bg-amber-900/40',   ic: 'text-amber-600 dark:text-amber-400'  },
                 ].map((s) => (
-                    <div key={s.label} className={`rounded-xl border border-gray-200 bg-gradient-to-br ${s.bg} p-4 shadow-sm`}>
+                    <div key={s.label} className={`rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br ${s.bg} p-4 shadow-sm`}>
                         <div className={`w-8 h-8 rounded-lg ${s.ibg} ${s.ic} flex items-center justify-center mb-2`}>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         </div>
-                        <p className="text-xl font-extrabold text-gray-900 tabular-nums">{s.value}</p>
-                        <p className="text-xs font-medium text-gray-500 mt-0.5">{s.label}</p>
+                        <p className={`text-xl font-extrabold tabular-nums ${s.ic.includes('text') ? s.ic : 'text-gray-900 dark:text-gray-100'}`}>{s.value}</p>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">{s.label}</p>
                     </div>
                 ))}
             </div>
@@ -275,10 +275,10 @@ export default function ActivityLog({ logs, filters, filterOptions }) {
 
             {/* ── Read-Only Footer ─────────────────────────────────────────── */}
             <div className="mt-6 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-3.5 h-3.5 text-amber-400 dark:text-amber-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
-                Data log bersifat <strong className="text-gray-500 dark:text-gray-400">read-only</strong> dan tidak dapat dihapus atau dimodifikasi dari panel ini.
+                Data log bersifat <strong className="text-gray-500 dark:text-gray-300">read-only</strong> dan tidak dapat dihapus atau dimodifikasi dari panel ini.
             </div>
         </OwnerLayout>
     );

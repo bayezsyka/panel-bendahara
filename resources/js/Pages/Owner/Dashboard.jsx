@@ -25,15 +25,15 @@ const COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'
 const RupiahTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-xl border-none bg-white p-3 shadow-lg text-xs min-w-[160px]">
-            <p className="font-semibold text-gray-800 mb-1.5">{fmtBulan(label) || label}</p>
+        <div className="rounded-xl border-none bg-white dark:bg-gray-900 p-3 shadow-lg text-xs min-w-[160px] border border-gray-100 dark:border-gray-800">
+            <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1.5">{fmtBulan(label) || label}</p>
             {payload.map((e, i) => (
                 <div key={i} className="flex items-center justify-between gap-4">
-                    <span className="flex items-center gap-1.5 text-gray-500">
+                    <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
                         <span className="w-2 h-2 rounded-full inline-block" style={{ background: e.color }} />
                         {e.name}
                     </span>
-                    <span className="font-medium text-gray-900">{rupiah(e.value)}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{rupiah(e.value)}</span>
                 </div>
             ))}
         </div>
@@ -43,30 +43,30 @@ const RupiahTooltip = ({ active, payload, label }) => {
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 const KpiCard = ({ title, value, sub, bg, ibg, ic, icon, linkTo }) => {
     const inner = (
-        <div className={`rounded-xl border border-gray-200 bg-gradient-to-br ${bg} p-5 shadow-sm h-full`}>
+        <div className={`rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br ${bg} p-5 shadow-sm h-full transition-all hover:shadow-md`}>
             <div className={`w-9 h-9 rounded-lg ${ibg} ${ic} flex items-center justify-center mb-3`}>
                 {icon}
             </div>
-            <p className="text-xs font-medium text-gray-500">{title}</p>
-            <p className="text-lg font-bold text-gray-900 tabular-nums mt-0.5">{value}</p>
-            {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100 tabular-nums mt-0.5">{value}</p>
+            {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
             {linkTo && (
-                <p className="text-xs text-indigo-500 font-medium mt-2">Lihat detail →</p>
+                <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium mt-2 group-hover:translate-x-1 transition-transform">Lihat detail →</p>
             )}
         </div>
     );
-    if (linkTo) return <Link href={route(linkTo)} className="block h-full">{inner}</Link>;
+    if (linkTo) return <Link href={route(linkTo)} className="block h-full group">{inner}</Link>;
     return inner;
 };
 
 // ─── Section Panel ────────────────────────────────────────────────────────────
 const Panel = ({ title, subtitle, children, action }) => (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
         {(title || subtitle) && (
-            <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+            <div className="border-b border-gray-100 dark:border-gray-800 px-6 py-4 flex items-center justify-between bg-gray-50/30 dark:bg-gray-800/20">
                 <div>
-                    <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-                    {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
+                    {subtitle && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>}
                 </div>
                 {action}
             </div>
@@ -86,7 +86,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
         <OwnerLayout
             header={
                 <PageHeader
-                    title="Dashboard"
+                    title="Dashboard Ringkasan"
                 />
             }
         >
@@ -100,7 +100,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                         title="Total Kas"
                         value={rupiah(total_kas.total)}
                         sub={`Besar ${rupiah(total_kas.kas_besar)} · Kecil ${rupiah(total_kas.kas_kecil)}`}
-                        bg="from-emerald-50 to-white" ibg="bg-emerald-100" ic="text-emerald-600"
+                        bg="from-emerald-50 dark:from-emerald-900/20 to-white dark:to-gray-900" ibg="bg-emerald-100 dark:bg-emerald-900/40" ic="text-emerald-600 dark:text-emerald-400"
                         linkTo="owner.kas"
                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>}
                     />
@@ -108,7 +108,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                         title="Piutang Belum Lunas"
                         value={rupiah(piutang_belum_lunas.total)}
                         sub={`${fmtNum(piutang_belum_lunas.jumlah_proyek)} proyek`}
-                        bg="from-red-50 to-white" ibg="bg-red-100" ic="text-red-600"
+                        bg="from-red-50 dark:from-red-900/20 to-white dark:to-gray-900" ibg="bg-red-100 dark:bg-red-900/40" ic="text-red-600 dark:text-red-400"
                         linkTo="owner.piutang"
                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                     />
@@ -116,7 +116,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                         title={`Pengeluaran ${pengeluaran_proyek_bulan_ini.periode}`}
                         value={rupiah(pengeluaran_proyek_bulan_ini.total)}
                         sub={`${fmtNum(pengeluaran_proyek_bulan_ini.jumlah_transaksi)} transaksi`}
-                        bg="from-amber-50 to-white" ibg="bg-amber-100" ic="text-amber-600"
+                        bg="from-amber-50 dark:from-amber-900/20 to-white dark:to-gray-900" ibg="bg-amber-100 dark:bg-amber-900/40" ic="text-amber-600 dark:text-amber-400"
                         linkTo="owner.proyek"
                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>}
                     />
@@ -124,7 +124,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                         title="Proyek Aktif"
                         value={fmtNum(snapshot.total_proyek_aktif)}
                         sub={`${fmtNum(snapshot.pengiriman_bulan_ini)} kiriman bulan ini`}
-                        bg="from-blue-50 to-white" ibg="bg-blue-100" ic="text-blue-600"
+                        bg="from-blue-50 dark:from-blue-900/20 to-white dark:to-gray-900" ibg="bg-blue-100 dark:bg-blue-900/40" ic="text-blue-600 dark:text-blue-400"
                         linkTo="owner.proyek"
                         icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" /></svg>}
                     />
@@ -136,7 +136,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                     <Panel
                         title="Tren Arus Kas"
                         subtitle="Kas masuk vs keluar — 6 bulan terakhir"
-                        action={<Link href={route('owner.kas')} className="text-xs text-indigo-500 font-medium hover:underline">Lihat detail →</Link>}
+                        action={<Link href={route('owner.kas')} className="text-xs text-indigo-500 dark:text-indigo-400 font-medium hover:underline">Lihat detail →</Link>}
                     >
                         <div style={{ height: 240 }}>
                             <ResponsiveContainer>
@@ -145,7 +145,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                                     <XAxis dataKey="bulan_key" tickFormatter={fmtBulan} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                                     <YAxis tickFormatter={rupiahCompact} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={52} />
                                     <Tooltip content={<RupiahTooltip />} />
-                                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ paddingTop: 12 }} formatter={v => <span className="text-xs text-gray-600">{v}</span>} />
+                                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ paddingTop: 12 }} formatter={v => <span className="text-xs text-gray-600 dark:text-gray-400">{v}</span>} />
                                     <Line type="monotone" dataKey="kas_masuk" name="Kas Masuk" stroke="#22c55e" strokeWidth={2.5} dot={{ r: 3, fill: '#22c55e', strokeWidth: 0 }} activeDot={{ r: 5 }} />
                                     <Line type="monotone" dataKey="kas_keluar" name="Kas Keluar" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 3, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{ r: 5 }} strokeDasharray="5 3" />
                                 </LineChart>
@@ -157,7 +157,7 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                     <Panel
                         title="Pengeluaran per Proyek"
                         subtitle="Top 5 proyek berdasarkan total pengeluaran"
-                        action={<Link href={route('owner.proyek')} className="text-xs text-indigo-500 font-medium hover:underline">Lihat detail →</Link>}
+                        action={<Link href={route('owner.proyek')} className="text-xs text-indigo-500 dark:text-indigo-400 font-medium hover:underline">Lihat detail →</Link>}
                     >
                         <div style={{ height: 240 }}>
                             <ResponsiveContainer>
@@ -178,13 +178,13 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                 {/* ── Quick-access snapshot row ── */}
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                     {[
-                        { label: 'Volume Beton Bulan Ini', value: `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(snapshot.volume_beton_bulan_ini_m3)} m³`, color: 'text-indigo-600' },
-                        { label: 'Pengeluaran Kas Bulan Ini', value: rupiah(snapshot.pengeluaran_kas_bulan_ini), color: 'text-red-600' },
-                        { label: 'Kas Besar', value: rupiah(total_kas.kas_besar), color: 'text-emerald-600' },
-                        { label: 'Kas Kecil', value: rupiah(total_kas.kas_kecil), color: 'text-teal-600' },
+                        { label: 'Volume Beton Bulan Ini', value: `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(snapshot.volume_beton_bulan_ini_m3)} m³`, color: 'text-indigo-600 dark:text-indigo-400' },
+                        { label: 'Pengeluaran Kas Bulan Ini', value: rupiah(snapshot.pengeluaran_kas_bulan_ini), color: 'text-red-600 dark:text-red-400' },
+                        { label: 'Kas Besar', value: rupiah(total_kas.kas_besar), color: 'text-emerald-600 dark:text-emerald-400' },
+                        { label: 'Kas Kecil', value: rupiah(total_kas.kas_kecil), color: 'text-teal-600 dark:text-teal-400' },
                     ].map(s => (
-                        <div key={s.label} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                            <p className="text-xs text-gray-500 font-medium">{s.label}</p>
+                        <div key={s.label} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{s.label}</p>
                             <p className={`text-base font-bold tabular-nums mt-1 ${s.color}`}>{s.value}</p>
                         </div>
                     ))}
@@ -199,10 +199,10 @@ export default function Dashboard({ metrics, projectSpending, cashflowTrend }) {
                         { label: 'Jejak Audit', sub: 'Aktivitas sistem selengkapnya', icon: 'audit', to: 'owner.audit-log' },
                     ].map(q => (
                         <Link key={q.to} href={route(q.to)}
-                            className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all group">
-                            <p className="text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">{q.label}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{q.sub}</p>
-                            <p className="text-xs text-indigo-500 font-medium mt-3">Buka →</p>
+                            className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:shadow-md transition-all group">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{q.label}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{q.sub}</p>
+                            <p className="text-xs text-indigo-500 dark:text-indigo-400 font-medium mt-3">Buka →</p>
                         </Link>
                     ))}
                 </div>

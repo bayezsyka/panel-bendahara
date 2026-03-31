@@ -18,7 +18,7 @@ class EnsurePanelAccess
         $user = $request->user();
 
         if (!$user || !$user->canAccessPanel($panel)) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke panel ini.');
+            return redirect()->route('no.access');
         }
 
         return $next($request);

@@ -114,7 +114,7 @@ class User extends Authenticatable
         }
 
         // 1. Kantor Utama: Superadmin & Bendahara can open ALL panels.
-        if ($this->isKantorUtama()) {
+        if ($this->isKantorUtama() && ($this->isSuperAdmin() || $this->isBendahara())) {
             return true;
         }
 
@@ -159,7 +159,13 @@ class User extends Authenticatable
 
     public function getHomeRoute(): string
     {
-        // Priority order for redirect
+        // Owner priority
+        if ($this->isOwner()) return 'owner.dashboard';
+
+        // Superadmin Utama priority
+        if ($this->isSuperAdminUtama()) return 'superadmin.users.index';
+
+        // Panel access priority
         if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
         if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.index';
         if ($this->canAccessPanel(self::PANEL_CASH)) return 'kas.dashboard';

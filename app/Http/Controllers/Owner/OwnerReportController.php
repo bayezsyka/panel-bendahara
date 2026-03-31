@@ -105,32 +105,132 @@ class OwnerReportController extends Controller
     // ── 3. Laporan Piutang / Riwayat Penerimaan ─────────────────────────────
     public function laporanPiutang(Request $request)
     {
-        // Re-uses the same view as ReceivableController::exportPdf
-        // Pull the same data without going through the bendahara middleware.
         $startDate = $request->input('start_date');
         $endDate   = $request->input('end_date');
+        $projectId = $request->input('project_id');
 
-        $query = \App\Models\ReceivableTransaction::with(['deliveryProject.customer'])
-            ->where('type', 'payment')
-            ->orderBy('created_at', 'desc');
+        // Get customers with their projects, shipments, and payments
+        $customers = \App\Models\Delivery\Customer::with(['projects.shipments.concreteGrade', 'projects.payments', 'projects.pumpRentals'])
+            ->when($projectId, function ($q) use ($projectId) {
+                $q->whereHas('projects', fn($p) => $p->where('id', $projectId));
+            })
+            ->whereHas('projects', function ($q) {
+                $q->has('shipments')->orHas('payments')->orHas('pumpRentals');
+            })
+            ->get();
 
-        if ($startDate) $query->whereDate('created_at', '>=', $startDate);
-        if ($endDate)   $query->whereDate('created_at', '<=', $endDate);
+        $reports = $customers->map(function ($customer) {
+            $ledger = collect();
 
-        $payments    = $query->get();
-        $grandTotal  = $payments->sum('amount');
+            foreach ($customer->projects as $project) {
+                // Shipments
+                $shipments = $project->shipments->map(function ($shipment) use ($project) {
+                    return [
+                        'type' => 'shipment',
+                        'date' => $shipment->date,
+                        'original_date' => $shipment->date,
+                        'project_name' => $project->name,
+                        'docket_number' => $shipment->docket_number,
+                        'concrete_grade' => $shipment->concreteGrade ? $shipment->concreteGrade->code : '-',
+                        'volume' => (float) $shipment->volume,
+                        'price_per_m3' => (float) $shipment->price_per_m3,
+                        'debit' => (float) $shipment->total_price_with_tax,
+                        'credit' => 0,
+                        'description' => $shipment->notes,
+                    ];
+                });
+                $ledger = $ledger->concat($shipments);
+
+                // Pump Rentals
+                $pumpRentals = $project->pumpRentals->map(function ($rental) use ($project) {
+                    return [
+                        'type' => 'pump_rental',
+                        'date' => $rental->date,
+                        'original_date' => $rental->date,
+                        'project_name' => $project->name,
+                        'docket_number' => $rental->docket_number ?? '-',
+                        'concrete_grade' => 'Sewa Pompa',
+                        'volume' => 0,
+                        'price_per_m3' => 0,
+                        'debit' => (float) ($rental->total_price),
+                        'credit' => 0,
+                        'description' => $rental->vehicle_number ? "Pompa: " . $rental->vehicle_number : "Sewa Pompa",
+                    ];
+                });
+                $ledger = $ledger->concat($pumpRentals);
+
+                // Payments
+                $payments = $project->payments->map(function ($payment) use ($project) {
+                    return [
+                        'type' => 'payment',
+                        'date' => $payment->date,
+                        'original_date' => $payment->date,
+                        'project_name' => $project->name,
+                        'docket_number' => '-',
+                        'concrete_grade' => '-',
+                        'volume' => 0,
+                        'price_per_m3' => 0,
+                        'debit' => 0,
+                        'credit' => (float) $payment->amount,
+                        'description' => $payment->description,
+                    ];
+                });
+                $ledger = $ledger->concat($payments);
+            }
+
+            if ($ledger->isEmpty()) return null;
+
+            // Sort by Date
+            $ledger = $ledger->sortBy(function ($item) {
+                $date = $item['original_date'] instanceof Carbon ? $item['original_date'] : Carbon::parse($item['original_date']);
+                return $date->format('Ymd') . ($item['type'] === 'shipment' ? '0' : ($item['type'] === 'pump_rental' ? '1' : '2'));
+            });
+
+            // Calculate Running Totals
+            $runningBalance = 0; $totalVolume = 0; $totalTagihan = 0; $totalPayment = 0;
+
+            $ledger = $ledger->map(function ($item) use (&$runningBalance, &$totalVolume, &$totalTagihan, &$totalPayment) {
+                $runningBalance += $item['debit'] - $item['credit'];
+                if ($item['type'] === 'shipment') {
+                    $totalVolume += $item['volume'];
+                    $totalTagihan += $item['debit'];
+                } else if ($item['type'] === 'pump_rental') {
+                    $totalTagihan += $item['debit'];
+                } else {
+                    $totalPayment += $item['credit'];
+                }
+                $item['balance'] = $runningBalance;
+                $item['running_volume'] = $totalVolume;
+                $item['running_tagihan'] = $totalTagihan;
+                return $item;
+            });
+
+            return [
+                'customer_name' => $customer->name,
+                'ledger' => $ledger,
+                'summary' => [
+                    'total_volume' => $totalVolume,
+                    'total_tagihan' => $totalTagihan,
+                    'total_payment' => $totalPayment,
+                    'final_balance' => $runningBalance
+                ]
+            ];
+        })->filter();
+
+        if ($reports->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada data piutang.');
+        }
 
         $period = ($startDate && $endDate)
             ? Carbon::parse($startDate)->translatedFormat('d F Y') . ' – ' . Carbon::parse($endDate)->translatedFormat('d F Y')
-            : 'Semua Waktu';
+            : 'Semua Periode';
 
-        $pdf = Pdf::loadView('pdf.laporan.riwayat_piutang', [
-            'payments'    => $payments,
-            'grandTotal'  => $grandTotal,
-            'period'      => $period,
-            'generatedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i'),
-        ]);
+        $pdf = Pdf::loadView('pdf.receivable.recap', [
+            'reports' => $reports,
+            'period' => $period,
+            'date_printed' => now('Asia/Jakarta')->translatedFormat('d F Y H:i'),
+        ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Laporan-Riwayat-Pembayaran.pdf');
+        return $pdf->stream('Laporan-Piutang-Owner.pdf');
     }
 }

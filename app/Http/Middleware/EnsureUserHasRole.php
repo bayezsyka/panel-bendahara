@@ -13,7 +13,7 @@ class EnsureUserHasRole
         $user = $request->user();
 
         if (!$user || !in_array($user->role, $roles)) {
-            abort(403);
+            return redirect()->route('no.access');
         }
 
         return $next($request);
