@@ -187,7 +187,7 @@
                 }
 
                 .signature-table td {
-                    width: 33.33%;
+                    width: 50%;
                     text-align: center;
                     border: 1px solid #000;
                     vertical-align: middle;
@@ -214,18 +214,15 @@
                 <table class="signature-table">
                     <tr>
                         <td class="sign-label">Mengetahui,</td>
-                        <td class="sign-label">Verifikasi,</td>
-                        <td class="sign-label">Mengajukan,</td>
+                        <td class="sign-label">Dibuat,</td>
                     </tr>
                     <tr>
-                        <td class="sign-space"></td>
                         <td class="sign-space"></td>
                         <td class="sign-space"></td>
                     </tr>
                     <tr>
                         <td class="sign-name"><strong>Mashuri</strong><br>Kepala Plant</td>
-                        <td class="sign-name"><strong>Adib</strong><br>Keuangan</td>
-                        <td class="sign-name"><strong>M. Amin</strong><br>Kasir</td>
+                        <td class="sign-name"><strong>Mas Adib</strong><br>Keuangan</td>
                     </tr>
                 </table>
             </div>

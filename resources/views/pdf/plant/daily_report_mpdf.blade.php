@@ -92,7 +92,7 @@
         }
 
         .signature-table td {
-            width: 33.33%;
+            width: 50%;
             border: 1px solid #000;
             text-align: center;
             vertical-align: top;
@@ -229,11 +229,9 @@
         <table class="signature-table">
             <tr>
                 <td class="td-label">Mengetahui,</td>
-                <td class="td-label">Verifikasi,</td>
-                <td class="td-label">Mengajukan,</td>
+                <td class="td-label">Dibuat,</td>
             </tr>
             <tr>
-                <td class="td-space"></td>
                 <td class="td-space"></td>
                 <td class="td-space"></td>
             </tr>
@@ -246,14 +244,8 @@
                 </td>
                 <td class="td-name">
                     <div class="sign-name-block">
-                        <div class="nama"><strong>Adib</strong></div>
+                        <div class="nama"><strong>Mas Adib</strong></div>
                         <div class="jabatan"><strong>Keuangan</strong></div>
-                    </div>
-                </td>
-                <td class="td-name">
-                    <div class="sign-name-block">
-                        <div class="nama"><strong>M. Amin</strong></div>
-                        <div class="jabatan"><strong>Kasir</strong></div>
                     </div>
                 </td>
             </tr>

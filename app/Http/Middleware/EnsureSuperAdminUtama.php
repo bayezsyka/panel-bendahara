@@ -15,6 +15,7 @@ class EnsureSuperAdminUtama
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $user = $request->user();
         if (!$user || !$user->isSuperAdminUtama()) {
             return redirect()->route('no.access');
         }
