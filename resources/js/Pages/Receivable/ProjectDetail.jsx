@@ -33,6 +33,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const paymentForm = useForm({
         amount: '',
+        refund_amount: '',
         date: new Date().toISOString().split('T')[0],
         description: 'Pembayaran Piutang',
         notes: '',
@@ -85,9 +86,11 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
     };
 
     const handleEditPayment = (payment) => {
+        const amt = parseFloat(payment.amount);
         setEditingPayment(payment);
         paymentForm.setData({
-            amount: payment.amount,
+            amount: amt > 0 ? amt : '',
+            refund_amount: amt < 0 ? Math.abs(amt) : '',
             date: payment.date.split('T')[0],
             description: payment.description,
             notes: payment.notes || '',
@@ -270,8 +273,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                                             <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-emerald-600 bg-emerald-50/30">
                                                                 {item.type === 'payment' ? formatCurrency(item.credit) : '-'}
                                                             </td>
-                                                            <td className="px-4 py-3 text-right font-black text-indigo-700 bg-indigo-50/30">
-                                                                {formatCurrency(item.balance)}
+                                                            <td className={`px-4 py-3 text-right font-black ${item.balance <= 0 ? 'text-emerald-700 bg-emerald-50/30 font-black' : 'text-indigo-700 bg-indigo-50/30'}`}>
+                                                                {item.balance < 0 ? `(${formatCurrency(Math.abs(item.balance))})` : formatCurrency(item.balance)}
                                                             </td>
                                                         </tr>
                                                     )
@@ -488,8 +491,19 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                 className="mt-1 block w-full"
                                 value={paymentForm.data.amount}
                                 onChange={(e) => paymentForm.setData('amount', e.target.value)}
-                                required
                             />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="refund_amount" value="Nominal Pengembalian / Refund (Rp)" />
+                            <TextInput
+                                id="refund_amount"
+                                type="number"
+                                className="mt-1 block w-full border-red-300 focus:border-red-500 focus:ring-red-500"
+                                value={paymentForm.data.refund_amount}
+                                onChange={(e) => paymentForm.setData('refund_amount', e.target.value)}
+                            />
+                            <p className="mt-1 text-[10px] text-slate-500 italic">* Isi salah satu atau keduanya (sistem akan menghitung selisihnya)</p>
                         </div>
 
                         <div>

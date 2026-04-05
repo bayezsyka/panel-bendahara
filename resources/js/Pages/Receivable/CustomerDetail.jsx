@@ -58,9 +58,13 @@ export default function CustomerDetail({ customer, projects }) {
                         <p className="text-sm font-medium text-slate-500 mb-1">Total Dibayar</p>
                         <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalPaid)}</p>
                     </div>
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <div className="bg-white dark:bg-[#1e1e2d] p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
                         <p className="text-sm font-medium text-slate-500 mb-1">Sisa Piutang</p>
-                        <p className="text-2xl font-bold text-red-600">{formatCurrency(totalRemaining)}</p>
+                        <p className={`text-2xl font-bold ${totalRemaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                            {totalRemaining < 0 ? `(${formatCurrency(Math.abs(totalRemaining))})` : formatCurrency(totalRemaining)}
+                            {totalRemaining < 0 && <span className="text-xs ml-2 font-medium">Lunas (Lebih)</span>}
+                            {totalRemaining === 0 && <span className="text-xs ml-2 font-medium">Lunas</span>}
+                        </p>
                     </div>
                 </div>
 
@@ -110,10 +114,27 @@ export default function CustomerDetail({ customer, projects }) {
                                             </div>
                                         </div>
 
-                                        <div className="mt-3 p-3 bg-red-50/30 rounded-xl border border-red-100/30">
+                                        <div className={`mt-3 p-3 rounded-xl border ${
+                                            project.remaining <= 0 
+                                                ? 'bg-emerald-50/30 dark:bg-emerald-500/10 border-emerald-100/30 dark:border-emerald-500/20' 
+                                                : 'bg-red-50/30 dark:bg-red-500/10 border-red-100/30 dark:border-red-500/20'
+                                        }`}>
                                             <div className="flex justify-between items-center">
-                                                <p className="text-[9px] font-black text-red-400 uppercase tracking-widest">Sisa Piutang</p>
-                                                <p className="text-base font-black text-red-600">{formatCurrency(project.remaining)}</p>
+                                                <p className={`text-[9px] font-black uppercase tracking-widest ${
+                                                    project.remaining <= 0 ? 'text-emerald-500' : 'text-red-400'
+                                                }`}>
+                                                    Sisa Piutang
+                                                </p>
+                                                <p className={`text-base font-black ${
+                                                    project.remaining <= 0 ? 'text-emerald-500' : 'text-red-600'
+                                                }`}>
+                                                    {project.remaining < 0 ? (
+                                                        <span className="flex items-center gap-1.5">
+                                                            <span className="text-[10px] uppercase">(Kelebihan)</span>
+                                                            {formatCurrency(Math.abs(project.remaining))}
+                                                        </span>
+                                                    ) : formatCurrency(project.remaining)}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

@@ -122,8 +122,8 @@ export default function Index({ customers }) {
 
                                     <div className="mt-5 p-3 bg-gray-50 rounded-lg border border-gray-100">
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Piutang</p>
-                                        <p className={`text-lg font-black ${customer.total_receivable > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                                            {formatCurrency(customer.total_receivable)}
+                                        <p className={`text-lg font-black ${customer.total_receivable > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                            {customer.total_receivable < 0 ? `(${formatCurrency(Math.abs(customer.total_receivable))})` : formatCurrency(customer.total_receivable)}
                                         </p>
                                     </div>
                                 </Link>

@@ -28,6 +28,7 @@ export default function Payments({ payments }) {
 
     const paymentForm = useForm({
         amount: '',
+        refund_amount: '',
         date: '',
         description: '',
         notes: '',
@@ -45,9 +46,11 @@ export default function Payments({ payments }) {
     };
 
     const handleEdit = (payment) => {
+        const amt = parseFloat(payment.amount);
         setEditingPayment(payment);
         paymentForm.setData({
-            amount: payment.amount,
+            amount: amt > 0 ? amt : '',
+            refund_amount: amt < 0 ? Math.abs(amt) : '',
             date: payment.date.split('T')[0],
             description: payment.description,
             notes: payment.notes || '',
@@ -56,7 +59,7 @@ export default function Payments({ payments }) {
     };
 
     const handleDelete = (payment) => {
-        if (confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) {
+        if (confirm('Apakah Anda yakin ingin menghapus transaksi ini?')) {
             paymentForm.delete(route('receivable.payment.destroy', payment.id));
         }
     };
@@ -218,8 +221,19 @@ export default function Payments({ payments }) {
                                 className="mt-1 block w-full"
                                 value={paymentForm.data.amount}
                                 onChange={(e) => paymentForm.setData('amount', e.target.value)}
-                                required
                             />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="refund_amount" value="Nominal Pengembalian / Refund (Rp)" />
+                            <TextInput
+                                id="refund_amount"
+                                type="number"
+                                className="mt-1 block w-full border-red-300 focus:border-red-500 focus:ring-red-500"
+                                value={paymentForm.data.refund_amount}
+                                onChange={(e) => paymentForm.setData('refund_amount', e.target.value)}
+                            />
+                            <p className="mt-1 text-[10px] text-slate-500 italic">* Isi salah satu atau keduanya (sistem akan menghitung selisihnya)</p>
                         </div>
 
                         <div>

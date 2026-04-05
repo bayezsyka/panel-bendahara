@@ -349,42 +349,48 @@ class ReceivableController extends Controller
     public function storePayment(Request $request, DeliveryProject $project)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'nullable|numeric',
+            'refund_amount' => 'nullable|numeric',
             'date' => 'required|date',
             'description' => 'required|string',
             'notes' => 'nullable|string',
         ]);
 
+        $finalAmount = (float)$request->amount - (float)$request->refund_amount;
+
         $project->payments()->create([
             'customer_id' => $project->customer_id,
             'type' => 'payment',
-            'amount' => $request->amount,
+            'amount' => $finalAmount,
             'date' => $request->date,
             'description' => $request->description,
             'notes' => $request->notes,
             'office_id' => $request->user()->office_id ?? 1,
         ]);
 
-        return redirect()->back()->with('success', 'Pembayaran berhasil disimpan.');
+        return redirect()->back()->with('success', 'Transaksi berhasil disimpan.');
     }
 
     public function updatePayment(Request $request, ReceivableTransaction $payment)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:0',
+            'amount' => 'nullable|numeric',
+            'refund_amount' => 'nullable|numeric',
             'date' => 'required|date',
             'description' => 'required|string',
             'notes' => 'nullable|string',
         ]);
 
+        $finalAmount = (float)$request->amount - (float)$request->refund_amount;
+
         $payment->update([
-            'amount' => $request->amount,
+            'amount' => $finalAmount,
             'date' => $request->date,
             'description' => $request->description,
             'notes' => $request->notes,
         ]);
 
-        return redirect()->back()->with('success', 'Pembayaran berhasil diubah.');
+        return redirect()->back()->with('success', 'Transaksi berhasil diubah.');
     }
 
     public function destroyPayment(ReceivableTransaction $payment)

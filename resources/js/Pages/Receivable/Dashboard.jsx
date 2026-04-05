@@ -135,7 +135,9 @@ export default function Dashboard({ stats, top_customers }) {
                                         <p className="text-xs text-slate-500">{c.projects_count} Proyek</p>
                                     </div>
                                     <div className="text-right ml-4">
-                                        <p className="text-sm font-bold text-red-600">{formatCurrency(c.total_receivable)}</p>
+                                        <p className={`text-sm font-bold ${c.total_receivable > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                            {c.total_receivable < 0 ? `(${formatCurrency(Math.abs(c.total_receivable))})` : formatCurrency(c.total_receivable)}
+                                        </p>
                                         <div className="flex items-center justify-end text-xs text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
                                             Detail <ChevronRight className="w-3 h-3" />
                                         </div>
