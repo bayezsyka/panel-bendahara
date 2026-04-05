@@ -147,6 +147,8 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::get('/customer/{customer}', [ReceivableController::class, 'showCustomer'])->name('customer.show');
         Route::get('/project/{project}', [ReceivableController::class, 'showProject'])->name('project.show');
         Route::post('/project/{project}/payment', [ReceivableController::class, 'storePayment'])->name('project.payment.store');
+        Route::put('/payment/{payment}', [ReceivableController::class, 'updatePayment'])->name('payment.update');
+        Route::delete('/payment/{payment}', [ReceivableController::class, 'destroyPayment'])->name('payment.destroy');
         Route::post('/project/{project}/legacy', [ReceivableController::class, 'storeLegacy'])->name('project.legacy.store');
         Route::get('/project/{project}/export-invoice', [ReceivableController::class, 'exportInvoice'])->name('project.export-invoice');
     });

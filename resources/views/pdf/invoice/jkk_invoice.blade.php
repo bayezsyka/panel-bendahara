@@ -328,7 +328,7 @@
         <div style="margin-bottom: 5px; font-weight: bold;">Invoice Amount :</div>
         <div class="terbilang-box">
             @if (isset($grandTotal) && $grandTotal > 0)
-                # {{ $terbilang }} #
+                {{ $terbilang }}
             @endif
         </div>
 

@@ -9,10 +9,30 @@ import {
     CreditCard,
     Calendar,
     ChevronRight,
-    User
+    User,
+    Edit2,
+    Trash2,
+    X
 } from 'lucide-react';
+import Modal from '@/Components/Modal';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
+import PrimaryButton from '@/Components/PrimaryButton';
+import SecondaryButton from '@/Components/SecondaryButton';
+import { useForm } from '@inertiajs/react';
+import { useState } from 'react';
 
 export default function Payments({ payments }) {
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingPayment, setEditingPayment] = useState(null);
+
+    const paymentForm = useForm({
+        amount: '',
+        date: '',
+        description: '',
+        notes: '',
+    });
+
     const formatCurrency = (value) => {
         const number = Number(value);
         if (isNaN(number)) return 'Rp0';
@@ -22,6 +42,34 @@ export default function Payments({ payments }) {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0,
         }).format(number);
+    };
+
+    const handleEdit = (payment) => {
+        setEditingPayment(payment);
+        paymentForm.setData({
+            amount: payment.amount,
+            date: payment.date.split('T')[0],
+            description: payment.description,
+            notes: payment.notes || '',
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleDelete = (payment) => {
+        if (confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) {
+            paymentForm.delete(route('receivable.payment.destroy', payment.id));
+        }
+    };
+
+    const submitUpdate = (e) => {
+        e.preventDefault();
+        paymentForm.put(route('receivable.payment.update', editingPayment.id), {
+            onSuccess: () => {
+                setIsEditModalOpen(false);
+                setEditingPayment(null);
+                paymentForm.reset();
+            }
+        });
     };
 
     return (
@@ -94,6 +142,22 @@ export default function Payments({ payments }) {
                                                         Tanpa Proyek
                                                     </span>
                                                 )}
+                                                <div className="mt-2 flex justify-center gap-1">
+                                                    <button 
+                                                        onClick={() => handleEdit(payment)}
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit Pembayaran"
+                                                    >
+                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(payment)}
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Hapus Pembayaran"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
                                              </td>
                                         </tr>
                                     ))
@@ -127,6 +191,80 @@ export default function Payments({ payments }) {
                     )}
                 </div>
             </div>
+
+            {/* Edit Modal */}
+            <Modal show={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} maxWidth="lg">
+                <form onSubmit={submitUpdate} className="p-6">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center">
+                            <CreditCard className="w-6 h-6 mr-2 text-indigo-600" />
+                            Edit Pembayaran
+                        </h2>
+                        <button 
+                            type="button" 
+                            onClick={() => setIsEditModalOpen(false)}
+                            className="text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel htmlFor="amount" value="Jumlah Pembayaran (Rp)" />
+                            <TextInput
+                                id="amount"
+                                type="number"
+                                className="mt-1 block w-full"
+                                value={paymentForm.data.amount}
+                                onChange={(e) => paymentForm.setData('amount', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="date" value="Tanggal Transaksi" />
+                            <TextInput
+                                id="date"
+                                type="date"
+                                className="mt-1 block w-full"
+                                value={paymentForm.data.date}
+                                onChange={(e) => paymentForm.setData('date', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="description" value="Keterangan" />
+                            <TextInput
+                                id="description"
+                                className="mt-1 block w-full"
+                                value={paymentForm.data.description}
+                                onChange={(e) => paymentForm.setData('description', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="notes" value="Catatan Tambahan (Opsional)" />
+                            <textarea
+                                id="notes"
+                                className="mt-1 block w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                rows="3"
+                                value={paymentForm.data.notes}
+                                onChange={(e) => paymentForm.setData('notes', e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-end gap-3">
+                        <SecondaryButton onClick={() => setIsEditModalOpen(false)}>Batal</SecondaryButton>
+                        <PrimaryButton disabled={paymentForm.processing} className="bg-indigo-600 hover:bg-indigo-700">
+                            Update Pembayaran
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
         </BendaharaLayout>
     );
 }

@@ -11,38 +11,51 @@
         height: 1.2cm;
         font-size: 8.5px;
         color: #555;
-        border-top: 0.7px solid #ddd;
-        padding-top: 6px;
+        border-top: 1px solid #eee;
+        padding-top: 8px;
         font-family: Arial, Helvetica, sans-serif;
     }
 
-    .footer-left {
-        float: left;
-        max-width: 70%;
+    .footer-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: none;
     }
 
-    .footer-right {
-        float: right;
+    .footer-table td {
+        vertical-align: top;
+        padding: 0;
+        border: none;
+    }
+
+    .f-label {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 2px;
+    }
+
+    .f-value {
+        color: #666;
+    }
+
+    .f-right {
         text-align: right;
-        white-space: nowrap;
-    }
-
-    .footer-muted {
-        color: #888;
-        font-style: italic;
     }
 </style>
 
 <div id="pdf-footer">
-    <div class="footer-left">
-        <strong>Dicetak oleh</strong><br>
-        <span>{{ Auth::user()->name }}</span>
-    </div>
-
-    <div class="footer-right">
-        Waktu cetak<br>
-        <strong>
-            {{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') }} WIB
-        </strong>
-    </div>
+    <table class="footer-table">
+        <tr>
+            <td>
+                <div class="f-label">Dicetak oleh</div>
+                <div class="f-value">{{ Auth::user()->name }}</div>
+            </td>
+            <td class="f-right">
+                <div class="f-label">Waktu cetak</div>
+                <div class="f-value">
+                    {{ \Carbon\Carbon::now('Asia/Jakarta')->translatedFormat('d F Y, H:i') }} WIB
+                </div>
+            </td>
+        </tr>
+    </table>
 </div>

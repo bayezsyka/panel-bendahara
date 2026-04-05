@@ -17,12 +17,15 @@ import {
     FileDown,
     Calendar,
     CheckCircle2,
-    Clock
+    Clock,
+    Edit2,
+    Trash2
 } from 'lucide-react';
 
 export default function ProjectDetail({ project, unbilled_shipments, billed_shipments, payments, concrete_grades = [], shipment_ledger = [], pump_ledger = [] }) {
     const [activeTab, setActiveTab] = useState('ledger');
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [editingPayment, setEditingPayment] = useState(null);
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
     const [isLegacyModalOpen, setIsLegacyModalOpen] = useState(false);
 
@@ -61,13 +64,41 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const submitPayment = (e) => {
         e.preventDefault();
-        if (!project?.slug) return;
-        paymentForm.post(route('receivable.project.payment.store', project.slug), {
-            onSuccess: () => {
-                setIsPaymentModalOpen(false);
-                paymentForm.reset();
-            },
+        
+        if (editingPayment) {
+            paymentForm.put(route('receivable.payment.update', editingPayment.id), {
+                onSuccess: () => {
+                    setIsPaymentModalOpen(false);
+                    setEditingPayment(null);
+                    paymentForm.reset();
+                },
+            });
+        } else {
+            if (!project?.slug) return;
+            paymentForm.post(route('receivable.project.payment.store', project.slug), {
+                onSuccess: () => {
+                    setIsPaymentModalOpen(false);
+                    paymentForm.reset();
+                },
+            });
+        }
+    };
+
+    const handleEditPayment = (payment) => {
+        setEditingPayment(payment);
+        paymentForm.setData({
+            amount: payment.amount,
+            date: payment.date.split('T')[0],
+            description: payment.description,
+            notes: payment.notes || '',
         });
+        setIsPaymentModalOpen(true);
+    };
+
+    const handleDeletePayment = (payment) => {
+        if (confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) {
+            paymentForm.delete(route('receivable.payment.destroy', payment.id));
+        }
     };
 
     const handleExportInvoice = (e) => {
@@ -399,18 +430,37 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                         <th className="px-6 py-4">Keterangan</th>
                                         <th className="px-6 py-4 text-right">Jumlah Pembayaran</th>
                                         <th className="px-6 py-4">Catatan</th>
+                                        <th className="px-6 py-4 text-right">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {payments.length === 0 ? (
-                                        <tr><td colSpan="4" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi pembayaran.</td></tr>
+                                        <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi pembayaran.</td></tr>
                                     ) : (
                                         payments.map(item => (
                                             <tr key={item.id} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                                 <td className="px-6 py-4">{new Date(item.date).toLocaleDateString('id-ID')}</td>
                                                 <td className="px-6 py-4 font-bold">{item.description}</td>
-                                                <td className="px-6 py-4 text-right text-emerald-600 font-bold">{formatCurrency(item.amount)}</td>
+                                                <td className="px-6 py-4 text-emerald-600 font-bold">{formatCurrency(item.amount)}</td>
                                                 <td className="px-6 py-4 text-slate-500">{item.notes || '-'}</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button 
+                                                            onClick={() => handleEditPayment(item)}
+                                                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            title="Edit Pembayaran"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeletePayment(item)}
+                                                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Hapus Pembayaran"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
                                             </tr>
                                         ))
                                     )}
@@ -426,7 +476,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                 <form onSubmit={submitPayment} className="p-6">
                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                         <CreditCard className="w-6 h-6 mr-2 text-emerald-600" />
-                        Input Pembayaran Baru
+                        {editingPayment ? 'Edit Pembayaran' : 'Input Pembayaran Baru'}
                     </h2>
 
                     <div className="space-y-4">
@@ -478,9 +528,13 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                     </div>
 
                     <div className="mt-8 flex justify-end gap-3">
-                        <SecondaryButton onClick={() => setIsPaymentModalOpen(false)}>Batal</SecondaryButton>
+                        <SecondaryButton onClick={() => {
+                            setIsPaymentModalOpen(false);
+                            setEditingPayment(null);
+                            paymentForm.reset();
+                        }}>Batal</SecondaryButton>
                         <PrimaryButton disabled={paymentForm.processing} className="bg-emerald-600 hover:bg-emerald-700">
-                            Simpan Pembayaran
+                            {editingPayment ? 'Update Pembayaran' : 'Simpan Pembayaran'}
                         </PrimaryButton>
                     </div>
                 </form>

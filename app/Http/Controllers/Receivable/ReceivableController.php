@@ -368,6 +368,31 @@ class ReceivableController extends Controller
         return redirect()->back()->with('success', 'Pembayaran berhasil disimpan.');
     }
 
+    public function updatePayment(Request $request, ReceivableTransaction $payment)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0',
+            'date' => 'required|date',
+            'description' => 'required|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        $payment->update([
+            'amount' => $request->amount,
+            'date' => $request->date,
+            'description' => $request->description,
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->back()->with('success', 'Pembayaran berhasil diubah.');
+    }
+
+    public function destroyPayment(ReceivableTransaction $payment)
+    {
+        $payment->delete();
+        return redirect()->back()->with('success', 'Pembayaran berhasil dihapus.');
+    }
+
     public function exportInvoice(Request $request, DeliveryProject $project)
     {
         // Calculate Starting No based on prior items to ensure absolute numbering
@@ -568,21 +593,21 @@ class ReceivableController extends Controller
         } else if ($number < 20) {
             $temp = $this->terbilang($number - 10) . " Belas";
         } else if ($number < 100) {
-            $temp = $this->terbilang($number / 10) . " Puluh" . $this->terbilang($number % 10);
+            $temp = $this->terbilang($number / 10) . " Puluh " . $this->terbilang($number % 10);
         } else if ($number < 200) {
-            $temp = " Seratus" . $this->terbilang($number - 100);
+            $temp = " Seratus " . $this->terbilang($number - 100);
         } else if ($number < 1000) {
-            $temp = $this->terbilang($number / 100) . " Ratus" . $this->terbilang($number % 100);
+            $temp = $this->terbilang($number / 100) . " Ratus " . $this->terbilang($number % 100);
         } else if ($number < 2000) {
-            $temp = " Seribu" . $this->terbilang($number - 1000);
+            $temp = " Seribu " . $this->terbilang($number - 1000);
         } else if ($number < 1000000) {
-            $temp = $this->terbilang($number / 1000) . " Ribu" . $this->terbilang($number % 1000);
+            $temp = $this->terbilang($number / 1000) . " Ribu " . $this->terbilang($number % 1000);
         } else if ($number < 1000000000) {
-            $temp = $this->terbilang($number / 1000000) . " Juta" . $this->terbilang($number % 1000000);
+            $temp = $this->terbilang($number / 1000000) . " Juta " . $this->terbilang($number % 1000000);
         } else if ($number < 1000000000000) {
-            $temp = $this->terbilang($number / 1000000000) . " Milyar" . $this->terbilang(fmod($number, 1000000000));
+            $temp = $this->terbilang($number / 1000000000) . " Milyar " . $this->terbilang(fmod($number, 1000000000));
         } else if ($number < 1000000000000000) {
-            $temp = $this->terbilang($number / 1000000000000) . " Trilyun" . $this->terbilang(fmod($number, 1000000000000));
+            $temp = $this->terbilang($number / 1000000000000) . " Trilyun " . $this->terbilang(fmod($number, 1000000000000));
         }
 
         return trim($temp);
