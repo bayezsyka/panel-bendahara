@@ -4,6 +4,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
+import TextArea from '@/Components/TextArea';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
@@ -662,9 +663,9 @@ export default function KasKecil({
                                 {errors.amount && <div className="text-red-500 text-xs mt-1">{errors.amount}</div>}
                             </div>
                             
-                            <div className="md:col-span-1">
+                            <div className="md:col-span-2">
                                 <InputLabel value="Keterangan" />
-                                <TextInput type="text" className="w-full mt-1" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Contoh: Dropping dari Kas Besar / Beli ATK" required />
+                                <TextArea className="w-full mt-1" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Contoh: Dropping dari Kas Besar / Beli ATK" required />
                                 {errors.description && <div className="text-red-500 text-xs mt-1">{errors.description}</div>}
                             </div>
                         </div>

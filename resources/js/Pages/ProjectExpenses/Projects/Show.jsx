@@ -8,6 +8,7 @@ import Dropdown, { DropDownContext } from "@/Components/Dropdown";
 import Modal from "@/Components/Modal";
 import InputLabel from "@/Components/InputLabel";
 import TextInput from "@/Components/TextInput";
+import TextArea from "@/Components/TextArea";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import InputError from "@/Components/InputError";
@@ -1009,12 +1010,12 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
 
                             <div>
                                 <InputLabel value="Deskripsi" />
-                                <textarea
+                                <TextArea
                                     value={editForm.data.description}
                                     onChange={(e) =>
                                         editForm.setData("description", e.target.value)
                                     }
-                                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    className="mt-1 block w-full"
                                     rows="3"
                                 />
                             </div>
@@ -1244,15 +1245,15 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
 
                     <div className="mb-6">
                         <InputLabel value="Catatan Tambahan (Opsional)" />
-                        <textarea
+                        <TextArea
                             value={data.description}
                             onChange={(e) =>
                                 setData("description", e.target.value)
                             }
-                            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                            className="mt-1 block w-full"
                             rows="2"
                             placeholder="Keterangan lain jika diperlukan..."
-                        ></textarea>
+                        />
                     </div>
 
                     <div className="flex justify-end gap-3 sticky bottom-0 bg-white pt-4 border-t border-gray-100">

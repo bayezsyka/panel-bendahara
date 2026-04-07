@@ -4,6 +4,7 @@ import { Head, useForm, router } from '@inertiajs/react'; // Link changed to rou
 import Modal from '@/Components/Modal';
 import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
+import TextArea from '@/Components/TextArea';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
@@ -693,9 +694,9 @@ export default function KasBesar({
                                 {errors.amount && <div className="text-red-500 text-xs mt-1">{errors.amount}</div>}
                             </div>
                             
-                            <div className="md:col-span-1"> 
+                            <div className="md:col-span-2"> 
                                 <InputLabel value="Keterangan" />
-                                <TextInput type="text" className="w-full mt-1" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Contoh: Deposit dari Bank" required />
+                                <TextArea className="w-full mt-1" value={data.description} onChange={e => setData('description', e.target.value)} placeholder="Contoh: Deposit dari Bank" required />
                                 {errors.description && <div className="text-red-500 text-xs mt-1">{errors.description}</div>}
                             </div>
                         </div>
@@ -725,7 +726,7 @@ export default function KasBesar({
                         </div>
                         <div>
                             <InputLabel value="Keterangan / Keperluan" />
-                            <TextInput type="text" className="w-full mt-1" value={transferData.description} onChange={e => setTransferData('description', e.target.value)} placeholder="Contoh: Tambahan Kas Kecil" required />
+                            <TextArea className="w-full mt-1" value={transferData.description} onChange={e => setTransferData('description', e.target.value)} placeholder="Contoh: Tambahan Kas Kecil" required />
                             {transferErrors.description && <div className="text-red-500 text-xs mt-1">{transferErrors.description}</div>}
                         </div>
                         <div>

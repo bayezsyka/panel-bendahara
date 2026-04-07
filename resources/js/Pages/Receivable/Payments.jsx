@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import Modal from '@/Components/Modal';
 import TextInput from '@/Components/TextInput';
+import TextArea from '@/Components/TextArea';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
@@ -250,7 +251,7 @@ export default function Payments({ payments }) {
 
                         <div>
                             <InputLabel htmlFor="description" value="Keterangan" />
-                            <TextInput
+                            <TextArea
                                 id="description"
                                 className="mt-1 block w-full"
                                 value={paymentForm.data.description}
@@ -261,9 +262,9 @@ export default function Payments({ payments }) {
 
                         <div>
                             <InputLabel htmlFor="notes" value="Catatan Tambahan (Opsional)" />
-                            <textarea
+                            <TextArea
                                 id="notes"
-                                className="mt-1 block w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+                                className="mt-1 block w-full"
                                 rows="3"
                                 value={paymentForm.data.notes}
                                 onChange={(e) => paymentForm.setData('notes', e.target.value)}
