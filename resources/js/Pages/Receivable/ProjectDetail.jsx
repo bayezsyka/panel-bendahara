@@ -50,6 +50,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         terms_of_payment: '',
         due_date_jt: '',
         include_pump: true,
+        include_dp: true,
     });
 
     const formatCurrency = (value) => {
@@ -649,31 +650,39 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-8 mt-4 pt-4 border-t border-slate-100">
-                            <div className="flex items-center">
+                        <div className="flex flex-wrap items-center gap-8 mt-4 pt-4 border-t border-slate-100">
+                            <label className="relative inline-flex items-center cursor-pointer group">
                                 <input 
                                     type="checkbox" 
-                                    id="include_pump" 
-                                    className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    className="sr-only peer"
                                     checked={invoiceForm.data.include_pump}
                                     onChange={(e) => invoiceForm.setData('include_pump', e.target.checked)}
                                 />
-                                <label htmlFor="include_pump" className="ml-2 text-sm text-slate-700 font-bold select-none cursor-pointer">
-                                    Sertakan Sewa Pompa
-                                </label>
-                            </div>
-                            <div className="flex items-center">
+                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 group-hover:after:shadow-sm"></div>
+                                <span className="ml-3 text-sm font-bold text-slate-700 select-none">Sertakan Sewa Pompa</span>
+                            </label>
+
+                            <label className="relative inline-flex items-center cursor-pointer group">
                                 <input 
                                     type="checkbox" 
-                                    id="mark_as_billed" 
-                                    className="rounded border-slate-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    className="sr-only peer"
                                     checked={invoiceForm.data.mark_as_billed}
                                     onChange={(e) => invoiceForm.setData('mark_as_billed', e.target.checked)}
                                 />
-                                <label htmlFor="mark_as_billed" className="ml-2 text-sm text-slate-700 font-bold select-none cursor-pointer">
-                                    Tandai "Sudah Ditagih"
-                                </label>
-                            </div>
+                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 group-hover:after:shadow-sm"></div>
+                                <span className="ml-3 text-sm font-bold text-slate-700 select-none">Tandai "Sudah Ditagih"</span>
+                            </label>
+
+                            <label className="relative inline-flex items-center cursor-pointer group">
+                                <input 
+                                    type="checkbox" 
+                                    className="sr-only peer"
+                                    checked={invoiceForm.data.include_dp}
+                                    onChange={(e) => invoiceForm.setData('include_dp', e.target.checked)}
+                                />
+                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 group-hover:after:shadow-sm"></div>
+                                <span className="ml-3 text-sm font-bold text-slate-700 select-none">Masukkan DP/Pembayaran</span>
+                            </label>
                         </div>
                     </div>
 

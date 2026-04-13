@@ -540,11 +540,15 @@ class ReceivableController extends Controller
         $invoiceItems = $invoiceItems->sortBy('sort_key')->values();
 
         // 3. Ambil Payments (DP)
-        $paymentQuery = $project->payments();
-        if ($request->end_date) {
-            $paymentQuery->where('date', '<=', $request->end_date);
+        $totalDP = 0;
+        $includeDp = $request->boolean('include_dp', true);
+        if ($includeDp) {
+            $paymentQuery = $project->payments();
+            if ($request->end_date) {
+                $paymentQuery->where('date', '<=', $request->end_date);
+            }
+            $totalDP = $paymentQuery->sum('amount');
         }
-        $totalDP = $paymentQuery->sum('amount');
 
         // 4. Kalkulasi Grand Total
         $ppnRaw = 0;
