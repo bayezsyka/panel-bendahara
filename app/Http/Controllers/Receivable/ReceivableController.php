@@ -10,6 +10,7 @@ use App\Models\ReceivableTransaction;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class ReceivableController extends Controller
 {
@@ -586,7 +587,7 @@ class ReceivableController extends Controller
             $pumpRentals->each->update(['is_billed' => true]);
         }
 
-        return $pdf->stream('Invoice-' . $project->name . '-' . now()->format('Ymd') . '.pdf');
+        return $pdf->stream('Invoice-' . Str::slug($project->name) . '-' . now()->format('Ymd') . '.pdf');
     }
 
     /**

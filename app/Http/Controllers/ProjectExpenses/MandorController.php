@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Mandor;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class MandorController extends Controller
 {
@@ -151,6 +152,6 @@ class MandorController extends Controller
             'date' => $date
         ]);
 
-        return $pdf->stream('Laporan_Harian_' . $mandor->name . '_' . $date . '.pdf');
+        return $pdf->stream('Laporan_Harian_' . Str::slug($mandor->name, '_') . '_' . $date . '.pdf');
     }
 }

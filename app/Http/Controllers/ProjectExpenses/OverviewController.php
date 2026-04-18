@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf; // Pastikan import ini ada
+use Illuminate\Support\Str;
 
 use App\Models\PlantTransaction;
 
@@ -189,7 +190,7 @@ class OverviewController extends Controller
             'generatedAt' => now('Asia/Jakarta')->translatedFormat('d F Y H:i'),
         ]);
 
-        return $pdf->stream('Laporan-' . $expenseType->name . '.pdf');
+        return $pdf->stream('Laporan-' . Str::slug($expenseType->name) . '.pdf');
     }
 
     // ... method monthlyExpenseSeries tetap sama ...

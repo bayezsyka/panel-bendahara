@@ -11,6 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -177,7 +178,7 @@ class ProjectController extends Controller
             'period' => $period,
         ])->setPaper('a4', 'portrait');
 
-        $filename = 'rekap_pengiriman_'.str_replace(' ', '_', strtolower($project->name)).'.pdf';
+        $filename = 'rekap_pengiriman_'.Str::slug($project->name, '_').'.pdf';
 
         return $pdf->stream($filename);
     }

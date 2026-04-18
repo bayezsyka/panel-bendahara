@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Mandor;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -146,9 +147,9 @@ class ProjectController extends Controller
             ->withProperties(['expense_type' => $expenseType ? $expenseType->name : 'Semua'])
             ->log('Melakukan export PDF laporan proyek: ' . $project->name);
 
-        $fileName = 'Laporan_' . str_replace(' ', '_', $project->name);
+        $fileName = 'Laporan_' . Str::slug($project->name, '_');
         if ($expenseType) {
-            $fileName .= '_' . str_replace(' ', '_', $expenseType->name);
+            $fileName .= '_' . Str::slug($expenseType->name, '_');
         }
         $fileName .= '.pdf';
 
