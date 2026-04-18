@@ -254,11 +254,13 @@ class ReceivableController extends Controller
         $shipItems = $project->shipments->map(function ($shipment) {
             return [
                 'id' => 's-' . $shipment->id,
+                'original_id' => $shipment->id,
                 'type' => 'shipment',
                 'date' => $shipment->date,
                 'original_date' => $shipment->date,
                 'docket_number' => $shipment->docket_number,
                 'concrete_grade' => $shipment->concreteGrade,
+                'concrete_grade_id' => $shipment->concrete_grade_id,
                 'volume' => (float) $shipment->volume,
                 'price_per_m3' => (float) $shipment->price_per_m3,
                 'debit' => (float) $shipment->total_price_with_tax,
@@ -272,6 +274,7 @@ class ReceivableController extends Controller
         $payItems = $project->payments->map(function ($payment) {
             return [
                 'id' => 'p-' . $payment->id,
+                'original_id' => $payment->id,
                 'type' => 'payment',
                 'date' => $payment->date,
                 'original_date' => $payment->date,
@@ -311,6 +314,7 @@ class ReceivableController extends Controller
             $pumpRunningTagihan += (float) $rental->total_price;
             return [
                 'id' => 'pr-' . $rental->id,
+                'original_id' => $rental->id,
                 'type' => 'pump_rental',
                 'date' => $rental->date,
                 'docket_number' => $rental->docket_number ?? '-',

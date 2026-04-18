@@ -117,6 +117,7 @@ class ShipmentController extends Controller
             'concreteGrades' => $concreteGrades,
             'vehicles' => $vehicles,
             'selectedProjectId' => $request->project_id,
+            'from' => $request->from,
             'defaultValues' => $selectedProject ? [
                 'concrete_grade_id' => $selectedProject->default_concrete_grade_id,
                 'price_per_m3' => $selectedProject->defaultConcreteGrade ? $selectedProject->defaultConcreteGrade->price : 0
@@ -146,7 +147,11 @@ class ShipmentController extends Controller
 
         $shipment = DeliveryShipment::create($validated);
 
-        return redirect()->route('delivery.projects.show', $shipment->project)
+        $backTo = $request->from === 'receivable' 
+            ? route('receivable.project.show', $shipment->project->slug)
+            : route('delivery.projects.show', $shipment->project);
+
+        return redirect()->to($backTo)
             ->with('message', 'Surat Jalan Berhasil Dicatat');
     }
 
@@ -162,7 +167,7 @@ class ShipmentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(DeliveryShipment $shipment)
+    public function edit(Request $request, DeliveryShipment $shipment)
     {
         $projects = DeliveryProject::with('customer')
             ->get();
@@ -177,6 +182,7 @@ class ShipmentController extends Controller
             'projects' => $projects,
             'concreteGrades' => $concreteGrades,
             'vehicles' => $vehicles,
+            'from' => $request->from
         ]);
     }
 
@@ -202,19 +208,26 @@ class ShipmentController extends Controller
 
         $shipment->update($validated);
 
-        return redirect()->route('delivery.projects.show', $shipment->project)
-            ->with('message', 'Surat Jalan Berhasil Diperbarui');
+        $backTo = $request->from === 'receivable' 
+            ? route('receivable.project.show', $shipment->project->slug)
+            : route('delivery.projects.show', $shipment->project->slug);
+
+        return redirect()->to($backTo)->with('message', 'Surat Jalan Berhasil Diperbarui');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DeliveryShipment $shipment)
+    public function destroy(Request $request, DeliveryShipment $shipment)
     {
         $project = $shipment->project;
         $shipment->delete();
 
-        return redirect()->route('delivery.projects.show', $project)
+        $backTo = $request->from === 'receivable' 
+            ? route('receivable.project.show', $project->slug)
+            : route('delivery.projects.show', $project->slug);
+
+        return redirect()->to($backTo)
             ->with('message', 'Surat Jalan Berhasil Dihapus');
     }
 

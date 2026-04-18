@@ -45,7 +45,8 @@ class PumpRentalController extends Controller
 
         return Inertia::render('Delivery/PumpRental/Create', [
             'project' => $project,
-            'vehicles' => $vehicles
+            'vehicles' => $vehicles,
+            'from' => $request->from
         ]);
     }
 
@@ -109,8 +110,11 @@ class PumpRentalController extends Controller
             'is_billed' => false,
         ]);
 
-        return redirect()->route('delivery.projects.show', $project->slug)
-            ->with('message', 'Penyewaan Pompa Berhasil Dicatat');
+        $backTo = $request->from === 'receivable' 
+            ? route('receivable.project.show', $project->slug)
+            : route('delivery.projects.show', $project->slug);
+
+        return redirect()->to($backTo)->with('message', 'Penyewaan Pompa Berhasil Dicatat');
     }
 
     /**
@@ -126,7 +130,8 @@ class PumpRentalController extends Controller
                  'date' => $pumpRental->date ? $pumpRental->date->format('Y-m-d') : null
             ]),
             'project' => $pumpRental->deliveryProject,
-            'vehicles' => $vehicles
+            'vehicles' => $vehicles,
+            'from' => request('from')
         ]);
     }
 
@@ -190,8 +195,11 @@ class PumpRentalController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
-        return redirect()->route('delivery.projects.show', $project->slug)
-            ->with('message', 'Penyewaan Pompa Berhasil Diperbarui');
+        $backTo = $request->from === 'receivable' 
+            ? route('receivable.project.show', $project->slug)
+            : route('delivery.projects.show', $project->slug);
+
+        return redirect()->to($backTo)->with('message', 'Penyewaan Pompa Berhasil Diperbarui');
     }
 
     /**
@@ -205,8 +213,10 @@ class PumpRentalController extends Controller
         $pumpRental->delete();
 
         if ($project) {
-            return redirect()->route('delivery.projects.show', $project->slug)
-                ->with('message', 'Penyewaan Pompa Berhasil Dihapus');
+            $backTo = request('from') === 'receivable' 
+                ? route('receivable.project.show', $project->slug)
+                : route('delivery.projects.show', $project->slug);
+            return redirect()->to($backTo)->with('message', 'Penyewaan Pompa Berhasil Dihapus');
         }
 
         return redirect()->back()->with('message', 'Penyewaan Pompa Berhasil Dihapus');

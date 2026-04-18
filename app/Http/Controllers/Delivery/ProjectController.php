@@ -160,17 +160,28 @@ class ProjectController extends Controller
     /**
      * Export recap PDF for a specific project.
      */
-    public function exportRecapPdf(DeliveryProject $project)
+    public function exportRecapPdf(Request $request, DeliveryProject $project)
     {
-        $shipments = $project->shipments()->with('concreteGrade')->orderBy('date')->orderBy('id')->get();
+        $query = $project->shipments()
+            ->with('concreteGrade')
+            ->orderBy('date')
+            ->orderBy('id');
 
-        $firstDate = $shipments->first()?->date;
-        $lastDate = $shipments->last()?->date;
+        if ($request->start_date && $request->end_date) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+            $period = Carbon::parse($request->start_date)->translatedFormat('d F Y').' s/d '.Carbon::parse($request->end_date)->translatedFormat('d F Y');
+        } else {
+            $shipmentsForPeriod = $project->shipments()->orderBy('date')->get();
+            $firstDate = $shipmentsForPeriod->first()?->date;
+            $lastDate = $shipmentsForPeriod->last()?->date;
 
-        $period = '-';
-        if ($firstDate && $lastDate) {
-            $period = Carbon::parse($firstDate)->translatedFormat('d F Y').' s/d '.Carbon::parse($lastDate)->translatedFormat('d F Y');
+            $period = '-';
+            if ($firstDate && $lastDate) {
+                $period = Carbon::parse($firstDate)->translatedFormat('d F Y').' s/d '.Carbon::parse($lastDate)->translatedFormat('d F Y');
+            }
         }
+
+        $shipments = $query->get();
 
         $pdf = Pdf::loadView('pdf.delivery.rekap_pengiriman', [
             'project' => $project->load('customer'),

@@ -26,6 +26,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
     const [activeTab, setActiveTab] = useState('ledger');
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [editingPayment, setEditingPayment] = useState(null);
+    const [editingShipment, setEditingShipment] = useState(null);
     const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
     const [isLegacyModalOpen, setIsLegacyModalOpen] = useState(false);
 
@@ -104,6 +105,42 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
             paymentForm.delete(route('receivable.payment.destroy', payment.id));
         }
     };
+    
+    const handleEditShipment = (item) => {
+        const fullShipment = project.shipments.find(s => s.id === item.original_id);
+        setEditingShipment(fullShipment);
+        legacyForm.setData({
+            date: fullShipment.date.split('T')[0],
+            concrete_grade_id: fullShipment.concrete_grade_id,
+            volume: fullShipment.volume,
+            price_per_m3: fullShipment.price_per_m3,
+            delivery_project_id: fullShipment.delivery_project_id,
+            docket_number: fullShipment.docket_number || '',
+            rit_number: fullShipment.rit_number || 1,
+            slump: fullShipment.slump || '',
+            vehicle_number: fullShipment.vehicle_number || '',
+            driver_name: fullShipment.driver_name || '',
+            total_price: fullShipment.total_price || (fullShipment.volume * fullShipment.price_per_m3),
+            notes: fullShipment.notes || '',
+        });
+        setIsLegacyModalOpen(true);
+    };
+
+    const handleDeleteShipment = (item) => {
+        if (confirm('Apakah Anda yakin ingin menghapus data pengiriman ini?')) {
+            paymentForm.delete(route('delivery.shipments.destroy', { shipment: item.original_id, from: 'receivable' }));
+        }
+    };
+
+    const handleEditPumpRental = (item) => {
+        window.location.href = route('delivery.pump-rentals.edit', { id: item.original_id, from: 'receivable' });
+    };
+
+    const handleDeletePumpRental = (item) => {
+        if (confirm('Apakah Anda yakin ingin menghapus data sewa pompa ini?')) {
+            paymentForm.delete(route('delivery.pump-rentals.destroy', { id: item.original_id, from: 'receivable' }));
+        }
+    };
 
     const handleExportInvoice = (e) => {
         e.preventDefault();
@@ -123,17 +160,37 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         concrete_grade_id: '',
         volume: '',
         price_per_m3: '',
+        // Full fields for update
+        delivery_project_id: project.id,
+        docket_number: '',
+        rit_number: 1,
+        slump: '',
+        vehicle_number: '',
+        driver_name: '',
+        total_price: 0,
+        notes: '',
     });
 
     const submitLegacy = (e) => {
         e.preventDefault();
         if (!project?.slug) return;
-        legacyForm.post(route('receivable.project.legacy.store', project.slug), {
-            onSuccess: () => {
-                setIsLegacyModalOpen(false);
-                legacyForm.reset();
-            },
-        });
+
+        if (editingShipment) {
+            legacyForm.put(route('delivery.shipments.update', { shipment: editingShipment.id, from: 'receivable' }), {
+                onSuccess: () => {
+                    setIsLegacyModalOpen(false);
+                    setEditingShipment(null);
+                    legacyForm.reset();
+                },
+            });
+        } else {
+            legacyForm.post(route('receivable.project.legacy.store', project.slug), {
+                onSuccess: () => {
+                    setIsLegacyModalOpen(false);
+                    legacyForm.reset();
+                },
+            });
+        }
     };
 
     const tabs = [
@@ -237,7 +294,8 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                                     <th className="px-4 py-3 text-right border-r border-slate-100">Total Tagihan</th>
                                                     <th className="px-4 py-3 border-r border-slate-100">Keterangan</th>
                                                     <th className="px-4 py-3 text-right border-r border-slate-100">Pembayaran</th>
-                                                    <th className="px-4 py-3 text-right">Saldo Akhir</th>
+                                                    <th className="px-4 py-3 text-right border-r border-slate-100">Saldo Akhir</th>
+                                                    <th className="px-4 py-3 text-center">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
@@ -274,8 +332,26 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                                             <td className="px-4 py-3 text-right border-r border-slate-100 font-bold text-emerald-600 bg-emerald-50/30">
                                                                 {item.type === 'payment' ? formatCurrency(item.credit) : '-'}
                                                             </td>
-                                                            <td className={`px-4 py-3 text-right font-black ${item.balance <= 0 ? 'text-emerald-700 bg-emerald-50/30 font-black' : 'text-indigo-700 bg-indigo-50/30'}`}>
+                                                            <td className={`px-4 py-3 text-right font-black border-r border-slate-100 ${item.balance <= 0 ? 'text-emerald-700 bg-emerald-50/30 font-black' : 'text-indigo-700 bg-indigo-50/30'}`}>
                                                                 {item.balance < 0 ? `(${formatCurrency(Math.abs(item.balance))})` : formatCurrency(item.balance)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <div className="flex justify-center gap-1">
+                                                                    <button 
+                                                                        onClick={() => item.type === 'shipment' ? handleEditShipment(item) : handleEditPayment(item)}
+                                                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => item.type === 'shipment' ? handleDeleteShipment(item) : handleDeletePayment(item)}
+                                                                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                        title="Hapus"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     )
@@ -310,17 +386,18 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                                     <th className="px-4 py-3 text-right border-r border-slate-100">Volume</th>
                                                     <th className="px-4 py-3 text-right border-r border-slate-100 font-bold text-slate-800">Tagihan</th>
                                                     <th className="px-4 py-3 text-right border-r border-slate-100 font-black text-slate-900">Total Tagihan</th>
-                                                    <th className="px-4 py-3">Catatan</th>
+                                                    <th className="px-4 py-3 border-r border-slate-100">Catatan</th>
+                                                    <th className="px-4 py-3 text-center">Aksi</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
                                                 {pump_ledger.length === 0 ? (
-                                                    <tr><td colSpan="9" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi sewa pompa.</td></tr>
+                                                    <tr><td colSpan="10" className="px-6 py-12 text-center text-slate-500 italic">Belum ada transaksi sewa pompa.</td></tr>
                                                 ) : (
                                                     pump_ledger.map((item, index) => (
                                                         <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                                             <td className="px-4 py-3 text-center font-medium border-r border-slate-100 bg-slate-50/30">{index + 1}</td>
-                                                            <td className="px-4 py-3 border-r border-slate-100font-bold bg-orange-50/10">
+                                                            <td className="px-4 py-3 border-r border-slate-100 font-bold bg-orange-50/10">
                                                                 {new Date(item.date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' })}
                                                             </td>
                                                             <td className="px-4 py-3 border-r border-slate-100 font-mono text-xs text-indigo-600 font-bold">{item.docket_number}</td>
@@ -333,7 +410,25 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                                             <td className="px-4 py-3 text-right border-r border-slate-100 font-black text-slate-900 bg-orange-50/20">
                                                                 {formatCurrency(item.total_tagihan)}
                                                             </td>
-                                                            <td className="px-4 py-3 italic text-slate-500 max-w-[200px] truncate">{item.notes || '-'}</td>
+                                                            <td className="px-4 py-3 italic text-slate-500 max-w-[200px] truncate border-r border-slate-100">{item.notes || '-'}</td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <div className="flex justify-center gap-1">
+                                                                    <button 
+                                                                        onClick={() => handleEditPumpRental(item)}
+                                                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => handleDeletePumpRental(item)}
+                                                                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                        title="Hapus"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
                                                         </tr>
                                                     ))
                                                 )}
@@ -704,7 +799,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                 <form onSubmit={submitLegacy} className="p-6">
                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center">
                         <Calendar className="w-6 h-6 mr-2 text-orange-600" />
-                        Input Piutang (Migrasi Data)
+                        {editingShipment ? 'Edit Data Pengiriman' : 'Input Piutang (Migrasi Data)'}
                     </h2>
 
                     <div className="space-y-4">
@@ -727,11 +822,14 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                 className="mt-1 block w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                 value={legacyForm.data.concrete_grade_id}
                                 onChange={(e) => {
-                                    const grade = concrete_grades.find(g => g.id == e.target.value);
+                                    const selectedId = e.target.value;
+                                    const grade = concrete_grades.find(g => g.id == selectedId);
+                                    const newPrice = grade ? grade.price : legacyForm.data.price_per_m3;
                                     legacyForm.setData({
                                         ...legacyForm.data,
-                                        concrete_grade_id: e.target.value,
-                                        price_per_m3: grade ? grade.price : legacyForm.data.price_per_m3
+                                        concrete_grade_id: selectedId,
+                                        price_per_m3: newPrice,
+                                        total_price: legacyForm.data.volume * newPrice
                                     });
                                 }}
                                 required
@@ -751,7 +849,14 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                 step="0.01"
                                 className="mt-1 block w-full"
                                 value={legacyForm.data.volume}
-                                onChange={(e) => legacyForm.setData('volume', e.target.value)}
+                                onChange={(e) => {
+                                    const vol = e.target.value;
+                                    legacyForm.setData({
+                                        ...legacyForm.data,
+                                        volume: vol,
+                                        total_price: vol * legacyForm.data.price_per_m3
+                                    });
+                                }}
                                 required
                             />
                         </div>
@@ -763,7 +868,14 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                                 type="number"
                                 className="mt-1 block w-full"
                                 value={legacyForm.data.price_per_m3}
-                                onChange={(e) => legacyForm.setData('price_per_m3', e.target.value)}
+                                onChange={(e) => {
+                                    const price = e.target.value;
+                                    legacyForm.setData({
+                                        ...legacyForm.data,
+                                        price_per_m3: price,
+                                        total_price: legacyForm.data.volume * price
+                                    });
+                                }}
                                 required
                             />
                         </div>
@@ -771,15 +883,76 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
                         <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
                             <p className="text-xs text-slate-500 uppercase font-bold tracking-wider">Total Tagihan</p>
                             <p className="text-2xl font-bold text-slate-900 mt-1">
-                                {formatCurrency((legacyForm.data.volume || 0) * (legacyForm.data.price_per_m3 || 0))}
+                                {formatCurrency(legacyForm.data.total_price || (legacyForm.data.volume || 0) * (legacyForm.data.price_per_m3 || 0))}
                             </p>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-4 mt-4 space-y-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Informasi Tambahan (Opsional)</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel htmlFor="docket_number" value="No. Docket (DN)" />
+                                    <TextInput
+                                        id="docket_number"
+                                        className="mt-1 block w-full"
+                                        value={legacyForm.data.docket_number}
+                                        onChange={(e) => legacyForm.setData('docket_number', e.target.value)}
+                                        placeholder="DN-..."
+                                    />
+                                </div>
+                                <div>
+                                    <InputLabel htmlFor="rit_number" value="Rit Ke-" />
+                                    <TextInput
+                                        id="rit_number"
+                                        type="number"
+                                        className="mt-1 block w-full"
+                                        value={legacyForm.data.rit_number}
+                                        onChange={(e) => legacyForm.setData('rit_number', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <InputLabel htmlFor="vehicle_number" value="No. Polisi Kendaraan" />
+                                    <TextInput
+                                        id="vehicle_number"
+                                        className="mt-1 block w-full"
+                                        value={legacyForm.data.vehicle_number}
+                                        onChange={(e) => legacyForm.setData('vehicle_number', e.target.value)}
+                                        placeholder="B 1234 ABC"
+                                    />
+                                </div>
+                                <div>
+                                    <InputLabel htmlFor="driver_name" value="Nama Supir" />
+                                    <TextInput
+                                        id="driver_name"
+                                        className="mt-1 block w-full"
+                                        value={legacyForm.data.driver_name}
+                                        onChange={(e) => legacyForm.setData('driver_name', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <InputLabel htmlFor="notes" value="Catatan" />
+                                <textarea
+                                    id="notes"
+                                    className="mt-1 block w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    rows="2"
+                                    value={legacyForm.data.notes}
+                                    onChange={(e) => legacyForm.setData('notes', e.target.value)}
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <div className="mt-8 flex justify-end gap-3">
-                        <SecondaryButton onClick={() => setIsLegacyModalOpen(false)}>Batal</SecondaryButton>
+                        <SecondaryButton onClick={() => {
+                            setIsLegacyModalOpen(false);
+                            setEditingShipment(null);
+                            legacyForm.reset();
+                        }}>Batal</SecondaryButton>
                         <PrimaryButton disabled={legacyForm.processing} className="bg-orange-600 hover:bg-orange-700">
-                            Simpan Data Migrasi
+                            {editingShipment ? 'Update Data' : 'Simpan Data Migrasi'}
                         </PrimaryButton>
                     </div>
                 </form>

@@ -8,8 +8,9 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import { Disclosure } from '@headlessui/react';
 
-export default function Edit({ pumpRental, project, vehicles }) {
+export default function Edit({ pumpRental, project, vehicles, from }) {
     const { data, setData, put, processing, errors } = useForm({
+        from: from || '',
         date: pumpRental.date,
         docket_number: pumpRental.docket_number || '',
         vehicle_number: pumpRental.vehicle_number || '',
@@ -54,7 +55,7 @@ export default function Edit({ pumpRental, project, vehicles }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        put(route('delivery.pump-rentals.update', pumpRental.id));
+        put(route('delivery.pump-rentals.update', { id: pumpRental.id, from: data.from }));
     };
 
     const handleVehicleChange = (e) => {
@@ -78,7 +79,7 @@ export default function Edit({ pumpRental, project, vehicles }) {
             <div className="max-w-2xl mx-auto space-y-6">
                 <div>
                     <Link
-                        href={route('delivery.projects.show', project.slug)}
+                        href={from === 'receivable' ? route('receivable.project.show', project.slug) : route('delivery.projects.show', project.slug)}
                         className="text-sm text-indigo-600 hover:text-indigo-900 flex items-center gap-1 mb-2 font-medium"
                     >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -242,7 +243,7 @@ export default function Edit({ pumpRental, project, vehicles }) {
                         </div>
                         <div className="flex gap-3">
                             <Link
-                                href={route('delivery.projects.show', project.slug)}
+                                href={from === 'receivable' ? route('receivable.project.show', project.slug) : route('delivery.projects.show', project.slug)}
                                 className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-widest text-gray-700 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
                                 Batal

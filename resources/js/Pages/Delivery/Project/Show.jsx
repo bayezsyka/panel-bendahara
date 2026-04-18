@@ -8,6 +8,9 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
     const { auth } = usePage().props;
     const { can_create, can_edit } = auth.permissions || {};
 
+    const [startDate, setStartDate] = React.useState('');
+    const [endDate, setEndDate] = React.useState('');
+
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -202,15 +205,37 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
                                 {project.shipments.length} Pengiriman
                             </span>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">Dari:</span>
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="text-[10px] border-gray-200 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-1 px-2"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">S/D:</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="text-[10px] border-gray-200 rounded-md focus:ring-indigo-500 focus:border-indigo-500 py-1 px-2"
+                                />
+                            </div>
                             {project.shipments.length > 0 && (
                                 <a
-                                    href={route('delivery.projects.export-recap-pdf', project.slug)}
+                                    href={route('delivery.projects.export-recap-pdf', {
+                                        project: project.slug,
+                                        start_date: startDate,
+                                        end_date: endDate
+                                    })}
                                     target="_blank"
-                                    className="text-xs bg-white border border-gray-200 px-3 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-all flex items-center gap-2"
+                                    className="text-[10px] bg-white border border-gray-200 px-3 py-1.5 rounded-lg font-black text-gray-600 hover:bg-gray-50 transition-all flex items-center gap-2 shadow-sm uppercase tracking-tighter"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                                    Cetak Rekap (PDF)
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                    Cetak Rekap
                                 </a>
                             )}
                         </div>
