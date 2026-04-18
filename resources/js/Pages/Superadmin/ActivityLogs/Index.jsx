@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import PageHeader from '@/Components/PageHeader';
+import ActivityTimestamp from '@/Components/ActivityTimestamp';
 import { DataTable, Badge, SearchInput, Select } from '@/Components/ui';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
@@ -13,11 +14,17 @@ export default function Index({ logs, filters, filterOptions }) {
     const [userFilter, setUserFilter] = useState(filters.user_id || '');
     const [dateFrom, setDateFrom] = useState(filters.date_from || '');
     const [dateTo, setDateTo] = useState(filters.date_to || '');
+    const [perPage, setPerPage] = useState(String(filters.per_page || logs.per_page || 25));
     const [selectedLog, setSelectedLog] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [showFilters, setShowFilters] = useState(
         !!(filters.event || filters.module || filters.date_from || filters.date_to || filters.user_id)
     );
+    const perPageOptions = filterOptions?.perPageOptions || [25, 50, 100, 200];
+
+    useEffect(() => {
+        setPerPage(String(filters.per_page || logs.per_page || perPageOptions[0]));
+    }, [filters.per_page, logs.per_page, perPageOptions]);
 
     // Build params function
     const buildParams = useCallback(() => {
@@ -28,8 +35,9 @@ export default function Index({ logs, filters, filterOptions }) {
         if (userFilter) params.user_id = userFilter;
         if (dateFrom) params.date_from = dateFrom;
         if (dateTo) params.date_to = dateTo;
+        if (perPage) params.per_page = perPage;
         return params;
-    }, [searchTerm, eventFilter, moduleFilter, userFilter, dateFrom, dateTo]);
+    }, [searchTerm, eventFilter, moduleFilter, userFilter, dateFrom, dateTo, perPage]);
 
     // Debounce search
     useEffect(() => {
@@ -43,7 +51,7 @@ export default function Index({ logs, filters, filterOptions }) {
             }
         }, 500);
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+    }, [searchTerm, buildParams, filters.search]);
 
     // Immediate apply on dropdown/date filters
     const applyFilters = useCallback((overrides = {}) => {
@@ -85,7 +93,7 @@ export default function Index({ logs, filters, filterOptions }) {
         setUserFilter('');
         setDateFrom('');
         setDateTo('');
-        router.get(route('superadmin.activity_logs.index'), {}, { preserveState: true, replace: true });
+        router.get(route('superadmin.activity_logs.index'), { per_page: perPage }, { preserveState: true, replace: true });
     };
 
     const hasActiveFilters = useMemo(() => {
@@ -95,6 +103,12 @@ export default function Index({ logs, filters, filterOptions }) {
     const activeFilterCount = useMemo(() => {
         return [eventFilter, moduleFilter, userFilter, dateFrom, dateTo].filter(Boolean).length;
     }, [eventFilter, moduleFilter, userFilter, dateFrom, dateTo]);
+
+    const handlePerPageChange = (e) => {
+        const value = e.target.value;
+        setPerPage(value);
+        applyFilters({ per_page: value });
+    };
 
     const openDetailModal = (log) => {
         setSelectedLog(log);
@@ -214,14 +228,13 @@ export default function Index({ logs, filters, filterOptions }) {
             key: 'created_at',
             label: 'Waktu',
             render: (row) => (
-                <div className="flex flex-col">
-                    <span className="text-gray-900 dark:text-gray-100 text-xs font-medium whitespace-nowrap">
-                        {row.created_at.split(' ').slice(0, 3).join(' ')}
-                    </span>
-                    <span className="text-gray-400 dark:text-gray-500 text-[11px] font-mono">
-                        {row.created_at.split(' ').slice(3).join(' ')}
-                    </span>
-                </div>
+                <ActivityTimestamp
+                    value={row.created_at}
+                    primary="date"
+                    secondary="time"
+                    primaryClassName="text-gray-900 dark:text-gray-100 text-xs font-medium whitespace-nowrap"
+                    secondaryClassName="text-gray-400 dark:text-gray-500 text-[11px] font-mono"
+                />
             ),
         },
         {
@@ -322,6 +335,19 @@ export default function Index({ logs, filters, filterOptions }) {
                         placeholder="Cari berdasarkan user atau deskripsi..."
                         maxWidth="max-w-sm"
                     />
+
+                    <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <span>Per halaman</span>
+                        <select
+                            value={perPage}
+                            onChange={handlePerPageChange}
+                            className="h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-700/40 dark:bg-[#2a2a3d] dark:text-gray-200"
+                        >
+                            {perPageOptions.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                    </label>
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
@@ -464,6 +490,10 @@ export default function Index({ logs, filters, filterOptions }) {
                 )}
 
                 {/* Data Table */}
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Menampilkan {logs.data?.length?.toLocaleString('id-ID') ?? 0} dari {logs.total?.toLocaleString('id-ID') ?? 0} log.
+                </div>
+
                 <DataTable
                     columns={columns}
                     data={logs.data}
@@ -498,7 +528,13 @@ export default function Index({ logs, filters, filterOptions }) {
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                                 <div className="bg-gray-50 dark:bg-[#1a1a2e] rounded-xl p-3">
                                     <span className="text-gray-400 dark:text-gray-500 block text-[10px] uppercase tracking-wider font-semibold mb-1">Waktu</span>
-                                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedLog.created_at}</span>
+                                    <ActivityTimestamp
+                                        value={selectedLog.created_at}
+                                        primary="display"
+                                        secondary="relative"
+                                        primaryClassName="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                                        secondaryClassName="text-xs text-gray-400 dark:text-gray-500 mt-1"
+                                    />
                                 </div>
                                 <div className="bg-gray-50 dark:bg-[#1a1a2e] rounded-xl p-3">
                                     <span className="text-gray-400 dark:text-gray-500 block text-[10px] uppercase tracking-wider font-semibold mb-1">Pelaku</span>

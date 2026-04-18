@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Support\ActivityLogTimestamp;
+use Carbon\CarbonImmutable;
 use Spatie\Activitylog\Models\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 class ActivityLogController extends Controller
 {
+    private const PER_PAGE_OPTIONS = [25, 50, 100, 200];
+
     /**
      * Mapping subject_type ke label yang lebih mudah dibaca.
      */
@@ -43,6 +47,10 @@ class ActivityLogController extends Controller
 
     public function index(Request $request)
     {
+        $perPage = in_array((int) $request->integer('per_page', 25), self::PER_PAGE_OPTIONS, true)
+            ? (int) $request->integer('per_page', 25)
+            : 25;
+
         $query = Activity::with(['causer', 'subject'])
             ->latest();
 
@@ -69,10 +77,10 @@ class ActivityLogController extends Controller
 
         // — Filter: Tanggal (dari – sampai) —
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->where('created_at', '>=', CarbonImmutable::parse($request->date_from, ActivityLogTimestamp::timezone())->startOfDay());
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->where('created_at', '<=', CarbonImmutable::parse($request->date_to, ActivityLogTimestamp::timezone())->endOfDay());
         }
 
         // — Filter: User (causer) —
@@ -80,7 +88,7 @@ class ActivityLogController extends Controller
             $query->where('causer_id', $request->user_id);
         }
 
-        $logs = $query->paginate(25)->through(function ($log) {
+        $logs = $query->paginate($perPage)->withQueryString()->through(function ($log) {
             return [
                 'id'           => $log->id,
                 'description'  => $log->description,
@@ -90,7 +98,7 @@ class ActivityLogController extends Controller
                 'causer'       => $log->causer ? $log->causer->name : 'Sistem/Seeder',
                 'causer_id'    => $log->causer_id,
                 'ip_address'   => $log->properties['ip'] ?? 'N/A',
-                'created_at'   => $log->created_at->format('d M Y H:i:s'),
+                'created_at'   => ActivityLogTimestamp::make($log->created_at),
                 'properties'   => $this->formatProperties($log->properties),
                 'target_url'   => $this->generateTargetUrl($log),
             ];
@@ -138,11 +146,12 @@ class ActivityLogController extends Controller
 
         return Inertia::render('Superadmin/ActivityLogs/Index', [
             'logs'    => $logs,
-            'filters' => $request->only(['search', 'event', 'module', 'date_from', 'date_to', 'user_id']),
+            'filters' => $request->only(['search', 'event', 'module', 'date_from', 'date_to', 'user_id', 'per_page']),
             'filterOptions' => [
                 'modules' => $modules,
                 'events'  => $events,
                 'users'   => $users,
+                'perPageOptions' => self::PER_PAGE_OPTIONS,
             ],
         ]);
     }
@@ -218,7 +227,7 @@ class ActivityLogController extends Controller
         // 3. Cek Format Tanggal
         if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
             try {
-                return \Carbon\Carbon::parse($value)->format('d M Y H:i');
+                return ActivityLogTimestamp::formatDateString($value);
             } catch (\Exception $e) {
                 return $value;
             }

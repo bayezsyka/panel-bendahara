@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Support\ActivityLogTimestamp;
+use Carbon\CarbonImmutable;
 use Spatie\Activitylog\Models\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 
 class OwnerActivityLogController extends Controller
 {
+    private const PER_PAGE_OPTIONS = [20, 50, 100, 200];
+
     /**
      * Reuse the same label maps from the Superadmin version — single source of truth.
      */
@@ -51,6 +55,10 @@ class OwnerActivityLogController extends Controller
      */
     public function index(Request $request)
     {
+        $perPage = in_array((int) $request->integer('per_page', 20), self::PER_PAGE_OPTIONS, true)
+            ? (int) $request->integer('per_page', 20)
+            : 20;
+
         $query = Activity::with(['causer'])->latest();
 
         // Filter: Pencarian teks (description atau nama user)
@@ -74,13 +82,13 @@ class OwnerActivityLogController extends Controller
 
         // Filter: Tanggal dari – sampai
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->where('created_at', '>=', CarbonImmutable::parse($request->date_from, ActivityLogTimestamp::timezone())->startOfDay());
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->where('created_at', '<=', CarbonImmutable::parse($request->date_to, ActivityLogTimestamp::timezone())->endOfDay());
         }
 
-        $logs = $query->paginate(20)->through(function ($log) {
+        $logs = $query->paginate($perPage)->withQueryString()->through(function ($log) {
             return [
                 'id'           => $log->id,
                 'description'  => $log->description,
@@ -91,8 +99,7 @@ class OwnerActivityLogController extends Controller
                 'causer'       => $log->causer?->name ?? 'Sistem',
                 'causer_role'  => $log->causer?->role ?? null,
                 'ip_address'   => $log->properties['ip'] ?? ($log->properties['attributes']['ip'] ?? 'N/A'),
-                'created_at'   => $log->created_at->format('d M Y H:i:s'),
-                'created_at_relative' => $log->created_at->diffForHumans(),
+                'created_at'   => ActivityLogTimestamp::make($log->created_at),
             ];
         });
 
@@ -121,10 +128,11 @@ class OwnerActivityLogController extends Controller
 
         return Inertia::render('Owner/ActivityLog', [
             'logs'    => $logs,
-            'filters' => $request->only(['search', 'event', 'module', 'date_from', 'date_to']),
+            'filters' => $request->only(['search', 'event', 'module', 'date_from', 'date_to', 'per_page']),
             'filterOptions' => [
                 'modules' => $modules,
                 'events'  => $events,
+                'perPageOptions' => self::PER_PAGE_OPTIONS,
             ],
         ]);
     }

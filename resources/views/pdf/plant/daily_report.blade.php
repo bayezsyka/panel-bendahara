@@ -111,6 +111,10 @@
             vertical-align: top;
         }
 
+        .signature-table.three-cols td {
+            width: 33.33%;
+        }
+
         .td-label {
             padding: 8px 5px;
             font-style: italic;
@@ -241,13 +245,19 @@
     </div>
 
     <div class="signature-box">
-        <table class="signature-table">
+        <table class="signature-table {{ $cashType === 'kas_kecil' ? 'three-cols' : '' }}">
             <tr>
                 <td class="td-label">Mengetahui,</td>
+                @if($cashType === 'kas_kecil')
+                    <td class="td-label">Verifikasi,</td>
+                @endif
                 <td class="td-label">Dibuat,</td>
             </tr>
             <tr>
                 <td class="td-space"></td>
+                @if($cashType === 'kas_kecil')
+                    <td class="td-space"></td>
+                @endif
                 <td class="td-space"></td>
             </tr>
             <tr>
@@ -257,12 +267,27 @@
                         <div class="jabatan"><strong>Kepala Plant</strong></div>
                     </div>
                 </td>
-                <td class="td-name">
-                    <div class="sign-name-block">
-                        <div class="nama"><strong>Mas Adib</strong></div>
-                        <div class="jabatan"><strong>Keuangan</strong></div>
-                    </div>
-                </td>
+                @if($cashType === 'kas_kecil')
+                    <td class="td-name">
+                        <div class="sign-name-block">
+                            <div class="nama"><strong>Mas Adib</strong></div>
+                            <div class="jabatan"><strong>Keuangan</strong></div>
+                        </div>
+                    </td>
+                    <td class="td-name">
+                        <div class="sign-name-block">
+                            <div class="nama"><strong>M. Amin</strong></div>
+                            <div class="jabatan"><strong>Administrasi Keuangan</strong></div>
+                        </div>
+                    </td>
+                @else
+                    <td class="td-name">
+                        <div class="sign-name-block">
+                            <div class="nama"><strong>Mas Adib</strong></div>
+                            <div class="jabatan"><strong>Keuangan</strong></div>
+                        </div>
+                    </td>
+                @endif
             </tr>
         </table>
     </div>

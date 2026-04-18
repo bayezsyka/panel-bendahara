@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { Head, router, usePage } from '@inertiajs/react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Head, router } from '@inertiajs/react';
 import OwnerLayout from '@/Layouts/OwnerLayout';
 import DataTable from '@/Components/ui/DataTable';
 import Badge from '@/Components/ui/Badge';
 import Card from '@/Components/ui/Card';
+import ActivityTimestamp from '@/Components/ActivityTimestamp';
 import PageHeader from '@/Components/PageHeader';
 
 // ─── Event severity → Badge variant mapping ─────────────────────────────────
@@ -41,7 +42,23 @@ const EventIcon = ({ severity }) => {
 
 // ─── Filter Bar ──────────────────────────────────────────────────────────────
 const FilterBar = ({ filters, filterOptions, onFilter }) => {
-    const [local, setLocal] = useState({ ...filters });
+    const [local, setLocal] = useState({
+        search: filters.search ?? '',
+        event: filters.event ?? '',
+        module: filters.module ?? '',
+        date_from: filters.date_from ?? '',
+        date_to: filters.date_to ?? '',
+    });
+
+    useEffect(() => {
+        setLocal({
+            search: filters.search ?? '',
+            event: filters.event ?? '',
+            module: filters.module ?? '',
+            date_from: filters.date_from ?? '',
+            date_to: filters.date_to ?? '',
+        });
+    }, [filters.search, filters.event, filters.module, filters.date_from, filters.date_to]);
 
     const handleChange = (key, value) => {
         const updated = { ...local, [key]: value };
@@ -139,17 +156,39 @@ const FilterBar = ({ filters, filterOptions, onFilter }) => {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function ActivityLog({ logs, filters, filterOptions }) {
     const debounceRef = React.useRef(null);
+    const perPageOptions = filterOptions.perPageOptions ?? [20, 50, 100, 200];
+    const currentPerPage = Number(filters.per_page ?? logs.per_page ?? perPageOptions[0]);
+
+    const compactParams = useCallback((params) => {
+        const nextParams = { ...params };
+
+        Object.keys(nextParams).forEach((key) => {
+            if (nextParams[key] === '' || nextParams[key] === null || nextParams[key] === undefined) {
+                delete nextParams[key];
+            }
+        });
+
+        return nextParams;
+    }, []);
 
     const handleFilter = useCallback((newFilters) => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
-            router.get(route('owner.audit-log'), newFilters, {
+            router.get(route('owner.audit-log'), compactParams({ ...newFilters, per_page: currentPerPage }), {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
             });
         }, 350);
-    }, []);
+    }, [compactParams, currentPerPage]);
+
+    const handlePerPageChange = (event) => {
+        router.get(route('owner.audit-log'), compactParams({ ...filters, per_page: event.target.value }), {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
 
     // ── DataTable columns definition ──────────────────────────────────────────
     const columns = [
@@ -157,10 +196,7 @@ export default function ActivityLog({ logs, filters, filterOptions }) {
             key: 'created_at',
             label: 'Waktu',
             render: (row) => (
-                <div className="min-w-[130px]">
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 tabular-nums whitespace-nowrap">{row.created_at}</p>
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">{row.created_at_relative}</p>
-                </div>
+                <ActivityTimestamp value={row.created_at} className="min-w-[130px]" />
             ),
         },
         {
@@ -243,7 +279,7 @@ export default function ActivityLog({ logs, filters, filterOptions }) {
                     { label: 'Total Log',    value: logs.total?.toLocaleString('id-ID') ?? '—',                                       bg: 'from-indigo-50 dark:from-indigo-900/20 to-white dark:to-gray-900',  ibg: 'bg-indigo-100 dark:bg-indigo-900/40',  ic: 'text-indigo-600 dark:text-indigo-400' },
                     { label: 'Halaman',      value: `${logs.current_page} / ${logs.last_page}`,                                        bg: 'from-blue-50 dark:from-blue-900/20 to-white dark:to-gray-900',    ibg: 'bg-blue-100 dark:bg-blue-900/40',    ic: 'text-blue-600 dark:text-blue-400'   },
                     { label: 'Per Halaman',  value: logs.per_page,                                                                      bg: 'from-teal-50 dark:from-teal-900/20 to-white dark:to-gray-900',    ibg: 'bg-teal-100 dark:bg-teal-900/40',    ic: 'text-teal-600 dark:text-teal-400'   },
-                    { label: 'Filter Aktif', value: Object.values(filters).filter(Boolean).length || 'Tidak ada',                      bg: 'from-amber-50 dark:from-amber-900/20 to-white dark:to-gray-900',   ibg: 'bg-amber-100 dark:bg-amber-900/40',   ic: 'text-amber-600 dark:text-amber-400'  },
+                    { label: 'Filter Aktif', value: ['search', 'event', 'module', 'date_from', 'date_to'].filter((key) => Boolean(filters[key])).length || 'Tidak ada', bg: 'from-amber-50 dark:from-amber-900/20 to-white dark:to-gray-900',   ibg: 'bg-amber-100 dark:bg-amber-900/40',   ic: 'text-amber-600 dark:text-amber-400'  },
                 ].map((s) => (
                     <div key={s.label} className={`rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br ${s.bg} p-4 shadow-sm`}>
                         <div className={`w-8 h-8 rounded-lg ${s.ibg} ${s.ic} flex items-center justify-center mb-2`}>
@@ -257,6 +293,23 @@ export default function ActivityLog({ logs, filters, filterOptions }) {
 
             {/* ── Filter Bar ──────────────────────────────────────────────── */}
             <FilterBar filters={filters} filterOptions={filterOptions} onFilter={handleFilter} />
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Menampilkan {logs.data?.length?.toLocaleString('id-ID') ?? 0} dari {logs.total?.toLocaleString('id-ID') ?? 0} log.
+                </p>
+                <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span>Per halaman</span>
+                    <select
+                        value={String(currentPerPage)}
+                        onChange={handlePerPageChange}
+                        className="h-9 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 dark:border-gray-700/40 dark:bg-[#1a1a2e] dark:text-gray-200"
+                    >
+                        {perPageOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                </label>
+            </div>
 
             {/* ── Data Table ──────────────────────────────────────────────── */}
             <DataTable
