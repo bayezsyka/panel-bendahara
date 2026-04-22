@@ -110,8 +110,34 @@ export default function BendaharaLayout({ children, header }) {
         }
     }, [flash]);
 
+    const getPanelLabel = (panelName) => {
+        const labels = {
+            finance: 'Finance',
+            kas: 'Kas',
+            delivery: 'Delivery',
+            receivable: 'Piutang',
+            'slip-gaji': 'Slip Gaji',
+        };
+
+        return labels[panelName] ?? 'Finance';
+    };
+
+    const getPanelHomeRoute = (panelName) => {
+        const routes = {
+            finance: 'projectexpense.overview',
+            kas: 'kas.dashboard',
+            delivery: 'delivery.customers.index',
+            receivable: 'receivable.index',
+            'slip-gaji': 'slip-gaji.create',
+        };
+
+        return routes[panelName] ?? 'projectexpense.overview';
+    };
+
     let activePanel = 'finance';
-    if (route().current('receivable.*')) {
+    if (route().current('slip-gaji.*')) {
+        activePanel = 'slip-gaji';
+    } else if (route().current('receivable.*')) {
         activePanel = 'receivable';
     } else if (route().current('kas.*')) {
         activePanel = 'kas';
@@ -126,24 +152,31 @@ export default function BendaharaLayout({ children, header }) {
     const canAccessPanel = (panelName) => {
         if (!auth.user) return false;
 
+        const allowed = auth.user.allowed_panels || [];
+
         // Superadmin Logic
         if (auth.user.role === 'superadmin') {
             // Superadmin Plant (office_id 2) cannot access finance panel
             if (panelName === 'finance' && auth.user.office_id === 2) {
                 return false;
             }
+
+            if (panelName === 'slip_gaji' && auth.user.office_id === 2) {
+                return allowed.includes(panelName);
+            }
+
             return true;
         }
 
         // Bendahara Logic
-        const allowed = auth.user.allowed_panels || [];
         return allowed.includes(panelName);
     };
 
     const hasFinanceAccess = canAccessPanel('finance');
     const hasReceivableAccess = canAccessPanel('receivable');
     const hasKasAccess = canAccessPanel('kas') || canAccessPanel('plant_cash');
-    const hasDeliveryAccess = true; // Temporary allow all authenticated roles (bendahara/superadmin) as per route middleware
+    const hasDeliveryAccess = canAccessPanel('delivery');
+    const hasSlipGajiAccess = canAccessPanel('slip_gaji');
 
     // Helper untuk mengecek jika salah satu sub-menu aktif
     const isAnyActive = (routeNames) => {
@@ -328,7 +361,7 @@ export default function BendaharaLayout({ children, header }) {
                 {/* Header Sidebar (Logo) */}
                 <div className="flex items-center h-20 px-4 md:px-0 border-b border-gray-100 dark:border-gray-700/40 overflow-hidden whitespace-nowrap">
                     <Link
-                        href={route(activePanel === 'finance' ? 'projectexpense.overview' : (activePanel === 'kas' ? 'kas.dashboard' : (activePanel === 'delivery' ? 'delivery.customers.index' : 'receivable.index')))}
+                        href={route(getPanelHomeRoute(activePanel))}
                         className="flex items-center justify-start w-full px-4 md:px-0 md:pl-5 transition-all duration-300"
                     >
                         {/* Ikon Logo selalu terlihat */}
@@ -342,7 +375,7 @@ export default function BendaharaLayout({ children, header }) {
                                 Bendahara<span className="text-indigo-600 dark:text-indigo-400">App</span>
                             </span>
                             <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium tracking-wider uppercase mt-0.5 whitespace-nowrap">
-                                {activePanel === 'finance' ? 'Panel Keuangan' : (activePanel === 'kas' ? 'Panel Kas' : (activePanel === 'delivery' ? 'Panel Pengiriman' : 'Panel Piutang'))}
+                                {getPanelLabel(activePanel)}
                             </span>
                         </div>
                     </Link>
@@ -354,7 +387,7 @@ export default function BendaharaLayout({ children, header }) {
 
                         {/* Label Menu */}
                         <p className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
-                            {activePanel === 'finance' ? 'Menu Utama' : (activePanel === 'kas' ? 'Menu Kas' : (activePanel === 'delivery' ? 'Menu Pengiriman' : 'Menu Piutang'))}
+                            {activePanel === 'finance' ? 'Menu Utama' : (activePanel === 'slip-gaji' ? 'Menu Slip Gaji' : `Menu ${getPanelLabel(activePanel)}`)}
                         </p>
 
                         {/* FINANCE PANEL LINKS */}
@@ -432,6 +465,16 @@ export default function BendaharaLayout({ children, header }) {
                                     name="Tipe Biaya Kas"
                                     routeName="kas.expense-types.index"
                                     icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>}
+                                />
+                            </>
+                        )}
+
+                        {activePanel === 'slip-gaji' && (
+                            <>
+                                <SidebarLink
+                                    name="Buat Slip Gaji"
+                                    routeName="slip-gaji.create"
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2 10H7a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v7a2 2 0 01-2 2z" /></svg>}
                                 />
                             </>
                         )}
@@ -587,7 +630,7 @@ export default function BendaharaLayout({ children, header }) {
                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'finance' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
                                                 >
                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    <span className="text-xs font-bold">Finance Panel</span>
+                                                    <span className="text-xs font-bold">Finance</span>
                                                 </Link>
                                             )}
                                             {hasKasAccess && (
@@ -596,7 +639,7 @@ export default function BendaharaLayout({ children, header }) {
                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'kas' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
                                                 >
                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
-                                                    <span className="text-xs font-bold">Kas Panel</span>
+                                                    <span className="text-xs font-bold">Kas</span>
                                                 </Link>
                                             )}
                                             {hasDeliveryAccess && (
@@ -605,7 +648,7 @@ export default function BendaharaLayout({ children, header }) {
                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'delivery' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
                                                 >
                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                                                    <span className="text-xs font-bold">Delivery Panel</span>
+                                                    <span className="text-xs font-bold">Delivery</span>
                                                 </Link>
                                             )}
                                             {hasReceivableAccess && (
@@ -614,7 +657,16 @@ export default function BendaharaLayout({ children, header }) {
                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'receivable' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
                                                 >
                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                                    <span className="text-xs font-bold">Piutang Panel</span>
+                                                    <span className="text-xs font-bold">Piutang</span>
+                                                </Link>
+                                            )}
+                                            {hasSlipGajiAccess && (
+                                                <Link
+                                                    href={route('slip-gaji.create')}
+                                                    className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'slip-gaji' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
+                                                >
+                                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2 10H7a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v7a2 2 0 01-2 2z" /></svg>
+                                                    <span className="text-xs font-bold">Slip Gaji</span>
                                                 </Link>
                                             )}
                                         </div>
@@ -654,7 +706,7 @@ export default function BendaharaLayout({ children, header }) {
                         </button>
                         <div className="flex flex-col min-w-0">
                             <span className="font-bold text-gray-800 dark:text-gray-100 text-sm truncate">
-                                {activePanel === 'finance' ? 'Finance Panel' : (activePanel === 'kas' ? 'Kas Panel' : (activePanel === 'delivery' ? 'Delivery Panel' : 'Piutang Panel'))}
+                                {getPanelLabel(activePanel)}
                             </span>
                             <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wider -mt-1 truncate">
                                 {auth.current_office?.name}

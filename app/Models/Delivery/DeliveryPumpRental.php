@@ -15,7 +15,7 @@ class DeliveryPumpRental extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'is_billed' => 'boolean',
         'rental_price' => 'decimal:2',
         'volume_pumped' => 'decimal:2',

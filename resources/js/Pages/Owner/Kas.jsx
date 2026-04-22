@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import OwnerLayout from '@/Layouts/OwnerLayout';
 import PageHeader from '@/Components/PageHeader';
+import { formatDateInput } from '@/dateInput';
 
 const rupiah = (n) => 'Rp ' + new Intl.NumberFormat('id-ID').format(n || 0);
 const rupiahCompact = (v) => {
@@ -46,8 +47,7 @@ export default function Kas({ transactions, openingBalance, closingBalance, tota
             s = new Date(today.getFullYear(), today.getMonth()-1, 1);
             e = new Date(today.getFullYear(), today.getMonth(), 0);
         }
-        const fmt = (d) => d.toISOString().slice(0,10);
-        setStartDate(fmt(s)); setEndDate(fmt(e));
+        setStartDate(formatDateInput(s)); setEndDate(formatDateInput(e));
     };
 
     const CustomTooltip = ({ active, payload, label }) => {

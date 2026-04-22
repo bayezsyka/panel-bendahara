@@ -9,6 +9,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import DangerButton from '@/Components/DangerButton';
 import { Select } from '@/Components/ui';
+import { normalizeDateInput, shiftDateInput, todayDateInput } from '@/dateInput';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Calendar, Download, Plus, Search, Filter, X } from 'lucide-react';
 
 export default function KasKecil({ 
@@ -37,6 +38,7 @@ export default function KasKecil({
 
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const searchTimeout = useRef(null);
+    const today = todayDateInput();
 
     const [direction, setDirection] = useState('none'); // 'left', 'right', 'none'
     const [animKey, setAnimKey] = useState(0);
@@ -95,18 +97,14 @@ export default function KasKecil({
     const changeDate = (days) => {
         setDirection(days > 0 ? 'right' : 'left');
         setAnimKey(prev => prev + 1);
-        const date = new Date(selectedDate);
-        date.setDate(date.getDate() + days);
-        const newDate = date.toISOString().split('T')[0];
+        const newDate = shiftDateInput(selectedDate, { days });
         router.visit(route('kas.kas-kecil', { date: newDate }), { preserveScroll: true });
     };
 
     const changeMonth = (months) => {
         setDirection(months > 0 ? 'right' : 'left');
         setAnimKey(prev => prev + 1);
-        const date = new Date(selectedDate);
-        date.setMonth(date.getMonth() + months);
-        const newDate = date.toISOString().split('T')[0];
+        const newDate = shiftDateInput(selectedDate, { months });
         router.visit(route('kas.kas-kecil', { date: newDate }), { preserveScroll: true });
     };
 
@@ -116,7 +114,7 @@ export default function KasKecil({
         setEditingTransaction(transaction);
         if (transaction) {
             setData({
-                transaction_date: transaction.transaction_date,
+                transaction_date: normalizeDateInput(transaction.transaction_date),
                 type: transaction.type,
                 cash_type: 'kas_kecil',
                 amount: transaction.amount,
@@ -389,7 +387,7 @@ export default function KasKecil({
                                             type="date" 
                                             value={selectedDate}
                                             onChange={handleDateChange}
-                                            max={new Date().toISOString().split('T')[0]}
+                                            max={today}
                                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer pointer-events-none"
                                         />
                                         <div className={`px-4 py-1.5 text-center min-w-[200px] transition-all duration-300 ${
@@ -402,16 +400,16 @@ export default function KasKecil({
                                     <div className="flex gap-1">
                                         <button 
                                             onClick={() => changeDate(1)} 
-                                            className={`p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors ${selectedDate >= new Date().toISOString().split('T')[0] ? 'opacity-50 cursor-not-allowed' : ''}`} 
-                                            disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+                                            className={`p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors ${selectedDate >= today ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                            disabled={selectedDate >= today}
                                             title="Besok"
                                         >
                                             <ChevronRight className="w-4 h-4" />
                                         </button>
                                         <button 
                                             onClick={() => changeMonth(1)} 
-                                            className={`p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors ${selectedDate >= new Date().toISOString().split('T')[0] ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            disabled={selectedDate >= new Date().toISOString().split('T')[0]}
+                                            className={`p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-500 dark:text-gray-400 transition-colors ${selectedDate >= today ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            disabled={selectedDate >= today}
                                             title="Bulan Depan"
                                         >
                                             <ChevronsRight className="w-4 h-4" />
@@ -625,7 +623,7 @@ export default function KasKecil({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <InputLabel value="Tanggal" />
-                                <TextInput type="date" className="w-full mt-1" value={data.transaction_date} onChange={e => setData('transaction_date', e.target.value)} required max={new Date().toISOString().split('T')[0]} />
+                                <TextInput type="date" className="w-full mt-1" value={data.transaction_date} onChange={e => setData('transaction_date', e.target.value)} required max={today} />
                                 {errors.transaction_date && <div className="text-red-500 text-xs mt-1">{errors.transaction_date}</div>}
                             </div>
 

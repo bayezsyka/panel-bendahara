@@ -21,6 +21,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'nik',
+        'jabatan',
         'email',
         'password',
         'role',
@@ -67,6 +69,7 @@ class User extends Authenticatable
     const PANEL_CASH = 'kas'; // Kas Besar/Kecil
     const PANEL_RECEIVABLE = 'receivable'; // Piutang
     const PANEL_DELIVERY = 'delivery'; // Pengiriman (Surat Jalan)
+    const PANEL_SLIP_GAJI = 'slip_gaji'; // Slip Gaji
 
     // Role Helpers
     public function isSuperAdmin()
@@ -126,15 +129,25 @@ class User extends Authenticatable
             return false;
         }
 
-        // Superadmin Plant & Bendahara Plant have access to all panels (except Finance)
-        if ($this->isSuperAdmin() || $this->isBendahara()) {
-            return true;
-        }
-
         $panelsToCheck = [$panel];
         // 'kas' might be stored as 'plant_cash' in legacy data
         if ($panel === self::PANEL_CASH) {
             $panelsToCheck[] = 'plant_cash';
+        }
+
+        if ($panel === self::PANEL_SLIP_GAJI) {
+            foreach ($panelsToCheck as $p) {
+                if (in_array($p, $this->allowed_panels ?? [])) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Superadmin Plant & Bendahara Plant have access to all panels (except Finance)
+        if ($this->isSuperAdmin() || $this->isBendahara()) {
+            return true;
         }
 
         foreach ($panelsToCheck as $p) {
@@ -154,7 +167,8 @@ class User extends Authenticatable
         return $this->canAccessPanel(self::PANEL_FINANCE) ||
             $this->canAccessPanel(self::PANEL_CASH) ||
             $this->canAccessPanel(self::PANEL_RECEIVABLE) ||
-            $this->canAccessPanel(self::PANEL_DELIVERY);
+            $this->canAccessPanel(self::PANEL_DELIVERY) ||
+            $this->canAccessPanel(self::PANEL_SLIP_GAJI);
     }
 
     public function getHomeRoute(): string
@@ -169,6 +183,7 @@ class User extends Authenticatable
         if ($this->canAccessPanel(self::PANEL_FINANCE)) return 'projectexpense.overview';
         if ($this->canAccessPanel(self::PANEL_RECEIVABLE)) return 'receivable.index';
         if ($this->canAccessPanel(self::PANEL_CASH)) return 'kas.dashboard';
+        if ($this->canAccessPanel(self::PANEL_SLIP_GAJI)) return 'slip-gaji.create';
         if ($this->canAccessPanel(self::PANEL_DELIVERY)) return 'delivery.projects.index';
 
         return 'no.access';
@@ -239,9 +254,14 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'role', 'is_active', 'office_id', 'allowed_panels']) // Kolom apa yang dipantau
+            ->logOnly(['name', 'nik', 'jabatan', 'email', 'role', 'is_active', 'office_id', 'allowed_panels']) // Kolom apa yang dipantau
             ->logOnlyDirty() // Hanya catat yang berubah
             ->dontSubmitEmptyLogs()
             ->setDescriptionForEvent(fn(string $eventName) => "User ini telah di-{$eventName}");
+    }
+
+    public function slipGajis()
+    {
+        return $this->hasMany(SlipGaji::class, 'user_id');
     }
 }

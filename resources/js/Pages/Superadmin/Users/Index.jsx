@@ -305,10 +305,11 @@ export default function Index({ auth, users, filters, offices = [] }) {
                                 <InputLabel value="Akses Panel" className="mb-2" />
                                 <div className="flex flex-col gap-2">
                                     {[
-                                        { id: 'finance', label: 'Finance (Biaya Proyek & Operasional)' },
-                                        { id: 'kas', label: 'Cash (Kas Besar & Kecil)' },
-                                        { id: 'receivable', label: 'Receivable (Piutang)' },
-                                        { id: 'delivery', label: 'Delivery (Pengiriman)' },
+                                        { id: 'finance', label: 'Finance' },
+                                        { id: 'kas', label: 'Kas' },
+                                        { id: 'receivable', label: 'Piutang' },
+                                        { id: 'delivery', label: 'Delivery' },
+                                        { id: 'slip_gaji', label: 'Slip Gaji' },
                                     ].map((panel) => (
                                         <label key={panel.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
                                             <Checkbox

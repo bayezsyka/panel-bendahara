@@ -13,6 +13,7 @@ use App\Http\Controllers\ProjectExpenses\BenderaController;
 use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
 use App\Http\Controllers\Superadmin\UserController;
 use App\Http\Controllers\Bendahara\PlantTransactionController;
+use App\Http\Controllers\Bendahara\SlipGajiController;
 use App\Http\Controllers\Bendahara\CashSourceController;
 use App\Http\Controllers\Bendahara\CashExpenseTypeController;
 use App\Http\Controllers\Delivery\ConcreteGradeController;
@@ -104,6 +105,15 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
         Route::put('/transactions/{plantTransaction}', [PlantTransactionController::class, 'update'])->name('transactions.update');
         Route::delete('/transactions/{plantTransaction}', [PlantTransactionController::class, 'destroy'])->name('transactions.destroy');
         Route::post('/transfer', [PlantTransactionController::class, 'transfer'])->name('transfer');
+    });
+
+Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.access:slip_gaji', 'restrict.input'])
+    ->prefix('slip-gaji')
+    ->name('slip-gaji.')
+    ->group(function () {
+        Route::get('/create', [SlipGajiController::class, 'create'])->name('create');
+        Route::post('/', [SlipGajiController::class, 'store'])->name('store');
+        Route::get('/{id}/print', [SlipGajiController::class, 'print'])->name('print');
     });
 
 Route::get('/', function () {

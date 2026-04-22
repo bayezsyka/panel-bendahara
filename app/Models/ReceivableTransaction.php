@@ -12,7 +12,7 @@ class ReceivableTransaction extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'amount' => 'decimal:2',
     ];
 

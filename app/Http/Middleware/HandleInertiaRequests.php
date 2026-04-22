@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn() => session('success'),
                 'error' => fn() => session('error'),
                 'message' => fn() => session('message'),
+                'created_slip_gaji_id' => fn() => session('created_slip_gaji_id'),
             ]
         ];
     }

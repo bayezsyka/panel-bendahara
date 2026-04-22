@@ -7,11 +7,12 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import { Disclosure } from '@headlessui/react';
+import { todayDateInput } from '@/dateInput';
 
 export default function Create({ project, vehicles }) {
     const { data, setData, post, processing, errors } = useForm({
         delivery_project_id: project.id,
-        date: new Date().toISOString().split('T')[0],
+        date: todayDateInput(),
         docket_number: '',
         vehicle_number: '',
         driver_name: '',

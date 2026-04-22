@@ -23,6 +23,7 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "dayjs": "^1.11.13",
         "lodash": "^4.17.23",
         "lucide-react": "^0.563.0",
         "recharts": "^3.7.0",

@@ -14,6 +14,7 @@ import SecondaryButton from "@/Components/SecondaryButton";
 import InputError from "@/Components/InputError";
 import Swal from "sweetalert2";
 import { SearchInput } from "@/Components/ui";
+import { normalizeDateInput, todayDateInput } from "@/dateInput";
 
 const formatRupiah = (number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -124,7 +125,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
         project_id: project.id,
         expense_type_id: "",
         title: "",
-        transacted_at: new Date().toISOString().split("T")[0],
+        transacted_at: todayDateInput(),
         description: "",
         receipt_image: null,
         items: [{ name: "", quantity: 1, price: 0 }],
@@ -204,7 +205,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
             project_id: project.id,
             expense_type_id: "",
             title: "",
-            transacted_at: new Date().toISOString().split("T")[0],
+            transacted_at: todayDateInput(),
             description: "",
             receipt_image: null,
             items: [{ name: "", quantity: 1, price: 0 }],
@@ -221,7 +222,7 @@ export default function Show({ project, mandors, benderas, expenseTypes, allExpe
             project_id: project.id,
             expense_type_id: expense.expense_type_id || "",
             title: expense.title,
-            transacted_at: expense.transacted_at, // Assumes YYYY-MM-DD from backend or cast
+            transacted_at: normalizeDateInput(expense.transacted_at),
             description: expense.description || "",
             receipt_image: null, // Don't prepopulate file input, handled by backend if null
             items: expense.items.map((item) => ({

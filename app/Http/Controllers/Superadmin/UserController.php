@@ -49,7 +49,7 @@ class UserController extends Controller
             'office_id' => 'required|integer|in:1,2',
             'is_active' => 'boolean',
             'allowed_panels' => 'nullable|array',
-            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery', // added delivery, kas
+            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery,slip_gaji',
         ]);
 
         User::create([
@@ -78,7 +78,7 @@ class UserController extends Controller
             'is_active' => 'boolean',
             'password' => 'nullable|string|min:8',
             'allowed_panels' => 'nullable|array',
-            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery', // added delivery, kas
+            'allowed_panels.*' => 'string|in:finance,kas,plant_cash,receivable,delivery,slip_gaji',
         ]);
 
         $user->fill([

@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react'
 import BendaharaLayout from '@/Layouts/BendaharaLayout'
 import PageHeader from '@/Components/PageHeader'
 import Modal from '@/Components/Modal'
+import { todayDateInput } from '@/dateInput'
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -38,7 +39,7 @@ export default function Show({ mandor, stats, expenses, expenseTypes }) {
                                 type="date" 
                                 className="border-0 focus:ring-0 text-sm p-1 text-gray-700 bg-transparent"
                                 id="exportDate"
-                                defaultValue={new Date().toISOString().split('T')[0]}
+                                defaultValue={todayDateInput()}
                             />
                             <button
                                 onClick={() => {

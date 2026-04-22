@@ -27,7 +27,7 @@ class DeliveryShipment extends Model
      * @var array
      */
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
         'is_billed' => 'boolean',
         'volume' => 'decimal:2',
         'price_per_m3' => 'decimal:2',

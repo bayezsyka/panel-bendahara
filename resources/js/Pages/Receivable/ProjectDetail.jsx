@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
+import { normalizeDateInput, todayDateInput } from '@/dateInput';
 import { 
     FileSpreadsheet, 
     ArrowLeft,
@@ -35,15 +36,15 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
     const paymentForm = useForm({
         amount: '',
         refund_amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayDateInput(),
         description: 'Pembayaran Piutang',
         notes: '',
     });
 
     const invoiceForm = useForm({
         start_date: '',
-        end_date: new Date().toISOString().split('T')[0],
-        invoice_date: new Date().toISOString().split('T')[0],
+        end_date: todayDateInput(),
+        invoice_date: todayDateInput(),
         mark_as_billed: true,
         doc_no: '',
         delivery_note: '',
@@ -95,7 +96,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         paymentForm.setData({
             amount: amt > 0 ? amt : '',
             refund_amount: amt < 0 ? Math.abs(amt) : '',
-            date: payment.date.split('T')[0],
+            date: normalizeDateInput(payment.date),
             description: payment.description,
             notes: payment.notes || '',
         });
@@ -112,7 +113,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         const fullShipment = project.shipments.find(s => s.id === item.original_id);
         setEditingShipment(fullShipment);
         legacyForm.setData({
-            date: fullShipment.date.split('T')[0],
+            date: normalizeDateInput(fullShipment.date),
             concrete_grade_id: fullShipment.concrete_grade_id,
             volume: fullShipment.volume,
             price_per_m3: fullShipment.price_per_m3,
@@ -158,7 +159,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
     // ... (keep submitLegacy and legacyForm)
 
     const legacyForm = useForm({
-        date: new Date().toISOString().split('T')[0],
+        date: todayDateInput(),
         concrete_grade_id: '',
         volume: '',
         price_per_m3: '',

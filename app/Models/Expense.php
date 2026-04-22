@@ -35,7 +35,7 @@ class Expense extends Model
         });
     }
     protected $casts = [
-        'transacted_at' => 'date',
+        'transacted_at' => 'date:Y-m-d',
         'amount' => 'decimal:2',
         'office_id' => 'integer',
     ];

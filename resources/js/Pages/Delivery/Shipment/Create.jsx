@@ -6,11 +6,12 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
+import { todayDateInput } from '@/dateInput';
 
 export default function Create({ projects, concreteGrades, selectedProjectId, defaultValues, vehicles }) {
     const { data, setData, post, processing, errors } = useForm({
         delivery_project_id: selectedProjectId || '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayDateInput(),
         docket_number: '',
         rit_number: '',
         concrete_grade_id: defaultValues?.concrete_grade_id || '',

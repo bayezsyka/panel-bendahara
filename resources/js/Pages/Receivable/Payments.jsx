@@ -22,6 +22,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { normalizeDateInput } from '@/dateInput';
 
 export default function Payments({ payments }) {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -52,7 +53,7 @@ export default function Payments({ payments }) {
         paymentForm.setData({
             amount: amt > 0 ? amt : '',
             refund_amount: amt < 0 ? Math.abs(amt) : '',
-            date: payment.date.split('T')[0],
+            date: normalizeDateInput(payment.date),
             description: payment.description,
             notes: payment.notes || '',
         });

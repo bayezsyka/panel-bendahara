@@ -7,6 +7,7 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { SearchInput } from '@/Components/ui';
+import { shiftDateInput } from '@/dateInput';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, FileText, Calendar, Download } from 'lucide-react';
 
 export default function Index({ shipments, selectedDate, prevDate, nextDate, filters = {} }) {
@@ -59,18 +60,14 @@ export default function Index({ shipments, selectedDate, prevDate, nextDate, fil
     const changeDate = (days) => {
         setDirection(days > 0 ? 'right' : 'left');
         setAnimKey(prev => prev + 1);
-        const date = new Date(selectedDate);
-        date.setDate(date.getDate() + days);
-        const newDate = date.toISOString().split('T')[0];
+        const newDate = shiftDateInput(selectedDate, { days });
         router.visit(route('delivery.shipments.index', { date: newDate, search: searchTerm }), { preserveScroll: true });
     };
 
     const changeMonth = (months) => {
         setDirection(months > 0 ? 'right' : 'left');
         setAnimKey(prev => prev + 1);
-        const date = new Date(selectedDate);
-        date.setMonth(date.getMonth() + months);
-        const newDate = date.toISOString().split('T')[0];
+        const newDate = shiftDateInput(selectedDate, { months });
         router.visit(route('delivery.shipments.index', { date: newDate, search: searchTerm }), { preserveScroll: true });
     };
 
