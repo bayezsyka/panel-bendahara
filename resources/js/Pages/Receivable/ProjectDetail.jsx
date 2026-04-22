@@ -65,11 +65,13 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
         }).format(number);
     };
 
+    const getPaymentRouteId = (payment) => payment?.original_id ?? payment?.id;
+
     const submitPayment = (e) => {
         e.preventDefault();
         
         if (editingPayment) {
-            paymentForm.put(route('receivable.payment.update', editingPayment.id), {
+            paymentForm.put(route('receivable.payment.update', getPaymentRouteId(editingPayment)), {
                 onSuccess: () => {
                     setIsPaymentModalOpen(false);
                     setEditingPayment(null);
@@ -102,7 +104,7 @@ export default function ProjectDetail({ project, unbilled_shipments, billed_ship
 
     const handleDeletePayment = (payment) => {
         if (confirm('Apakah Anda yakin ingin menghapus pembayaran ini?')) {
-            paymentForm.delete(route('receivable.payment.destroy', payment.id));
+            paymentForm.delete(route('receivable.payment.destroy', getPaymentRouteId(payment)));
         }
     };
     

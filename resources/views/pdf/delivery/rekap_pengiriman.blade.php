@@ -35,8 +35,18 @@
             vertical-align: top;
         }
 
-        .header-info td:first-child {
+        .header-info .info-label {
             width: 200px;
+            font-weight: bold;
+        }
+
+        .header-info .info-separator {
+            width: 12px;
+            text-align: center;
+        }
+
+        .header-info .info-value {
+            word-break: break-word;
         }
 
         table.data-table {
@@ -88,24 +98,29 @@
 
     <table class="header-info">
         <tr>
-            <td class="font-bold">Nama Klien</td>
-            <td>: {{ $project->customer->name }}</td>
+            <td class="info-label">Nama Klien</td>
+            <td class="info-separator">:</td>
+            <td class="info-value">{{ $project->customer->name }}</td>
         </tr>
         <tr>
-            <td class="font-bold">Alamat Klien</td>
-            <td>: {{ $project->customer->address }}</td>
+            <td class="info-label">Alamat Klien</td>
+            <td class="info-separator">:</td>
+            <td class="info-value">{{ $project->customer->address }}</td>
         </tr>
         <tr>
-            <td class="font-bold">Nama Penerima / Sub Contractor</td>
-            <td>: {{ $project->sub_contractor ?? '-' }}</td>
+            <td class="info-label">Nama Penerima / Sub Contractor</td>
+            <td class="info-separator">:</td>
+            <td class="info-value">{{ $project->sub_contractor ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="font-bold">Alamat Proyek</td>
-            <td>: {{ $project->location }}</td>
+            <td class="info-label">Alamat Proyek</td>
+            <td class="info-separator">:</td>
+            <td class="info-value">{{ $project->location }}</td>
         </tr>
         <tr>
-            <td class="font-bold">Periode</td>
-            <td>: {{ $period }}</td>
+            <td class="info-label">Periode</td>
+            <td class="info-separator">:</td>
+            <td class="info-value">{{ $period }}</td>
         </tr>
     </table>
 

@@ -10,6 +10,16 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
 
     const [startDate, setStartDate] = React.useState('');
     const [endDate, setEndDate] = React.useState('');
+    const [shipmentSortField, setShipmentSortField] = React.useState('date');
+    const [shipmentSortDirection, setShipmentSortDirection] = React.useState('asc');
+
+    const shipmentSortOptions = [
+        { value: 'date', label: 'Tanggal' },
+        { value: 'docket_number', label: 'Docket Number' },
+        { value: 'rit_number', label: 'Rit' },
+        { value: 'volume', label: 'Volume' },
+        { value: 'total_price_with_tax', label: 'Nilai' },
+    ];
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('id-ID', {
@@ -18,6 +28,88 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
             minimumFractionDigits: 0,
         }).format(amount);
     };
+
+    const getShipmentSortValue = (shipment, field) => {
+        switch (field) {
+            case 'date':
+                return new Date(shipment.date).getTime();
+            case 'rit_number':
+                return Number(shipment.rit_number || 0);
+            case 'volume':
+                return Number(shipment.volume || 0);
+            case 'total_price_with_tax':
+                return Number(shipment.total_price_with_tax || 0);
+            case 'docket_number': {
+                const docket = shipment.docket_number ?? '';
+                const numericDocket = Number(docket);
+                return Number.isNaN(numericDocket) ? String(docket).toLowerCase() : numericDocket;
+            }
+            default:
+                return String(shipment[field] ?? '').toLowerCase();
+        }
+    };
+
+    const sortedShipments = [...project.shipments].sort((a, b) => {
+        const left = getShipmentSortValue(a, shipmentSortField);
+        const right = getShipmentSortValue(b, shipmentSortField);
+
+        if (typeof left === 'string' || typeof right === 'string') {
+            const comparison = String(left).localeCompare(String(right), 'id-ID', { numeric: true, sensitivity: 'base' });
+            return shipmentSortDirection === 'asc' ? comparison : -comparison;
+        }
+
+        const comparison = left === right ? 0 : left > right ? 1 : -1;
+        return shipmentSortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    const shipmentTotalVolume = sortedShipments.reduce((sum, shipment) => sum + parseFloat(shipment.volume || 0), 0);
+    const shipmentTotalPrice = sortedShipments.reduce((sum, shipment) => sum + parseFloat(shipment.total_price || 0), 0);
+    const shipmentTotalPriceWithTax = sortedShipments.reduce((sum, shipment) => sum + parseFloat(shipment.total_price_with_tax || 0), 0);
+
+    const toggleShipmentSort = (field) => {
+        if (shipmentSortField === field) {
+            setShipmentSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
+            return;
+        }
+
+        setShipmentSortField(field);
+        setShipmentSortDirection(field === 'date' ? 'asc' : 'desc');
+    };
+
+    const renderSortArrow = (field) => {
+        if (shipmentSortField !== field) {
+            return (
+                <svg className="w-3 h-3 text-gray-300 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 15l4 4 4-4M8 9l4-4 4 4" />
+                </svg>
+            );
+        }
+
+        return shipmentSortDirection === 'asc' ? (
+            <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+            </svg>
+        ) : (
+            <svg className="w-3 h-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+        );
+    };
+
+    const renderSortableHeader = (label, field, align = 'left') => (
+        <th className={`px-4 py-4 ${align === 'right' ? 'text-right' : ''}`}>
+            <button
+                type="button"
+                onClick={() => toggleShipmentSort(field)}
+                className={`group inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                    shipmentSortField === field ? 'text-indigo-600' : 'text-gray-400 hover:text-indigo-500'
+                } ${align === 'right' ? 'ml-auto' : ''}`}
+            >
+                <span>{label}</span>
+                {renderSortArrow(field)}
+            </button>
+        </th>
+    );
 
     const restoreShipment = (id) => {
         Swal.fire({
@@ -206,6 +298,27 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
                             </span>
                         </div>
                         <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">Urutkan:</span>
+                                <select
+                                    value={shipmentSortField}
+                                    onChange={(e) => setShipmentSortField(e.target.value)}
+                                    className="border-0 bg-transparent pr-6 text-[11px] font-bold text-gray-700 focus:ring-0"
+                                >
+                                    {shipmentSortOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    type="button"
+                                    onClick={() => setShipmentSortDirection((current) => current === 'asc' ? 'desc' : 'asc')}
+                                    className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-1 text-[10px] font-black uppercase tracking-tight text-indigo-700 transition-colors hover:bg-indigo-100"
+                                    title={shipmentSortDirection === 'asc' ? 'Urutan naik' : 'Urutan turun'}
+                                >
+                                    {shipmentSortDirection === 'asc' ? 'Naik' : 'Turun'}
+                                    {renderSortArrow(shipmentSortField)}
+                                </button>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-tight">Dari:</span>
                                 <input
@@ -247,21 +360,21 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
                                 <thead className="bg-gray-50/50">
                                     <tr>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">No</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tanggal</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Docket Number</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Rit</th>
+                                        {renderSortableHeader('Tanggal', 'date')}
+                                        {renderSortableHeader('Docket Number', 'docket_number')}
+                                        {renderSortableHeader('Rit', 'rit_number')}
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Mutu</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Slump</th>
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Volume</th>
+                                        {renderSortableHeader('Volume', 'volume', 'right')}
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">No Polisi</th>
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Supir</th>
                                         {project.has_ppn && <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nilai (DPP)</th>}
-                                        <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Nilai {project.has_ppn ? '(+PPN)' : ''}</th>
+                                        {renderSortableHeader(`Nilai ${project.has_ppn ? '(+PPN)' : ''}`, 'total_price_with_tax', 'right')}
                                         <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {project.shipments.map((shipment, index) => (
+                                    {sortedShipments.map((shipment, index) => (
                                         <tr key={shipment.id} className="hover:bg-gray-50/70 transition-colors group">
                                             <td className="px-4 py-3 text-sm font-medium text-gray-400 text-center">{index + 1}</td>
                                             <td className="px-4 py-3 text-sm text-gray-700 font-medium">
@@ -336,16 +449,16 @@ export default function Show({ project, trashedShipments = [], trashedPumpRental
                                     <tr>
                                         <td colSpan="6" className="px-4 py-4 text-xs text-gray-400 uppercase tracking-widest text-right">Total Rekapitulasi</td>
                                         <td className="px-4 py-4 text-sm text-gray-900 text-right tabular-nums">
-                                            {project.shipments.reduce((sum, s) => sum + parseFloat(s.volume), 0).toFixed(2)} m³
+                                            {shipmentTotalVolume.toFixed(2)} m³
                                         </td>
                                         <td colSpan="2"></td>
                                         {project.has_ppn && (
                                             <td className="px-4 py-4 text-sm text-gray-500 text-right tabular-nums">
-                                                {formatCurrency(project.shipments.reduce((sum, s) => sum + parseFloat(s.total_price), 0))}
+                                                {formatCurrency(shipmentTotalPrice)}
                                             </td>
                                         )}
                                         <td className="px-4 py-4 text-base text-indigo-700 text-right tabular-nums">
-                                            {formatCurrency(project.shipments.reduce((sum, s) => sum + parseFloat(s.total_price_with_tax), 0))}
+                                            {formatCurrency(shipmentTotalPriceWithTax)}
                                         </td>
                                         <td></td>
                                     </tr>
