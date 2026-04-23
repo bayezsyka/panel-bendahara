@@ -14,50 +14,54 @@ class StoreSlipGajiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
-            'status' => ['required', 'string', 'max:100'],
-            'periode' => ['required', 'string', 'max:100'],
+            'employee_id' => ['required', 'string', 'exists:salary_employees,uuid'],
+            'period_month' => ['required', 'regex:/^\d{4}\-\d{2}$/'],
             'tanggal_tf_cash' => ['required', 'date'],
-            'gaji_pokok' => ['required', 'numeric', 'min:0'],
-            'uang_makan' => ['nullable', 'numeric', 'min:0'],
-            'uang_lembur' => ['nullable', 'numeric', 'min:0'],
-            'bpjs_kesehatan' => ['nullable', 'numeric', 'min:0'],
-            'bpjs_ketenagakerjaan' => ['nullable', 'numeric', 'min:0'],
-            'pph21' => ['nullable', 'numeric', 'min:0'],
-            'tempat_tanggal_ttd' => ['required', 'string', 'max:150'],
-            'direktur' => ['required', 'string', 'max:100'],
+            'income_items' => ['required', 'array', 'min:1'],
+            'income_items.*.salary_component_type_id' => ['required', 'integer', 'exists:salary_component_types,id'],
+            'income_items.*.amount' => ['nullable', 'numeric', 'min:0'],
+            'deduction_items' => ['required', 'array'],
+            'deduction_items.*.salary_component_type_id' => ['required', 'integer', 'exists:salary_component_types,id'],
+            'deduction_items.*.amount' => ['nullable', 'numeric', 'min:0'],
+            'status' => ['required', 'string', 'max:255'],
+            'metode_pembayaran' => ['required', 'string', 'in:TF,CASH'],
+            'tanggal_ttd' => ['required', 'date'],
         ];
     }
 
     protected function prepareForValidation(): void
     {
-        $numericFields = [
-            'gaji_pokok',
-            'uang_makan',
-            'uang_lembur',
-            'bpjs_kesehatan',
-            'bpjs_ketenagakerjaan',
-            'pph21',
-        ];
+        $incomeItems = collect($this->input('income_items', []))
+            ->map(fn ($item) => [
+                'salary_component_type_id' => $item['salary_component_type_id'] ?? null,
+                'amount' => ($item['amount'] ?? null) === '' ? 0 : ($item['amount'] ?? 0),
+            ])
+            ->values()
+            ->all();
 
-        $prepared = [];
+        $deductionItems = collect($this->input('deduction_items', []))
+            ->map(fn ($item) => [
+                'salary_component_type_id' => $item['salary_component_type_id'] ?? null,
+                'amount' => ($item['amount'] ?? null) === '' ? 0 : ($item['amount'] ?? 0),
+            ])
+            ->values()
+            ->all();
 
-        foreach ($numericFields as $field) {
-            $value = $this->input($field);
-            $prepared[$field] = $value === null || $value === '' ? 0 : $value;
-        }
-
-        $this->merge($prepared);
+        $this->merge([
+            'income_items' => $incomeItems,
+            'deduction_items' => $deductionItems,
+        ]);
     }
 
     public function messages(): array
     {
         return [
-            'user_id.required' => 'Pegawai wajib dipilih.',
-            'user_id.exists' => 'Pegawai yang dipilih tidak ditemukan.',
-            'gaji_pokok.required' => 'Gaji pokok wajib diisi.',
+            'employee_id.required' => 'Pegawai wajib dipilih.',
+            'employee_id.exists' => 'Pegawai yang dipilih tidak ditemukan.',
+            'period_month.required' => 'Periode bulan wajib dipilih.',
             'tanggal_tf_cash.required' => 'Tanggal TF/Cash wajib diisi.',
-            'tempat_tanggal_ttd.required' => 'Tempat dan tanggal TTD wajib diisi.',
+            'tanggal_ttd.required' => 'Tanggal TTD wajib diisi.',
+            'income_items.required' => 'Minimal harus ada satu komponen pendapatan.',
         ];
     }
 }

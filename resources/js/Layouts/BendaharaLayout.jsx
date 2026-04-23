@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Swal from 'sweetalert2';
 import ThemeTransition from '@/Components/ThemeTransition';
 
 export default function BendaharaLayout({ children, header }) {
-    const { auth, flash, errors } = usePage().props;
+    const { auth, flash, errors, salary_company_context: salaryCompanyContext } = usePage().props;
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -128,7 +128,7 @@ export default function BendaharaLayout({ children, header }) {
             kas: 'kas.dashboard',
             delivery: 'delivery.customers.index',
             receivable: 'receivable.index',
-            'slip-gaji': 'slip-gaji.create',
+            'slip-gaji': 'slip-gaji.index',
         };
 
         return routes[panelName] ?? 'projectexpense.overview';
@@ -177,6 +177,23 @@ export default function BendaharaLayout({ children, header }) {
     const hasKasAccess = canAccessPanel('kas') || canAccessPanel('plant_cash');
     const hasDeliveryAccess = canAccessPanel('delivery');
     const hasSlipGajiAccess = canAccessPanel('slip_gaji');
+    const availableSalaryCompanies = salaryCompanyContext?.companies || [];
+    const currentSalaryCompanyId = salaryCompanyContext?.current_company_id || '';
+
+    const handleSalaryCompanyChange = (event) => {
+        const companyId = event.target.value;
+        if (!companyId) {
+            return;
+        }
+
+        router.post(route('slip-gaji.switch-company'), {
+            company_id: companyId,
+        }, {
+            preserveScroll: true,
+            preserveState: false,
+            replace: true,
+        });
+    };
 
     // Helper untuk mengecek jika salah satu sub-menu aktif
     const isAnyActive = (routeNames) => {
@@ -384,6 +401,28 @@ export default function BendaharaLayout({ children, header }) {
                 {/* Menu Navigasi */}
                 <div className="flex flex-col h-[calc(100vh-5rem)]">
                     <div className="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar space-y-1">
+                        {activePanel === 'slip-gaji' && (
+                            <div className="mb-4 overflow-hidden transition-all duration-300 md:mb-0 md:max-h-0 md:translate-y-2 md:opacity-0 md:group-hover:mb-4 md:group-hover:max-h-80 md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                                <div className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-4 shadow-sm">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.28em] text-indigo-500">Perusahaan Aktif</p>
+                                    <select
+                                        value={currentSalaryCompanyId}
+                                        onChange={handleSalaryCompanyChange}
+                                        className="mt-3 block w-full rounded-2xl border-indigo-200 bg-white text-sm font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    {availableSalaryCompanies.length === 0 ? (
+                                        <option value="">Belum ada perusahaan</option>
+                                    ) : (
+                                            availableSalaryCompanies.map((company) => (
+                                                <option key={company.id} value={company.id}>
+                                                    {company.name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Label Menu */}
                         <p className="px-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 whitespace-nowrap overflow-hidden">
@@ -472,9 +511,34 @@ export default function BendaharaLayout({ children, header }) {
                         {activePanel === 'slip-gaji' && (
                             <>
                                 <SidebarLink
-                                    name="Buat Slip Gaji"
-                                    routeName="slip-gaji.create"
+                                    name="Slip Gaji"
+                                    routeName="slip-gaji.index"
                                     icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2 10H7a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v7a2 2 0 01-2 2z" /></svg>}
+                                />
+
+                                <div className="pt-4 pb-2 px-3 transition-all duration-200 md:opacity-0 md:group-hover:opacity-100 overflow-hidden whitespace-nowrap">
+                                    <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Master Data</p>
+                                </div>
+
+                                <SidebarLink
+                                    name="Daftar Pegawai"
+                                    routeName="slip-gaji.employees.index"
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                                />
+                                <SidebarLink
+                                    name="Tipe Pendapatan"
+                                    routeName="slip-gaji.income-types.index"
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 1v8m0 0v1" /></svg>}
+                                />
+                                <SidebarLink
+                                    name="Tipe Potongan"
+                                    routeName="slip-gaji.deduction-types.index"
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>}
+                                />
+                                <SidebarLink
+                                    name="Perusahaan"
+                                    routeName="slip-gaji.companies.index"
+                                    icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4 6 4v14M9 9h1m-1 4h1m4-4h1m-1 4h1" /></svg>}
                                 />
                             </>
                         )}
@@ -662,7 +726,7 @@ export default function BendaharaLayout({ children, header }) {
                                             )}
                                             {hasSlipGajiAccess && (
                                                 <Link
-                                                    href={route('slip-gaji.create')}
+                                                    href={route('slip-gaji.index')}
                                                     className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all ${activePanel === 'slip-gaji' ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-700 dark:text-indigo-400 shadow-sm' : 'bg-white dark:bg-[#2a2a42] border-gray-100 dark:border-gray-700/40 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30'}`}
                                                 >
                                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M9 8h6m2 10H7a2 2 0 01-2-2V6a2 2 0 012-2h7l5 5v7a2 2 0 01-2 2z" /></svg>

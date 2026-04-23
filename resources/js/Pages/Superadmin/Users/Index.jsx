@@ -117,7 +117,9 @@ export default function Index({ auth, users, filters, offices = [] }) {
             render: (row) => (
                 <div>
                     <div className="text-sm font-bold text-gray-900">{row.name}</div>
-                    <div className="text-xs text-gray-400 font-medium">UID: {row.id}</div>
+                    <div className="text-xs text-gray-400 font-medium">
+                        UID: {row.id}
+                    </div>
                 </div>
             ),
         },
@@ -231,6 +233,8 @@ export default function Index({ auth, users, filters, offices = [] }) {
                             <TextInput id="name" type="text" className="mt-1 block w-full" value={data.name} onChange={(e) => setData('name', e.target.value)} required isFocused />
                             <InputError message={errors.name} className="mt-2" />
                         </div>
+
+
 
                         <div>
                             <InputLabel htmlFor="email" value="Email" />

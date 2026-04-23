@@ -1,27 +1,30 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
-
-use App\Http\Controllers\ProjectExpenses\OverviewController;
-use App\Http\Controllers\ProjectExpenses\ProjectController;
-use App\Http\Controllers\ProjectExpenses\ExpenseController;
-use App\Http\Controllers\ProjectExpenses\MandorController;
-use App\Http\Controllers\ProjectExpenses\BenderaController;
-use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
-use App\Http\Controllers\Superadmin\UserController;
-use App\Http\Controllers\Bendahara\PlantTransactionController;
-use App\Http\Controllers\Bendahara\SlipGajiController;
-use App\Http\Controllers\Bendahara\CashSourceController;
 use App\Http\Controllers\Bendahara\CashExpenseTypeController;
+use App\Http\Controllers\Bendahara\CashSourceController;
+use App\Http\Controllers\Bendahara\PlantTransactionController;
+use App\Http\Controllers\Bendahara\SalaryCompanyContextController;
+use App\Http\Controllers\Bendahara\SalaryCompanyController;
+use App\Http\Controllers\Bendahara\SalaryComponentTypeController;
+use App\Http\Controllers\Bendahara\SalaryEmployeeController;
+use App\Http\Controllers\Bendahara\SlipGajiController;
 use App\Http\Controllers\Delivery\ConcreteGradeController;
 use App\Http\Controllers\Delivery\CustomerController;
 use App\Http\Controllers\Delivery\ProjectController as DeliveryProjectController;
-use App\Http\Controllers\Delivery\ShipmentController;
-use App\Http\Controllers\Receivable\ReceivableController;
 use App\Http\Controllers\Delivery\PumpRentalController;
+use App\Http\Controllers\Delivery\ShipmentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectExpenses\BenderaController;
+use App\Http\Controllers\ProjectExpenses\ExpenseController;
+use App\Http\Controllers\ProjectExpenses\ExpenseTypeController;
+use App\Http\Controllers\ProjectExpenses\MandorController;
+use App\Http\Controllers\ProjectExpenses\OverviewController;
+use App\Http\Controllers\ProjectExpenses\ProjectController;
+use App\Http\Controllers\Receivable\ReceivableController;
+use App\Http\Controllers\Superadmin\UserController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::middleware(['auth', 'verified', 'role:superadmin', 'superadmin.utama'])
     ->prefix('superadmin')
@@ -39,19 +42,19 @@ Route::middleware(['auth', 'verified', 'role:owner'])
     ->name('owner.')
     ->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Owner\OwnerDashboardController::class, 'index'])->name('dashboard');
-        Route::get('/search',   [\App\Http\Controllers\Owner\SearchController::class, 'index'])->name('search');
-        Route::get('/audit-log',[\App\Http\Controllers\Owner\OwnerActivityLogController::class, 'index'])->name('audit-log');
+        Route::get('/search', [\App\Http\Controllers\Owner\SearchController::class, 'index'])->name('search');
+        Route::get('/audit-log', [\App\Http\Controllers\Owner\OwnerActivityLogController::class, 'index'])->name('audit-log');
 
         // ── Data Panel Pages (READ-ONLY, with filters) ──────────────────────
-        Route::get('/kas',     [\App\Http\Controllers\Owner\OwnerKasController::class, 'index'])->name('kas');
-        Route::get('/proyek',  [\App\Http\Controllers\Owner\OwnerProyekController::class, 'index'])->name('proyek');
-        Route::get('/piutang',     [\App\Http\Controllers\Owner\OwnerPiutangController::class,    'index'])->name('piutang');
-        Route::get('/pengiriman',  [\App\Http\Controllers\Owner\OwnerPengirimanController::class, 'index'])->name('pengiriman');
+        Route::get('/kas', [\App\Http\Controllers\Owner\OwnerKasController::class, 'index'])->name('kas');
+        Route::get('/proyek', [\App\Http\Controllers\Owner\OwnerProyekController::class, 'index'])->name('proyek');
+        Route::get('/piutang', [\App\Http\Controllers\Owner\OwnerPiutangController::class,    'index'])->name('piutang');
+        Route::get('/pengiriman', [\App\Http\Controllers\Owner\OwnerPengirimanController::class, 'index'])->name('pengiriman');
 
         // ── Download Center (READ-ONLY PDF exports) ─────────────────────────
         Route::get('/reports/laporan-proyek', [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanKeseluruhan'])->name('reports.laporan-proyek');
-        Route::get('/reports/laporan-kas',    [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanKas'])->name('reports.laporan-kas');
-        Route::get('/reports/laporan-piutang',[\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanPiutang'])->name('reports.laporan-piutang');
+        Route::get('/reports/laporan-kas', [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanKas'])->name('reports.laporan-kas');
+        Route::get('/reports/laporan-piutang', [\App\Http\Controllers\Owner\OwnerReportController::class, 'laporanPiutang'])->name('reports.laporan-piutang');
     });
 
 // PROJECT EXPENSES MODULAR ROUTES
@@ -70,7 +73,6 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
 
         Route::get('/expenses/{expense}/print', [ExpenseController::class, 'print'])->name('expenses.print');
         Route::resource('expenses', ExpenseController::class)->only(['store', 'destroy', 'update']);
-
 
         Route::get('mandors/{mandor}/export-daily', [MandorController::class, 'exportDailyExpenses'])->name('mandors.export-daily');
         Route::resource('mandors', MandorController::class)->except(['create', 'edit']);
@@ -111,18 +113,42 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
     ->prefix('slip-gaji')
     ->name('slip-gaji.')
     ->group(function () {
+        Route::get('/', [SlipGajiController::class, 'index'])->name('index');
+        Route::post('/switch-company', [SalaryCompanyContextController::class, 'update'])->name('switch-company');
+        Route::get('/pegawai', [SalaryEmployeeController::class, 'index'])->name('employees.index');
+        Route::post('/pegawai', [SalaryEmployeeController::class, 'store'])->name('employees.store');
+        Route::put('/pegawai/{employee}', [SalaryEmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('/pegawai/{employee}', [SalaryEmployeeController::class, 'destroy'])->name('employees.destroy');
         Route::get('/create', [SlipGajiController::class, 'create'])->name('create');
         Route::post('/', [SlipGajiController::class, 'store'])->name('store');
-        Route::get('/{id}/print', [SlipGajiController::class, 'print'])->name('print');
+        Route::patch('/{uuid}/reset', [SlipGajiController::class, 'reset'])->name('reset');
+        Route::get('/print-all', [SlipGajiController::class, 'printAll'])->name('print-all');
+        Route::get('/{uuid}/print', [SlipGajiController::class, 'print'])->name('print');
+
+        Route::get('/tipe-pendapatan', [SalaryComponentTypeController::class, 'incomeIndex'])->name('income-types.index');
+        Route::post('/tipe-pendapatan', [SalaryComponentTypeController::class, 'storeIncome'])->name('income-types.store');
+        Route::put('/tipe-pendapatan/{componentType}', [SalaryComponentTypeController::class, 'updateIncome'])->name('income-types.update');
+        Route::delete('/tipe-pendapatan/{componentType}', [SalaryComponentTypeController::class, 'destroyIncome'])->name('income-types.destroy');
+
+        Route::get('/tipe-potongan', [SalaryComponentTypeController::class, 'deductionIndex'])->name('deduction-types.index');
+        Route::post('/tipe-potongan', [SalaryComponentTypeController::class, 'storeDeduction'])->name('deduction-types.store');
+        Route::put('/tipe-potongan/{componentType}', [SalaryComponentTypeController::class, 'updateDeduction'])->name('deduction-types.update');
+        Route::delete('/tipe-potongan/{componentType}', [SalaryComponentTypeController::class, 'destroyDeduction'])->name('deduction-types.destroy');
+
+        Route::get('/perusahaan', [SalaryCompanyController::class, 'index'])->name('companies.index');
+        Route::post('/perusahaan', [SalaryCompanyController::class, 'store'])->name('companies.store');
+        Route::put('/perusahaan/{company}', [SalaryCompanyController::class, 'update'])->name('companies.update');
+        Route::delete('/perusahaan/{company}', [SalaryCompanyController::class, 'destroy'])->name('companies.destroy');
     });
 
 Route::get('/', function () {
-    if (!Auth::check()) {
+    if (! Auth::check()) {
         return redirect()->route('login');
     }
 
     /** @var \App\Models\User $user */
     $user = Auth::user();
+
     return redirect()->route($user->getHomeRoute());
 });
 
@@ -137,6 +163,7 @@ Route::get('/no-access', function () {
     } else {
         return redirect()->route('login');
     }
+
     return Inertia::render('NoAccess');
 })->name('no.access');
 
@@ -169,7 +196,7 @@ Route::middleware(['auth', 'verified', 'role:bendahara,superadmin', 'panel.acces
     ->name('delivery.')
     ->group(function () {
         Route::resource('concrete-grades', ConcreteGradeController::class);
-        
+
         Route::get('customers/trash', [CustomerController::class, 'trash'])->name('customers.trash');
         Route::post('customers/{id}/restore', [CustomerController::class, 'restore'])->name('customers.restore');
         Route::resource('customers', CustomerController::class);
@@ -203,4 +230,4 @@ Route::middleware(['auth', 'verified', 'role:superadmin'])->group(function () {
     })->name('playground');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

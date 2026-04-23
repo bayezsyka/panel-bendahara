@@ -1,315 +1,223 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <title>Slip Gaji - {{ $slipGaji->employee_name }}</title>
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
-            color: #0f172a;
-            font-size: 12px;
-            margin: 28px;
-        }
-
-        .wrapper {
-            border: 1px solid #cbd5e1;
-            padding: 24px;
-            border-radius: 12px;
-        }
-
-        .header {
-            width: 100%;
-            border-bottom: 2px solid #0f172a;
-            padding-bottom: 14px;
-            margin-bottom: 18px;
-        }
-
-        .title {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin: 0 0 6px 0;
-        }
-
-        .subtitle {
+            font-family: Arial, sans-serif;
+            color: #000;
             font-size: 11px;
-            color: #475569;
-            margin: 0;
+            margin: 20px;
+            background: #ffffff;
         }
 
-        .meta-table,
-        .income-table,
-        .signature-table {
+
+
+        .main-table {
             width: 100%;
             border-collapse: collapse;
         }
 
-        .meta-table td {
-            padding: 4px 0;
+        .main-table td, .main-table th {
+            padding: 4px 6px;
             vertical-align: top;
         }
 
-        .meta-label {
-            width: 180px;
-            font-weight: 700;
-        }
-
-        .meta-separator {
-            width: 12px;
+        .title-row {
             text-align: center;
-        }
-
-        .section-grid {
-            width: 100%;
-            margin-top: 22px;
-        }
-
-        .section-grid td {
-            vertical-align: top;
-            width: 50%;
-        }
-
-        .section-grid td:first-child {
-            padding-right: 10px;
-        }
-
-        .section-grid td:last-child {
-            padding-left: 10px;
-        }
-
-        .box-title {
-            background: #e2e8f0;
-            color: #0f172a;
+            font-weight: bold;
             font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-bottom: none;
+            padding-bottom: 15px !important;
         }
 
-        .income-table th,
-        .income-table td {
-            border: 1px solid #cbd5e1;
-            padding: 9px 12px;
+        .bold {
+            font-weight: bold;
         }
 
-        .income-table th {
-            background: #f8fafc;
-            text-align: left;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
+        .bordered {
+            border: 1px solid #000;
         }
 
         .text-right {
             text-align: right;
         }
 
-        .net-summary {
-            margin-top: 18px;
-            border: 1px solid #1d4ed8;
-            background: #eff6ff;
-            padding: 14px 16px;
+        .text-center {
+            text-align: center;
         }
 
-        .net-label {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: #1d4ed8;
-            margin: 0 0 6px 0;
-            font-weight: 700;
+        .spacer-row {
+            height: 15px;
         }
 
-        .net-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0;
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
         }
 
-        .notes {
-            margin-top: 18px;
-            padding: 12px 14px;
-            border: 1px dashed #94a3b8;
-            color: #475569;
-            line-height: 1.6;
+        .items-table td, .items-table th {
+            border: 1px solid #000;
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+
+        .signature-box {
+            margin-top: 25px;
+            page-break-inside: avoid;
         }
 
         .signature-table {
-            margin-top: 42px;
+            width: 100%;
+            border-collapse: collapse;
         }
 
         .signature-table td {
             width: 50%;
+            border: 1px solid #000;
             text-align: center;
             vertical-align: top;
         }
 
-        .signature-place {
-            margin-bottom: 70px;
+        .td-label {
+            padding: 8px 5px;
+            font-weight: bold;
         }
 
-        .signature-name {
-            font-weight: 700;
+        .td-space {
+            height: 80px;
+        }
+
+        .td-name {
+            padding: 6px 10px 5px 5px;
+            text-align: center;
+        }
+
+        .sign-name-block {
+            display: inline-block;
+            text-align: center;
+        }
+
+        .sign-name-block .nama {
+            font-weight: bold;
+            font-size: 12px;
+            display: block;
             text-decoration: underline;
         }
 
-        .footer-meta {
-            margin-top: 20px;
-            font-size: 10px;
-            color: #64748b;
+        .sign-name-block .jabatan {
+            font-size: 11px;
+            display: block;
+            margin-top: 3px;
         }
     </style>
 </head>
-
 <body>
-    <div class="wrapper">
-        <table class="header">
-            <tr>
-                <td>
-                    <p class="title">Slip Gaji</p>
-                    <p class="subtitle">PT JKK - Dokumen pembayaran gaji karyawan</p>
-                </td>
-                <td style="text-align: right;">
-                    <p class="subtitle" style="margin-bottom: 4px;">Tanggal TF/Cash</p>
-                    <p style="font-size: 16px; font-weight: 700; margin: 0;">
-                        {{ $slipGaji->tanggal_tf_cash->translatedFormat('d F Y') }}
-                    </p>
-                </td>
-            </tr>
-        </table>
+    @php
+        $directorName = $slipGaji->company->direktur ?? $slipGaji->direktur ?? 'Direktur Utama';
+    @endphp
+    @include('pdf.komponen.footer')
+    @include('pdf.komponen.header')
 
-        <table class="meta-table">
-            <tr>
-                <td class="meta-label">Nama</td>
-                <td class="meta-separator">:</td>
-                <td>{{ $slipGaji->employee_name }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">NIK</td>
-                <td class="meta-separator">:</td>
-                <td>{{ $slipGaji->employee_nik ?: '-' }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Jabatan</td>
-                <td class="meta-separator">:</td>
-                <td>{{ $slipGaji->employee_position }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Status</td>
-                <td class="meta-separator">:</td>
-                <td>{{ $slipGaji->status }}</td>
-            </tr>
-            <tr>
-                <td class="meta-label">Periode</td>
-                <td class="meta-separator">:</td>
-                <td>{{ $slipGaji->periode }}</td>
-            </tr>
-        </table>
+    <table class="main-table">
+        <tr>
+            <td colspan="4" class="title-row">
+                SLIP GAJI BULAN {{ strtoupper(\Carbon\Carbon::createFromFormat('Y-m', $slipGaji->period_month)->translatedFormat('F Y')) }}
+            </td>
+        </tr>
+        <tr>
+            <td class="bold" style="width: 25%;">NAMA</td>
+            <td style="width: 25%;">{{ strtoupper($slipGaji->employee_name) }}</td>
+            <td class="bold" style="width: 25%;">PERIODE</td>
+            <td style="width: 25%;">{{ strtoupper($slipGaji->periode) }}</td>
+        </tr>
+        <tr>
+            <td class="bold">NIK</td>
+            <td>{{ $slipGaji->employee_nik ?: '-' }}</td>
+            <td class="bold">TANGGAL</td>
+            <td>{{ strtoupper($slipGaji->tanggal_tf_cash->translatedFormat('d F Y')) }} ({{ $slipGaji->metode_pembayaran ?: 'TF' }})</td>
+        </tr>
+        <tr>
+            <td class="bold">JABATAN</td>
+            <td>{{ strtoupper($slipGaji->employee_position) }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td class="bold">STATUS</td>
+            <td>{{ strtoupper($slipGaji->status) }}</td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
 
-        <table class="section-grid">
-            <tr>
-                <td>
-                    <div class="box-title">Pendapatan</div>
-                    <table class="income-table">
-                        <thead>
-                            <tr>
-                                <th>Komponen</th>
-                                <th class="text-right">Nominal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Gaji Pokok</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->gaji_pokok, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td>Uang Makan</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->uang_makan, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td>Uang Lembur</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->uang_lembur, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td style="font-weight: 700;">Total Pendapatan</td>
-                                <td class="text-right" style="font-weight: 700;">
-                                    Rp {{ number_format($slipGaji->gaji_pokok + $slipGaji->uang_makan + $slipGaji->uang_lembur, 0, ',', '.') }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-                <td>
-                    <div class="box-title">Potongan</div>
-                    <table class="income-table">
-                        <thead>
-                            <tr>
-                                <th>Komponen</th>
-                                <th class="text-right">Nominal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>BPJS Kesehatan</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->bpjs_kesehatan, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td>BPJS Ketenagakerjaan</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->bpjs_ketenagakerjaan, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td>PPh 21</td>
-                                <td class="text-right">Rp {{ number_format($slipGaji->pph21, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <td style="font-weight: 700;">Total Potongan</td>
-                                <td class="text-right" style="font-weight: 700;">
-                                    Rp {{ number_format($slipGaji->bpjs_kesehatan + $slipGaji->bpjs_ketenagakerjaan + $slipGaji->pph21, 0, ',', '.') }}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </table>
+    <table class="items-table">
+        <tr>
+            <th colspan="2" class="text-center bold">PENDAPATAN</th>
+            <th colspan="2" class="text-center bold">POTONGAN</th>
+        </tr>
+        @php
+            $incomes = $slipGaji->items->where('component_type', 'income')->values();
+            $deductions = $slipGaji->items->where('component_type', 'deduction')->values();
+            $maxRows = max($incomes->count(), $deductions->count());
+        @endphp
+        
+        @for($i = 0; $i < $maxRows; $i++)
+        <tr>
+            <td style="width: 30%;">{{ isset($incomes[$i]) ? strtoupper($incomes[$i]->component_name) : '' }}</td>
+            <td style="width: 20%;" class="text-right">
+                {{ isset($incomes[$i]) && $incomes[$i]->amount > 0 ? number_format($incomes[$i]->amount, 0, ',', '.') : '' }}
+            </td>
+            <td style="width: 30%;">{{ isset($deductions[$i]) ? strtoupper($deductions[$i]->component_name) : '' }}</td>
+            <td style="width: 20%;" class="text-right">
+                {{ isset($deductions[$i]) && $deductions[$i]->amount > 0 ? number_format($deductions[$i]->amount, 0, ',', '.') : '' }}
+            </td>
+        </tr>
+        @endfor
 
-        <div class="net-summary">
-            <p class="net-label">Pendapatan Bersih</p>
-            <p class="net-value">Rp {{ number_format($slipGaji->pendapatan_bersih, 0, ',', '.') }}</p>
-        </div>
+        <tr>
+            <td class="text-right bold">TOTAL PENDAPATAN</td>
+            <td class="text-right bold">{{ number_format($slipGaji->total_pendapatan, 0, ',', '.') }}</td>
+            <td class="text-right bold">TOTAL POTONGAN</td>
+            <td class="text-right bold">{{ number_format($slipGaji->total_potongan, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td style="border: none;"></td>
+            <td class="text-right bold" style="font-size: 13px;">{{ number_format($slipGaji->pendapatan_bersih, 0, ',', '.') }}</td>
+            <td style="border: none;" colspan="2"></td>
+        </tr>
+    </table>
 
-        <div class="notes">
-            Slip gaji ini dibuat sebagai bukti pembayaran resmi. Mohon diperiksa kembali rincian pendapatan dan potongan sebelum ditandatangani.
-        </div>
-
+    <div style="text-align: right; margin-top: 15px; margin-bottom: 5px; font-weight: bold;">
+        {{ strtoupper($slipGaji->tempat_tanggal_ttd) }}
+    </div>
+    
+    <div class="signature-box">
         <table class="signature-table">
             <tr>
-                <td>
-                    <div class="signature-place">{{ $slipGaji->tempat_tanggal_ttd }}</div>
-                    <div class="signature-name">{{ $slipGaji->direktur }}</div>
-                    <div>Direktur</div>
+                <td class="td-label">DISETUJUI,</td>
+                <td class="td-label">DITERIMA OLEH,</td>
+            </tr>
+            <tr>
+                <td class="td-space"></td>
+                <td class="td-space"></td>
+            </tr>
+            <tr>
+                <td class="td-name">
+                    <div class="sign-name-block">
+                        <div class="nama">{{ strtoupper($directorName) }}</div>
+                        <div class="jabatan">DIREKTUR</div>
+                    </div>
                 </td>
-                <td>
-                    <div class="signature-place">{{ $slipGaji->tempat_tanggal_ttd }}</div>
-                    <div class="signature-name">{{ $slipGaji->penerima }}</div>
-                    <div>Penerima</div>
+                <td class="td-name">
+                    <div class="sign-name-block">
+                        <div class="nama">{{ strtoupper($slipGaji->penerima) }}</div>
+                        <div class="jabatan">KARYAWAN</div>
+                    </div>
                 </td>
             </tr>
         </table>
-
-        <div class="footer-meta">
-            Dicetak pada {{ now()->translatedFormat('d F Y H:i') }} WIB
-            @if ($slipGaji->creator)
-                oleh {{ $slipGaji->creator->name }}
-            @endif
-        </div>
     </div>
 </body>
-
 </html>
