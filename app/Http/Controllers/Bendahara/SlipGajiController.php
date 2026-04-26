@@ -19,6 +19,8 @@ use Throwable;
 
 class SlipGajiController extends Controller
 {
+    private const PDF_POINTS_PER_MM = 2.8346456693;
+
     public function index(Request $request, SalaryCompanyContextService $salaryCompanyContextService): Response
     {
         $currentCompany = $salaryCompanyContextService->getCurrentCompany();
@@ -272,9 +274,13 @@ class SlipGajiController extends Controller
             ->where('is_finalized', true)
             ->firstOrFail();
 
+        $slotHeightMm = null;
+
         $pdf = Pdf::loadView('pdf.kas.slip-gaji-pdf', [
             'slipGaji' => $slipGaji,
-        ])->setPaper('a4', 'portrait');
+            'slipLayout' => 'six-up',
+            'slotHeightMm' => $slotHeightMm,
+        ])->setPaper('a4', 'landscape');
 
         $fileName = 'slip-gaji-'.str($slipGaji->employee_name.'-'.$slipGaji->id)->slug().'.pdf';
 
@@ -287,16 +293,27 @@ class SlipGajiController extends Controller
         abort_if(! $currentCompany, 404);
 
         $selectedMonth = $this->resolveMonth($request->string('month')->toString());
+        $selectedSlipUuids = $this->resolveSelectedSlipUuids($request);
 
         $slips = SlipGaji::query()
             ->with(['company', 'creator', 'items'])
             ->where('salary_company_id', $currentCompany->id)
             ->where('period_month', $selectedMonth)
             ->where('is_finalized', true)
+            ->when(
+                $selectedSlipUuids->isNotEmpty(),
+                fn ($query) => $query->whereIn('uuid', $selectedSlipUuids)
+            )
             ->orderBy('employee_name')
             ->get();
 
-        abort_if($slips->isEmpty(), 404, 'Belum ada slip gaji untuk periode ini.');
+        abort_if(
+            $slips->isEmpty(),
+            404,
+            $selectedSlipUuids->isNotEmpty()
+                ? 'Slip gaji terpilih tidak ditemukan.'
+                : 'Belum ada slip gaji untuk periode ini.'
+        );
 
         if ($request->string('mode')->toString() === 'uniform') {
             $metode = $request->string('metode')->toString();
@@ -316,15 +333,67 @@ class SlipGajiController extends Controller
             });
         }
 
+        $slipLayout = 'six-up';
+        $slotHeightMm = null;
+
         $pdf = Pdf::loadView('pdf.kas.slip-gaji-batch-pdf', [
             'slips' => $slips,
             'selectedMonthLabel' => $this->buildMonthLabel($selectedMonth),
             'selectedCompany' => $currentCompany,
-        ])->setPaper('a4', 'portrait');
+            'slipLayout' => $slipLayout,
+            'slotHeightMm' => $slotHeightMm,
+        ]);
 
-        $fileName = 'slip-gaji-'.str($currentCompany->name.'-'.$selectedMonth)->slug().'.pdf';
+        $pdf->setPaper('a4', 'landscape');
+
+        $fileNameSuffix = $selectedSlipUuids->isNotEmpty() ? '-terpilih' : '';
+        $fileName = 'slip-gaji-'.str($currentCompany->name.'-'.$selectedMonth.$fileNameSuffix)->slug().'.pdf';
 
         return $pdf->stream($fileName);
+    }
+
+    private function resolveSelectedSlipUuids(Request $request): Collection
+    {
+        $selectedSlips = $request->query('slips', []);
+
+        if (is_string($selectedSlips)) {
+            $selectedSlips = explode(',', $selectedSlips);
+        }
+
+        return collect($selectedSlips)
+            ->flatten()
+            ->map(fn ($uuid) => trim((string) $uuid))
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    private function resolveCompactSlotHeightMm(Collection $slips): float
+    {
+        $maxRows = (int) ($slips->map(function ($slip) {
+            $items = $slip->items ?? collect();
+
+            if (! $items instanceof Collection) {
+                $items = collect($items);
+            }
+
+            return max(
+                $items->where('component_type', 'income')->count(),
+                $items->where('component_type', 'deduction')->count()
+            );
+        })->max() ?? 0);
+
+        return min(148.5, max(112, 112 + max(0, $maxRows - 3) * 8));
+    }
+
+    private function paperSizeMm(float $widthMm, float $heightMm): array
+    {
+        return [
+            0,
+            0,
+            $widthMm * self::PDF_POINTS_PER_MM,
+            $heightMm * self::PDF_POINTS_PER_MM,
+        ];
     }
 
     private function buildItems(Collection $items, string $type): array

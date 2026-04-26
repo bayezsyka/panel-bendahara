@@ -8,7 +8,7 @@ import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import SecondaryButton from '@/Components/SecondaryButton';
 import { Building2, Download, FileText, Users, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 dayjs.locale('id');
 
@@ -26,15 +26,27 @@ export default function Index({
     selectedMonthLabel = dayjs().format('MMMM YYYY'),
     selectedCompany = null,
 }) {
-    const hasAnySlip = rows.some((row) => Boolean(row.slip?.is_finalized));
+    const finalizedSlipUuids = useMemo(
+        () => rows.filter((row) => row.slip?.is_finalized).map((row) => row.slip.uuid),
+        [rows],
+    );
+    const hasAnySlip = finalizedSlipUuids.length > 0;
 
     const [showExportModal, setShowExportModal] = useState(false);
+    const [selectedSlipUuids, setSelectedSlipUuids] = useState([]);
     const [exportSettings, setExportSettings] = useState({
         mode: 'individual',
         metode: 'TF',
         tgl_tf: dayjs(selectedMonth).set('date', 26).format('YYYY-MM-DD'),
         tgl_ttd: dayjs(selectedMonth).set('date', 26).format('YYYY-MM-DD'),
     });
+    const selectedSlipSet = useMemo(() => new Set(selectedSlipUuids), [selectedSlipUuids]);
+    const selectedCount = selectedSlipUuids.length;
+    const allFinalizedSelected = hasAnySlip && selectedCount === finalizedSlipUuids.length;
+
+    useEffect(() => {
+        setSelectedSlipUuids((current) => current.filter((uuid) => finalizedSlipUuids.includes(uuid)));
+    }, [finalizedSlipUuids]);
 
     const handleMonthChange = (event) => {
         router.get(
@@ -44,10 +56,28 @@ export default function Index({
         );
     };
 
+    const toggleSlipSelection = (uuid) => {
+        setSelectedSlipUuids((current) => (
+            current.includes(uuid)
+                ? current.filter((selectedUuid) => selectedUuid !== uuid)
+                : [...current, uuid]
+        ));
+    };
+
+    const toggleAllSelection = () => {
+        setSelectedSlipUuids(allFinalizedSelected ? [] : finalizedSlipUuids);
+    };
+
     const handleExportBatch = () => {
+        if (selectedCount === 0) {
+            return;
+        }
+
         const query = new URLSearchParams();
         query.append('month', selectedMonth);
         query.append('mode', exportSettings.mode);
+        selectedSlipUuids.forEach((uuid) => query.append('slips[]', uuid));
+
         if (exportSettings.mode === 'uniform') {
             query.append('metode', exportSettings.metode);
             query.append('tgl_tf', exportSettings.tgl_tf);
@@ -85,10 +115,20 @@ export default function Index({
                                 <button
                                     type="button"
                                     onClick={() => setShowExportModal(true)}
-                                    className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100"
+                                    disabled={selectedCount === 0}
+                                    className={`inline-flex items-center rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                                        selectedCount > 0
+                                            ? 'border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                                            : 'border-slate-200 bg-slate-100 text-slate-400'
+                                    }`}
                                 >
                                     <Download className="mr-2 h-4 w-4" />
-                                    Export Semua PDF
+                                    Export Terpilih PDF
+                                    {selectedCount > 0 && (
+                                        <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-black text-indigo-700">
+                                            {selectedCount}
+                                        </span>
+                                    )}
                                 </button>
                             ) : (
                                 <button
@@ -97,7 +137,7 @@ export default function Index({
                                     className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400"
                                 >
                                     <Download className="mr-2 h-4 w-4" />
-                                    Export Semua PDF
+                                    Export Terpilih PDF
                                 </button>
                             )}
                         </div>
@@ -134,6 +174,16 @@ export default function Index({
                         <table className="min-w-full divide-y divide-slate-100">
                             <thead className="bg-slate-50/90">
                                 <tr>
+                                    <th className="px-6 py-4 text-center">
+                                        <input
+                                            type="checkbox"
+                                            checked={allFinalizedSelected}
+                                            disabled={!hasAnySlip}
+                                            onChange={toggleAllSelection}
+                                            aria-label="Pilih semua slip gaji"
+                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-slate-100"
+                                        />
+                                    </th>
                                     <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">Nama</th>
                                     <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">NIK</th>
                                     <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">Jabatan</th>
@@ -148,6 +198,16 @@ export default function Index({
                                 {rows.length > 0 ? (
                                     rows.map((row) => (
                                         <tr key={row.id} className="hover:bg-slate-50/70">
+                                            <td className="px-6 py-4 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={Boolean(row.slip?.uuid && selectedSlipSet.has(row.slip.uuid))}
+                                                    disabled={!row.slip?.is_finalized}
+                                                    onChange={() => toggleSlipSelection(row.slip.uuid)}
+                                                    aria-label={`Pilih slip gaji ${row.name}`}
+                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:bg-slate-100"
+                                                />
+                                            </td>
                                             <td className="px-6 py-4 font-bold text-slate-900">{row.name}</td>
                                             <td className="px-6 py-4 text-slate-500">{row.nik || '-'}</td>
                                             <td className="px-6 py-4 text-slate-500">{row.jabatan || '-'}</td>
@@ -210,7 +270,7 @@ export default function Index({
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="8" className="px-6 py-16 text-center text-sm italic text-slate-500">
+                                        <td colSpan="9" className="px-6 py-16 text-center text-sm italic text-slate-500">
                                             {selectedCompany ? 'Belum ada data pegawai untuk perusahaan ini.' : 'Pilih perusahaan aktif terlebih dahulu.'}
                                         </td>
                                     </tr>
@@ -224,7 +284,7 @@ export default function Index({
             <Modal show={showExportModal} onClose={() => setShowExportModal(false)} maxWidth="md">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-5">
-                        <h2 className="text-lg font-bold text-slate-800">Export Semua PDF</h2>
+                        <h2 className="text-lg font-bold text-slate-800">Export PDF Terpilih</h2>
                         <button onClick={() => setShowExportModal(false)} className="text-slate-400 hover:text-slate-600">
                             <X className="h-5 w-5" />
                         </button>
@@ -297,7 +357,11 @@ export default function Index({
 
                         <div className="flex justify-end gap-2 pt-4">
                             <SecondaryButton onClick={() => setShowExportModal(false)}>Batal</SecondaryButton>
-                            <PrimaryButton onClick={handleExportBatch} className="bg-indigo-600 hover:bg-indigo-700">
+                            <PrimaryButton
+                                onClick={handleExportBatch}
+                                disabled={selectedCount === 0}
+                                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                            >
                                 <Download className="mr-2 h-4 w-4" /> Export PDF
                             </PrimaryButton>
                         </div>
